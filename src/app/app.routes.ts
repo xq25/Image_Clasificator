@@ -34,7 +34,7 @@ export const routes: Routes = [
       {
         path: 'users',
         loadChildren: () =>
-          import('./pages/users/users.routes').then((m) => m.UserRoutes),
+          import('./pages/ms-security/users/users.routes').then((m) => m.UsersRoutes),
       }
     ],
   },
