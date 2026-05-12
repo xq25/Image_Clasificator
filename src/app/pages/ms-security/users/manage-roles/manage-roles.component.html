@@ -1,0 +1,157 @@
+<div class="manage-roles-page p-6">
+
+  <!-- HEADER -->
+  <div class="page-header mb-6">
+    <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="user-identity" *ngIf="user()">
+      <div class="user-avatar">{{ getUserInitials() }}</div>
+      <div class="user-info">
+        <h2 class="user-name">{{ user()?.name ?? 'Cargando...' }}</h2>
+        <span class="user-email">{{ user()?.email ?? '' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  @if (toast()) {
+    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
+      {{ toast()!.message }}
+    </div>
+  }
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- ===== PANEL IZQUIERDO: ROLES ACTUALES ===== -->
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">shield</mat-icon>
+            <span>Roles asignados</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          @if (userRoles().length > 0) {
+            {{ userRoles().length }} rol{{ userRoles().length !== 1 ? 'es' : '' }} activo{{ userRoles().length !== 1 ? 's' : '' }}
+          } @else {
+            Sin roles asignados
+          }
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (loadingUserRoles()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (userRoles().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">lock_open</mat-icon>
+            <p class="text-gray-600 mt-2">Este usuario no tiene roles asignados.</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (role of userRoles(); track role.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-primary">verified_user</mat-icon>
+                <div matListItemTitle>{{ role.name }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ role.description }}</div>
+                <button
+                  mat-icon-button
+                  matListItemMeta
+                  color="warn"
+                  (click)="removeRole(role)"
+                  [disabled]="removingRoleId() === role.id"
+                  class="ml-2"
+                >
+                  @if (removingRoleId() === role.id) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <mat-icon>delete</mat-icon>
+                  }
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ===== PANEL DERECHO: ROLES DISPONIBLES ===== -->
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">add_circle</mat-icon>
+            <span>Roles disponibles</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ getAvailableRoles().length }} rol{{ getAvailableRoles().length !== 1 ? 'es' : '' }} disponible{{ getAvailableRoles().length !== 1 ? 's' : '' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- BÚSQUEDA -->
+        <mat-form-field appearance="outline" class="w-full mb-4">
+          <mat-label>Buscar rol...</mat-label>
+          <input
+            matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($event.target.value)"
+            placeholder="Filtra por nombre"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (loadingAvailableRoles()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (getAvailableRoles().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">check_circle</mat-icon>
+            <p class="text-gray-600 mt-2">
+              @if (userRoles().length === allRoles().length) {
+                El usuario tiene todos los roles disponibles.
+              } @else {
+                No hay roles disponibles que coincidan con la búsqueda.
+              }
+            </p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (role of getAvailableRoles(); track role.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
+                <div matListItemTitle>{{ role.name }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ role.description }}</div>
+                <button
+                  mat-raised-button
+                  matListItemMeta
+                  color="accent"
+                  (click)="assignRole(role)"
+                  [disabled]="addingRoleId() === role.id"
+                  class="ml-2"
+                >
+                  @if (addingRoleId() === role.id) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>add</mat-icon>
+                  }
+                  Asignar
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+</div>

@@ -52,6 +52,11 @@ export const navItems: NavItem[] = [
     iconName: 'solar:tablet-line-duotone',
     route: '/ui-components/tables',
   },
+  {
+    displayName: 'Users',
+    iconName: 'solar:users-group-rounded-line-duotone',
+    route: '/users/list',
+  },
 
   {
     navCap: 'Extra',
