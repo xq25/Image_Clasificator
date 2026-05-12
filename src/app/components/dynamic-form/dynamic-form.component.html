@@ -1,0 +1,199 @@
+<div class="p-6">
+  <mat-card class="cardWithShadow">
+    <!-- TÍTULO -->
+    <div class="flex items-center justify-between pb-4 border-b border-gray-200 mb-6">
+      <h2 class="text-2xl font-bold">{{ getModeTitle() }}</h2>
+      <span [class]="'px-3 py-1 rounded-full text-xs font-semibold mode-badge-' + config.mode + ' flex items-center gap-1'">
+        @if (isViewMode()) { 
+          <mat-icon class="text-sm">visibility</mat-icon>
+          Vista 
+        }
+        @else if (isCreateMode()) { 
+          <mat-icon class="text-sm">add</mat-icon>
+          Nuevo 
+        }
+        @else { 
+          <mat-icon class="text-sm">edit</mat-icon>
+          Editar 
+        }
+      </span>
+    </div>
+
+    <!-- FORMULARIO -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (field of getVisibleFields(); track field.name) {
+          <div [class.md:col-span-2]="field.type === 'textarea'">
+            <!-- TEXT AREA -->
+            @switch (field.type) {
+              @case ('textarea') {
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>{{ getLabel(field) }}
+                    @if (field.validators?.length && !isViewMode()) {
+                      <span class="text-red-500">*</span>
+                    }
+                  </mat-label>
+                  <textarea matInput 
+                    [formControlName]="field.name" 
+                    [placeholder]="field.placeholder || ''"
+                    rows="3"
+                    [disabled]="isViewMode()"
+                  ></textarea>
+                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                    <mat-error>
+                      @if (form.get(field.name)?.errors?.['required']) {
+                        Este campo es obligatorio
+                      }
+                      @if (form.get(field.name)?.errors?.['minlength']) {
+                        Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
+                      }
+                      @if (form.get(field.name)?.errors?.['maxlength']) {
+                        Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
+                      }
+                    </mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              <!-- SELECT -->
+              @case ('select') {
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>{{ getLabel(field) }}
+                    @if (field.validators?.length && !isViewMode()) {
+                      <span class="text-red-500">*</span>
+                    }
+                  </mat-label>
+                  <mat-select 
+                    [formControlName]="field.name"
+                    [disabled]="isViewMode()"
+                  >
+                    <mat-option value="">Seleccione...</mat-option>
+                    @for (opt of field.options ?? []; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                    <mat-error>
+                      @if (form.get(field.name)?.errors?.['required']) {
+                        Este campo es obligatorio
+                      }
+                    </mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              <!-- FILE -->
+              @case ('file') {
+                <div>
+                  <label class="block text-sm font-semibold mb-3 text-gray-700">{{ getLabel(field) }}
+                    @if (field.validators?.length && !isViewMode()) {
+                      <span class="text-red-500">*</span>
+                    }
+                  </label>
+                  <input
+                    type="file"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    (change)="onFileSelected($event, field.name)"
+                    [disabled]="isViewMode()"
+                  >
+                  @if (previewUrls[field.name]) {
+                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs">
+                      <img [src]="previewUrls[field.name]" class="w-full h-auto object-cover" alt="Vista previa">
+                    </div>
+                  } @else if (form.get(field.name)?.value && isViewMode()) {
+                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs">
+                      <img [src]="form.get(field.name)?.value" class="w-full h-auto object-cover" alt="Imagen">
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- TEXT / EMAIL / NUMBER / PASSWORD / DATE (default) -->
+              @default {
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>{{ getLabel(field) }}
+                    @if (field.validators?.length && !isViewMode()) {
+                      <span class="text-red-500">*</span>
+                    }
+                  </mat-label>
+                  <input matInput
+                    [type]="field.type || 'text'"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    [disabled]="isViewMode()"
+                  >
+                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                    <mat-error>
+                      @if (form.get(field.name)?.errors?.['required']) {
+                        Este campo es obligatorio
+                      }
+                      @if (form.get(field.name)?.errors?.['email']) {
+                        Formato de email inválido
+                      }
+                      @if (form.get(field.name)?.errors?.['minlength']) {
+                        Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
+                      }
+                      @if (form.get(field.name)?.errors?.['maxlength']) {
+                        Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
+                      }
+                      @if (form.get(field.name)?.errors?.['min']) {
+                        Valor mínimo: {{ form.get(field.name)?.errors?.['min'].min }}
+                      }
+                      @if (form.get(field.name)?.errors?.['max']) {
+                        Valor máximo: {{ form.get(field.name)?.errors?.['max'].max }}
+                      }
+                      @if (form.get(field.name)?.errors?.['pattern']) {
+                        Formato inválido
+                      }
+                    </mat-error>
+                  }
+                </mat-form-field>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <!-- ACCIONES -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+        <button type="button" 
+          mat-stroked-button
+          (click)="onCancel()"
+          class="text-gray-700">
+          @if (isViewMode()) {
+            <ng-container>
+              <mat-icon>arrow_back</mat-icon>
+              Volver
+            </ng-container>
+          } @else {
+            Cancelar
+          }
+        </button>
+
+        @if (isCreateMode()) {
+          <button type="submit" 
+            mat-flat-button 
+            color="primary"
+            [disabled]="form.invalid">
+            <ng-container>
+              <mat-icon>add</mat-icon>
+              Crear
+            </ng-container>
+          </button>
+        }
+
+        @if (isUpdateMode()) {
+          <button type="submit" 
+            mat-flat-button 
+            color="primary"
+            [disabled]="form.invalid">
+            <ng-container>
+              <mat-icon>save</mat-icon>
+              Actualizar
+            </ng-container>
+          </button>
+        }
+      </div>
+    </form>
+  </mat-card>
+</div>

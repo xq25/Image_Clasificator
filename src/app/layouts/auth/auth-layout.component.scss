@@ -1,0 +1,21 @@
+/* ============================================================== */
+/* Auth Layout Styles */
+/* ============================================================== */
+
+:host {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+mat-sidenav-container {
+  height: 100vh;
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-drawer-inner-container {
+      overflow: auto;
+      height: 100vh;
+    }
+  }
+}

@@ -1,0 +1,94 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="mt-4">
+  <!-- Título y Descripción -->
+  <div class="mb-4">
+    <h2 class="text-xl lg:text-2xl font-bold text-gray-900 mb-1">Iniciar Sesión</h2>
+    <p class="text-xs lg:text-sm text-gray-500">Ingresa tus credenciales</p>
+  </div>
+
+  <!-- Email Field -->
+  <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Email Address</mat-label>
+  <mat-form-field appearance="outline" class="w-full" color="primary">
+    <mat-icon matPrefix>email</mat-icon>
+    <input 
+      matInput 
+      type="email"
+      formControlName="email"
+      placeholder="Enter your email"
+    />
+    @if (f['email'].hasError('required') && f['email'].touched) {
+      <mat-error>Email is required</mat-error>
+    }
+    @if (f['email'].hasError('email') && f['email'].touched) {
+      <mat-error>Please enter a valid email</mat-error>
+    }
+  </mat-form-field>
+
+  <!-- Password Field -->
+  <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Password</mat-label>
+  <mat-form-field appearance="outline" class="w-full" color="primary">
+    <mat-icon matPrefix>lock</mat-icon>
+    <input 
+      matInput 
+      [type]="hidePassword ? 'password' : 'text'"
+      formControlName="password"
+      placeholder="Enter your password"
+    />
+    <button 
+      mat-icon-button 
+      matSuffix 
+      (click)="togglePasswordVisibility()" 
+      type="button"
+      class="toggle-password-btn">
+      <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+    </button>
+    @if (f['password'].hasError('required') && f['password'].touched) {
+      <mat-error>Password is required</mat-error>
+    }
+  </mat-form-field>
+
+  <!-- User Type Selection Info -->
+  @if (selectedUserType) {
+    <div class="user-type-badge">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ selectedUserType.name }} mode</span>
+    </div>
+  }
+
+  <!-- Submit Button -->
+  <button 
+    [disabled]="!form.valid"
+    mat-flat-button 
+    color="primary" 
+    class="w-full mt-4"
+    type="submit">
+    Sign In
+  </button>
+
+  <!-- Social Login Divider -->
+  <div class="divider-text mt-4 mb-2">O continúa con</div>
+
+  <!-- Social Login Buttons -->
+  <div class="social-buttons">
+    <button 
+      class="social-btn google-btn" 
+      type="button" 
+      (click)="onGoogleClick()">
+      <i class="fab fa-google"></i>
+      Google
+    </button>
+    <button 
+      class="social-btn github-btn" 
+      type="button" 
+      (click)="onGithubClick()">
+      <i class="fab fa-github"></i>
+      GitHub
+    </button>
+  </div>
+</form>
+
+<!-- Sign Up Link -->
+<span class="block font-medium text-center mt-4 text-sm">
+  Don't have an account?
+  <a href="/auth/authentication/register" class="no-underline text-primary font-medium text-xs lg:text-sm">
+    Create one</a>
+</span>

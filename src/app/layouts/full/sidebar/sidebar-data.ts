@@ -73,24 +73,24 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Login',
     iconName: 'solar:login-2-linear',
-    route: 'authentication',
+    route: 'auth',
     children: [
       {
         displayName: 'Boxed Login',
         iconName: 'tabler:point',
-        route: '/authentication/login',
+        route: '/auth/authentication/login',
       }
     ]
   },
   {
     displayName: 'Register',
     iconName: 'solar:user-plus-linear',
-    route: 'authentication',
+    route: 'auth',
     children: [
       {
         displayName: 'Boxed Register',
         iconName: 'tabler:point',
-        route: '/authentication/register',
+        route: '/auth/authentication/register',
       }
     ]
   },
