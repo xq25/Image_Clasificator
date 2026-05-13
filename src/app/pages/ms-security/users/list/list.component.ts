@@ -28,10 +28,10 @@ export class ListComponent {
   ];
 
   actionButtons: TableAction[] = [
-    { label: 'Ver', class: 'btn btn-sm btn-info', action: 'view' },
-    { label: 'Editar', class: 'btn btn-sm btn-primary', action: 'edit' },
-    { label: 'Eliminar', class: 'btn btn-sm btn-danger', action: 'delete' },
-    { label: 'Roles', class: 'btn btn-sm btn-secondary', action: 'manage-roles' },
+    { action: 'view', icon: 'visibility', class: 'btn-view' },
+    { action: 'edit', icon: 'edit', class: 'btn-edit' },
+    { action: 'delete', icon: 'delete', class: 'btn-delete' },
+    { action: 'manageRoles', icon: 'admin_panel_settings', class: 'btn-manage-roles' },
   ];
 
   constructor(private router: Router, private userService: UserService) {} 
@@ -66,7 +66,7 @@ export class ListComponent {
       case 'delete':
         this.delete(row.id);
         break;
-      case 'manage-roles':
+      case 'manageRoles':
         this.manageRoles(row.id);
         break;
     }

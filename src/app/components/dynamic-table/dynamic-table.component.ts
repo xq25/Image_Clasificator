@@ -1,7 +1,8 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface TableColumn {
   key: string;
@@ -9,15 +10,16 @@ export interface TableColumn {
 }
 
 export interface TableAction {
-  label: string;
-  class: string;
+  label?: string;
+  class?: string;
   action: string;
+  icon?: string;
 }
 
 @Component({
   selector: 'app-dynamic-table',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule],
   templateUrl: './dynamic-table.component.html',
   styleUrl: './dynamic-table.component.scss',
 })
@@ -27,52 +29,27 @@ export class DynamicTableComponent {
   actionButtons = input<TableAction[]>([]);
 
   displayedColumns = signal<string[]>([]);
-  columnsToDisplay = signal<string[]>([]);
 
   actionClicked = output<{ action: string; row: any }>();
 
   constructor() {
-    this.updateColumns();
-  }
-
-  ngOnInit() {
-    this.updateColumns();
-  }
-
-  private updateColumns() {
-    const cols = this.columns().map((col) => col.key);
-    this.displayedColumns.set(cols);
-    this.columnsToDisplay.set(cols);
-  }
-
-  addColumn() {
-    const newColumn: TableColumn = {
-      key: `col_${Date.now()}`,
-      label: `Column ${this.columns().length + 1}`,
-    };
-    const updatedColumns = [...this.columns(), newColumn];
-    this.updateColumnsDisplay(updatedColumns);
-  }
-
-  removeColumn() {
-    if (this.columns().length > 0) {
-      const updatedColumns = this.columns().slice(0, -1);
-      this.updateColumnsDisplay(updatedColumns);
-    }
-  }
-
-  shuffle() {
-    const shuffled = [...this.displayedColumns()].sort(() => Math.random() - 0.5);
-    this.columnsToDisplay.set(shuffled);
-  }
-
-  private updateColumnsDisplay(columns: TableColumn[]) {
-    const cols = columns.map((col) => col.key);
-    this.displayedColumns.set(cols);
-    this.columnsToDisplay.set(cols);
+    effect(() => {
+      const cols = this.columns().map((col) => col.key);
+      if (this.actionButtons().length > 0) {
+        cols.push('actions');
+      }
+      this.displayedColumns.set(cols);
+    });
   }
 
   handleAction(action: string, row: any) {
     this.actionClicked.emit({ action, row });
+  }
+
+  getColumnLabel(key: string): string {
+    return (
+      this.columns().find((col) => col.key === key)?.label ||
+      key.charAt(0).toUpperCase() + key.slice(1)
+    );
   }
 }
