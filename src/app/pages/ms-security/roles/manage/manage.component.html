@@ -1,0 +1,13 @@
+<div class="p-6">
+  @if (loading) {
+    <div class="flex items-center justify-center py-12">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (formConfig) {
+    <app-dynamic-form
+      [config]="formConfig"
+      (onSubmit)="handleFormSubmit($event)"
+      (onCancel)="handleFormCancel()"
+    />
+  }
+</div>

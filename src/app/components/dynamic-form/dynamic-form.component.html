@@ -1,26 +1,28 @@
 <div class="p-6">
   <mat-card class="cardWithShadow">
-    <!-- TÍTULO -->
-    <div class="flex items-center justify-between pb-4 border-b border-gray-200 mb-6">
-      <h2 class="text-2xl font-bold">{{ getModeTitle() }}</h2>
-      <span [class]="'px-3 py-1 rounded-full text-xs font-semibold mode-badge-' + config.mode + ' flex items-center gap-1'">
-        @if (isViewMode()) { 
-          <mat-icon class="text-sm">visibility</mat-icon>
-          Vista 
-        }
-        @else if (isCreateMode()) { 
-          <mat-icon class="text-sm">add</mat-icon>
-          Nuevo 
-        }
-        @else { 
-          <mat-icon class="text-sm">edit</mat-icon>
-          Editar 
-        }
-      </span>
+    <!-- HEADER -->
+    <div class="form-header mb-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-white">{{ getModeTitle() }}</h2>
+        <span [class]="'mode-badge mode-badge-' + config.mode">
+          @if (isViewMode()) { 
+            <mat-icon>visibility</mat-icon>
+            Vista
+          }
+          @else if (isCreateMode()) { 
+            <mat-icon>add_circle</mat-icon>
+            Nuevo
+          }
+          @else { 
+            <mat-icon>edit</mat-icon>
+            Editar
+          }
+        </span>
+      </div>
     </div>
 
     <!-- FORMULARIO -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 px-6 pb-6 pt-0">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @for (field of getVisibleFields(); track field.name) {
           <div [class.md:col-span-2]="field.type === 'textarea'">
@@ -30,13 +32,13 @@
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-label>{{ getLabel(field) }}
                     @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500">*</span>
+                      <span class="text-red-500 ml-1">*</span>
                     }
                   </mat-label>
                   <textarea matInput 
                     [formControlName]="field.name" 
                     [placeholder]="field.placeholder || ''"
-                    rows="3"
+                    rows="4"
                     [disabled]="isViewMode()"
                   ></textarea>
                   @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
@@ -60,7 +62,7 @@
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-label>{{ getLabel(field) }}
                     @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500">*</span>
+                      <span class="text-red-500 ml-1">*</span>
                     }
                   </mat-label>
                   <mat-select 
@@ -87,7 +89,7 @@
                 <div>
                   <label class="block text-sm font-semibold mb-3 text-gray-700">{{ getLabel(field) }}
                     @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500">*</span>
+                      <span class="text-red-500 ml-1">*</span>
                     }
                   </label>
                   <input
@@ -97,11 +99,11 @@
                     [disabled]="isViewMode()"
                   >
                   @if (previewUrls[field.name]) {
-                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs">
+                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
                       <img [src]="previewUrls[field.name]" class="w-full h-auto object-cover" alt="Vista previa">
                     </div>
                   } @else if (form.get(field.name)?.value && isViewMode()) {
-                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs">
+                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
                       <img [src]="form.get(field.name)?.value" class="w-full h-auto object-cover" alt="Imagen">
                     </div>
                   }
@@ -113,7 +115,7 @@
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-label>{{ getLabel(field) }}
                     @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500">*</span>
+                      <span class="text-red-500 ml-1">*</span>
                     }
                   </mat-label>
                   <input matInput
@@ -155,18 +157,21 @@
       </div>
 
       <!-- ACCIONES -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+      <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
         <button type="button" 
           mat-stroked-button
           (click)="onCancel()"
-          class="text-gray-700">
+          class="btn-cancel">
           @if (isViewMode()) {
             <ng-container>
               <mat-icon>arrow_back</mat-icon>
               Volver
             </ng-container>
           } @else {
-            Cancelar
+            <ng-container>
+              <mat-icon>close</mat-icon>
+              Cancelar
+            </ng-container>
           }
         </button>
 
@@ -174,9 +179,10 @@
           <button type="submit" 
             mat-flat-button 
             color="primary"
-            [disabled]="form.invalid">
+            [disabled]="form.invalid"
+            class="btn-create">
             <ng-container>
-              <mat-icon>add</mat-icon>
+              <mat-icon>add_circle</mat-icon>
               Crear
             </ng-container>
           </button>
@@ -186,7 +192,8 @@
           <button type="submit" 
             mat-flat-button 
             color="primary"
-            [disabled]="form.invalid">
+            [disabled]="form.invalid"
+            class="btn-update">
             <ng-container>
               <mat-icon>save</mat-icon>
               Actualizar
