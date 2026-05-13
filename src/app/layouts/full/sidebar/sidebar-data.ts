@@ -57,6 +57,11 @@ export const navItems: NavItem[] = [
     iconName: 'solar:users-group-rounded-line-duotone',
     route: '/users/list',
   },
+  {
+    displayName: 'Roles',
+    iconName: 'solar:shield-line-duotone',
+    route: '/roles/list',
+  },
 
   {
     navCap: 'Extra',

@@ -45,7 +45,7 @@ export class ManageComponent implements OnInit {
 
     } else {
       console.warn('[ManageComponent] Ruta no reconocida:', routePath);
-      this.router.navigate(['../list'], { relativeTo: this.route });
+      this.router.navigate(['users/list']);
     }
   }
 
@@ -58,7 +58,7 @@ export class ManageComponent implements OnInit {
       },
       error: () => {
         alert('Error: No se pudo cargar el usuario');
-        this.router.navigate(['../list'], { relativeTo: this.route });
+        this.router.navigate(['users/list']);
       }
     });
   }
@@ -109,7 +109,7 @@ export class ManageComponent implements OnInit {
       this.userService.createUser(data).subscribe({
         next: () => {
           alert('Usuario creado exitosamente');
-          this.router.navigate(['../list'], { relativeTo: this.route });
+          this.router.navigate(['users/list']);
         },
         error: (error) => {
           console.error('Error al crear usuario:', error);
@@ -122,7 +122,7 @@ export class ManageComponent implements OnInit {
       this.userService.updateUser(data.id, data).subscribe({
         next: () => {
           alert('Usuario actualizado exitosamente');
-          this.router.navigate(['../list'], { relativeTo: this.route });
+          this.router.navigate(['users/list']);
         },
         error: (error) => {
           console.error('Error al actualizar usuario:', error);
@@ -133,6 +133,6 @@ export class ManageComponent implements OnInit {
   }
 
   handleFormCancel(): void {
-    this.router.navigate(['../list'], { relativeTo: this.route });
+    this.router.navigate(['users/list']);
   }
 }

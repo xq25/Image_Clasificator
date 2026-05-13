@@ -35,6 +35,11 @@ export const routes: Routes = [
         path: 'users',
         loadChildren: () =>
           import('./pages/ms-security/users/users.routes').then((m) => m.UsersRoutes),
+      },
+      {
+        path: 'roles',
+        loadChildren: () =>
+          import('./pages/ms-security/roles/roles.routes').then((m) => m.rolesRoutes),
       }
     ],
   },
