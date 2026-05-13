@@ -5,31 +5,81 @@
     background: transparent;
 
     .mdc-data-table__header-cell {
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.875rem;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 0.5rem;
+      color: #ffffff;
+      background-color: var(--primary-color, #3f51b5);
+      border-bottom: 2px solid var(--border-color);
+      padding: 1.25rem 1rem;
       text-transform: capitalize;
     }
 
     .mdc-data-table__cell {
-      padding: 0.75rem 0.5rem;
+      padding: 1rem;
       font-size: 0.875rem;
+      color: var(--text-primary);
       border-bottom: 1px solid var(--border-color);
-
-      &:last-child {
-        text-align: center;
-      }
     }
 
     tbody tr {
       transition: background-color 0.2s ease;
 
       &:hover {
-        background-color: rgba(var(--primary-rgb), 0.05);
+        background-color: rgba(var(--primary-rgb, 63, 81, 181), 0.08);
       }
     }
+  }
+}
+
+.table-header {
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--primary-color, #3f51b5);
+}
+
+.table-cell {
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+.action-button {
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.btn-view {
+  color: #00bcd4 !important;
+
+  &:hover {
+    background-color: rgba(0, 188, 212, 0.08);
+  }
+}
+
+.btn-edit {
+  color: #2196f3 !important;
+
+  &:hover {
+    background-color: rgba(33, 150, 243, 0.08);
+  }
+}
+
+.btn-delete {
+  color: #f44336 !important;
+
+  &:hover {
+    background-color: rgba(244, 67, 54, 0.08);
+  }
+}
+
+.btn-manage-roles {
+  color: #4caf50 !important;
+
+  &:hover {
+    background-color: rgba(76, 175, 80, 0.08);
   }
 }
 
