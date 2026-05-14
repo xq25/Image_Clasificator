@@ -13,9 +13,13 @@
             <mat-icon>add_circle</mat-icon>
             Nuevo
           }
-          @else { 
+          @else if (isUpdateMode()) { 
             <mat-icon>edit</mat-icon>
             Editar
+          }
+          @else if (isModeSend()) {
+            <mat-icon>send</mat-icon>
+            Enviar
           }
         </span>
       </div>
@@ -197,6 +201,19 @@
             <ng-container>
               <mat-icon>save</mat-icon>
               Actualizar
+            </ng-container>
+          </button>
+        }
+
+        @if (isModeSend()) {
+          <button type="submit" 
+            mat-flat-button 
+            color="primary"
+            [disabled]="form.invalid"
+            class="btn-send">
+            <ng-container>
+              <mat-icon>send</mat-icon>
+              Enviar
             </ng-container>
           </button>
         }

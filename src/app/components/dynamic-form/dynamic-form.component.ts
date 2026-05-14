@@ -27,7 +27,7 @@ export interface FieldConfig {
 }
 
 export interface DynamicFormConfig {
-  mode: 0 | 1 | 2;   // 0=view, 1=create, 2=update
+  mode: 0 | 1 | 2 | 3;   // 0=view, 1=create, 2=update, 3=send
   fields: FieldConfig[];
   model?: any;
 }
@@ -62,6 +62,7 @@ export class DynamicFormComponent implements OnInit {
   readonly MODE_VIEW   = 0;
   readonly MODE_CREATE = 1;
   readonly MODE_UPDATE = 2;
+  readonly MODE_SEND   = 3;
 
   constructor(
     private fb: FormBuilder,
@@ -86,6 +87,7 @@ export class DynamicFormComponent implements OnInit {
 
       const shouldDisable =
         this.config.mode === this.MODE_VIEW ||
+        this.config.mode === this.MODE_SEND ||
         (this.config.mode === this.MODE_UPDATE && field.name === 'id') ||
         field.disabled === true;
 
@@ -132,10 +134,12 @@ export class DynamicFormComponent implements OnInit {
   getModeTitle(): string {
     if (this.config.mode === this.MODE_VIEW)   return 'Detalle del registro';
     if (this.config.mode === this.MODE_CREATE) return 'Crear registro';
+    if (this.config.mode === this.MODE_SEND)   return 'Enviar registro';
     return 'Actualizar registro';
   }
 
   isViewMode():   boolean { return this.config.mode === this.MODE_VIEW; }
   isCreateMode(): boolean { return this.config.mode === this.MODE_CREATE; }
   isUpdateMode(): boolean { return this.config.mode === this.MODE_UPDATE; }
+  isModeSend():   boolean { return this.config.mode === this.MODE_SEND; }
 }
