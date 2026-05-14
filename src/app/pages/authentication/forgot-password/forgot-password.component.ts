@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { combineLatest } from 'rxjs';
 import Swal from 'sweetalert2';
 import { SecurityService, PasswordStrength } from '@app/services/ms-security/security';
 import { UserService } from '@app/services/ms-security/user-service';
@@ -42,6 +43,7 @@ export class ForgotPasswordComponent implements OnInit {
 
   // Paso 3
   resetToken: string = '';
+  private processedToken: string = '';
 
   formData = {
     password: '',
@@ -70,17 +72,23 @@ export class ForgotPasswordComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Detectar si viene con token en la URL
-    this.route.queryParams.subscribe(params => {
-      const token = params['token'];
-      // Si viene el token en la ruta, se realiza directamente la validación del token y se genera una sesión temporal para actualizar la contraseña
-      if (token) {
-        this.resetToken = token;
-        this.step = 3;
-        this.tokenLoading = true;
-        this.validateToken(token);
-      }
+    // Soporta token por query (?token=...) y por segmento de ruta (.../forgot-password/:token)
+    combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
+      const token = params.get('token') || query.get('token') || '';
+      this.processResetToken(token);
     });
+  }
+
+  private processResetToken(token: string): void {
+    const normalizedToken = token?.trim();
+    if (!normalizedToken || normalizedToken === this.processedToken) return;
+
+    this.processedToken = normalizedToken;
+    this.resetToken = normalizedToken;
+    this.step = 3;
+    this.tokenLoading = true;
+    this.tokenError = false;
+    this.validateToken(normalizedToken);
   }
 
   // VALIDAR TOKEN Y GENERAR SESIÓN TEMPORAL
