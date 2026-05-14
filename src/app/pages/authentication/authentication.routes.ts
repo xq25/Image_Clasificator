@@ -20,6 +20,10 @@ export const AuthenticationRoutes: Routes = [
         path: 'forgot-password',
         component: ForgotPasswordComponent,
       },
+      {
+        path: 'forgot-password/:token',
+        component: ForgotPasswordComponent,
+      },
     ],
   },
 ];
