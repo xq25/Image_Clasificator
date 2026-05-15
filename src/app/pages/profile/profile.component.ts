@@ -84,6 +84,7 @@ export class ProfileComponent implements OnInit {
     }).subscribe({
       next: ({ user, profile }) => {
         const profileUser = profile?.user;
+        const loadedPhoto = profile?.photo || null;
 
         this.userForm = {
           id: profileUser?.id || user?.id || sessionUser.id,
@@ -98,11 +99,12 @@ export class ProfileComponent implements OnInit {
             phone: profile.phone || '',
             photo: profile.photo || '',
           };
-          this.previewUrl.set(profile.photo || null);
         } else {
           this.profileForm = { phone: '', photo: '' };
-          this.previewUrl.set(null);
         }
+
+        this.previewUrl.set(loadedPhoto);
+        this.profileService.setProfilePhoto(loadedPhoto);
 
         this.loading.set(false);
       },
@@ -173,7 +175,9 @@ export class ProfileComponent implements OnInit {
 
           this.profileForm.phone = savedProfile.phone || this.profileForm.phone;
           this.profileForm.photo = savedProfile.photo || this.profileForm.photo;
-          this.previewUrl.set(this.profileForm.photo || null);
+          const savedPhoto = this.profileForm.photo || null;
+          this.previewUrl.set(savedPhoto);
+          this.profileService.setProfilePhoto(savedPhoto);
           this.selectedFile = null;
           this.saving.set(false);
           this.successMessage.set('Perfil actualizado correctamente.');

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { Profile } from '@app/models/Profile';
@@ -11,8 +11,20 @@ import { Profile } from '@app/models/Profile';
 export class ProfileService {
 
   private apiUrl = `${environment.url_backend}/api/profiles`;
+  private profilePhotoSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private http: HttpClient) {}
+
+  // ===============================
+  // OBSERVER FOR PROFILE PHOTO CHANGES
+  // ===============================
+  get profilePhotoChanges(): Observable<string | null> {
+    return this.profilePhotoSubject.asObservable();
+  }
+
+  setProfilePhoto(photo: string | null): void {
+    this.profilePhotoSubject.next(photo);
+  }
 
   // ===============================
   // GET ALL PROFILES
