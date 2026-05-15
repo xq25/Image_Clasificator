@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-validate2-fa',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './validate2-fa.component.html',
   styleUrl: './validate2-fa.component.scss',
 })
