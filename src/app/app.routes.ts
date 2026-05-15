@@ -45,6 +45,21 @@ export const routes: Routes = [
         path: 'permissions',
         loadChildren: () =>
           import('./pages/ms-security/permissions/permissions.routes').then((m) => m.permissionsRoutes),
+      },
+      {
+        path: 'profile',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/profile/view/view.component').then((m) => m.ProfileViewComponent),
+          },
+          {
+            path: 'edit',
+            loadComponent: () =>
+              import('./pages/profile/profile.component').then((m) => m.ProfileComponent),
+          },
+        ],
       }
     ],
   },
