@@ -66,7 +66,7 @@ export class ProfileDropdownComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.securityService.logout();
-    this.router.navigate(this.ROUTES.login);
+    this.router.navigate(['auth/login']);
   }
 
 }

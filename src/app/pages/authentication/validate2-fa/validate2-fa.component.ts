@@ -79,6 +79,7 @@ export class Validate2FAComponent implements OnInit {
   }
 
   goBackToLogin(): void {
+    this.securityService.logout();
     this.router.navigate(['/auth/authentication/login']);
   }
 

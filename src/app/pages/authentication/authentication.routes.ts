@@ -30,6 +30,10 @@ export const AuthenticationRoutes: Routes = [
         component: Validate2FAComponent,
       },
       {
+        path: 'validate2fa',
+        component: Validate2FAComponent,
+      },
+      {
         path: 'validate2-fa',
         component: Validate2FAComponent,
       },
