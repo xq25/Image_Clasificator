@@ -62,6 +62,11 @@ export const navItems: NavItem[] = [
     iconName: 'solar:shield-line-duotone',
     route: '/roles/list',
   },
+  {
+    displayName: 'Permissions',
+    iconName: 'solar:lock-keyhole-minimalistic-line-duotone',
+    route: '/permissions/list',
+  },
 
   {
     navCap: 'Extra',
