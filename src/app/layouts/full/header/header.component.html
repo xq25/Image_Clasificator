@@ -55,29 +55,6 @@
     }
   </mat-menu>
 
-  <!-- --------------------------------------------------------------- -->
-  <!-- profile Dropdown -->
-  <!-- --------------------------------------------------------------- -->
-  <button mat-icon-button extended [matMenuTriggerFor]="profilemenu" aria-label="Notifications"
-    class="flex! items-center justify-center profile-btn-dd">
-    <img src="/assets/images/profile/user-1.jpg" class="rounded-full object-cover size-9! profile-dd" />
-  </button>
-  <mat-menu #profilemenu="matMenu" class="cardWithShadow">
-    <button mat-menu-item>
-      <mat-icon class="flex items-center"><i data-icon="solar:shield-user-line-duotone"
-          class="iconify size-5.5!"></i></mat-icon>My Profile
-    </button>
-    <button mat-menu-item>
-      <mat-icon class="flex items-center"><i data-icon="solar:user-id-line-duotone"
-          class="iconify size-5.5!"></i></mat-icon>My Account
-    </button>
-    <button mat-menu-item>
-      <mat-icon class="flex items-center"><i data-icon="solar:checklist-minimalistic-line-duotone"
-          class="iconify size-5.5!"></i> </mat-icon>My Task
-    </button>
-
-    <div class="px-3 mt-3">
-      <a [routerLink]="['/authentication/login']" mat-stroked-button class="w-full">Logout</a>
-    </div>
-  </mat-menu>
+  <!-- Profile dropdown component -->
+  <app-profile-dropdown></app-profile-dropdown>
 </mat-toolbar>

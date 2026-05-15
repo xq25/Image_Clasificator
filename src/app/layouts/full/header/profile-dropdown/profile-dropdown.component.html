@@ -1,0 +1,23 @@
+<!-- Profile dropdown moved from header -->
+<button mat-icon-button extended [matMenuTriggerFor]="profilemenu" aria-label="Notifications"
+	class="flex! items-center justify-center profile-btn-dd">
+	<img [src]="activePhoto" class="rounded-full object-cover size-9! profile-dd" />
+</button>
+<mat-menu #profilemenu="matMenu" class="cardWithShadow">
+	<button mat-menu-item (click)="goToProfile()">
+		<mat-icon class="flex items-center"><i data-icon="solar:shield-user-line-duotone"
+				class="iconify size-5.5!"></i></mat-icon>My Profile
+	</button>
+	<button mat-menu-item (click)="goToEdit()">
+		<mat-icon class="flex items-center"><i data-icon="solar:user-id-line-duotone"
+				class="iconify size-5.5!"></i></mat-icon>My Account
+	</button>
+	<button mat-menu-item (click)="goToTasks()">
+		<mat-icon class="flex items-center"><i data-icon="solar:checklist-minimalistic-line-duotone"
+				class="iconify size-5.5!"></i> </mat-icon>My Task
+	</button>
+
+	<div class="px-3 mt-3">
+		<button mat-stroked-button class="w-full" (click)="logout()">Logout</button>
+	</div>
+</mat-menu>

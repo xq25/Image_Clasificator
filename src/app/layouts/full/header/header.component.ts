@@ -12,6 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { TablerIconsModule } from 'angular-tabler-icons';
 import { MaterialModule } from 'src/app/material.module';
 import { RouterModule } from '@angular/router';
+import { ProfileDropdownComponent } from './profile-dropdown/profile-dropdown.component';
 
 import { FormsModule } from '@angular/forms';
 import { NgScrollbarModule } from 'ngx-scrollbar';
@@ -38,7 +39,8 @@ interface profiledd {
     RouterModule,
     NgScrollbarModule,
     TablerIconsModule,
-    MaterialModule
+    MaterialModule,
+    ProfileDropdownComponent
   ],
   templateUrl: './header.component.html',
   encapsulation: ViewEncapsulation.None
