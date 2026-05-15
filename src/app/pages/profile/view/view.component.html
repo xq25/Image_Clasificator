@@ -2,16 +2,16 @@
   <div class="profile-background"></div>
 
   @if (loading()) {
-    <div class="min-h-screen flex items-center justify-center">
-      <mat-card class="cardWithShadow p-8 text-center max-w-md">
+    <div class="min-h-[420px] flex items-start justify-center px-4 py-10">
+      <mat-card class="cardWithShadow p-6 text-center max-w-md w-full">
         <mat-spinner diameter="42" class="mx-auto"></mat-spinner>
         <p class="mt-4 text-gray-600">Cargando perfil...</p>
       </mat-card>
     </div>
   } @else {
-    <div class="p-4 lg:p-6 relative z-10">
+    <div class="px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 relative z-10">
       @if (errorMessage()) {
-        <mat-card class="cardWithShadow mb-6 border border-red-200 bg-red-50">
+        <mat-card class="cardWithShadow mb-4 border border-red-200 bg-red-50">
           <div class="flex items-center gap-3 p-4 text-red-700">
             <mat-icon>error</mat-icon>
             <span>{{ errorMessage() }}</span>
@@ -19,7 +19,7 @@
         </mat-card>
       }
 
-      <mat-card class="cardWithShadow profile-card overflow-hidden">
+      <mat-card class="cardWithShadow profile-card overflow-hidden mx-auto w-full max-w-7xl">
         <mat-tab-group
           mat-stretch-tabs="false"
           animationDuration="0ms"
@@ -34,19 +34,19 @@
             </ng-template>
 
             <mat-card-content class="p-0">
-              <div class="grid grid-cols-12 gap-6 p-6">
+              <div class="grid grid-cols-12 gap-4 p-4 lg:p-5">
                 <div class="sm:col-span-5 col-span-12">
                   <mat-card class="cardWithShadow h-full profile-side-card">
-                    <mat-card-content class="p-6 text-center">
+                    <mat-card-content class="p-4 lg:p-5 text-center">
                       <mat-card-title class="mb-1">Change Profile</mat-card-title>
                       <mat-card-subtitle class="text-sm">Vista de solo lectura de tu perfil</mat-card-subtitle>
 
-                      <div class="avatar-wrap mt-8">
+                      <div class="avatar-wrap mt-5">
                         <img [src]="activePhoto" alt="Profile photo" class="avatar-image" />
                         <div class="avatar-initials">{{ getInitials() }}</div>
                       </div>
 
-                      <div class="mt-6 flex flex-wrap justify-center gap-3">
+                      <div class="mt-5 flex flex-wrap justify-center gap-3">
                         <button mat-flat-button color="primary" type="button" (click)="goToEdit()">
                           Editar perfil
                         </button>
@@ -64,11 +64,11 @@
 
                 <div class="sm:col-span-7 col-span-12">
                   <mat-card class="cardWithShadow h-full profile-side-card">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Personal Details</mat-card-title>
                       <mat-card-subtitle class="text-sm">Información principal de tu cuenta</mat-card-subtitle>
 
-                      <div class="grid grid-cols-12 gap-5 mt-6">
+                      <div class="grid grid-cols-12 gap-4 mt-5">
                         <div class="sm:col-span-6 col-span-12">
                           <mat-label class="field-label">Your Name</mat-label>
                           <div class="readonly-field">{{ user.name || '—' }}</div>
@@ -107,15 +107,15 @@
               </div>
             </ng-template>
 
-            <mat-card-content class="p-6">
-              <div class="grid grid-cols-12 gap-6">
+            <mat-card-content class="p-4 lg:p-5">
+              <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 lg:col-span-7">
                   <mat-card class="cardWithShadow h-full profile-side-card">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Notification preferences</mat-card-title>
                       <mat-card-subtitle class="text-sm">Preferencias visibles en modo lectura</mat-card-subtitle>
 
-                      <div class="mt-6 space-y-4">
+                      <div class="mt-5 space-y-3">
                         <div class="pref-row readonly-row">
                           <div>
                             <p class="pref-title">Email updates</p>
@@ -146,11 +146,11 @@
 
                 <div class="col-span-12 lg:col-span-5">
                   <mat-card class="cardWithShadow h-full profile-side-card soft-panel">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Summary</mat-card-title>
                       <mat-card-subtitle class="text-sm">Estado actual de tus preferencias</mat-card-subtitle>
 
-                      <div class="summary-list mt-6">
+                      <div class="summary-list mt-5">
                         <div><span>Account updates</span><strong>On</strong></div>
                         <div><span>Security alerts</span><strong>On</strong></div>
                         <div><span>Product news</span><strong>Off</strong></div>
@@ -170,15 +170,15 @@
               </div>
             </ng-template>
 
-            <mat-card-content class="p-6">
-              <div class="grid grid-cols-12 gap-6">
+            <mat-card-content class="p-4 lg:p-5">
+              <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 lg:col-span-6">
                   <mat-card class="cardWithShadow profile-side-card soft-panel">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Account snapshot</mat-card-title>
                       <mat-card-subtitle class="text-sm">Resumen de datos vinculados al perfil</mat-card-subtitle>
 
-                      <div class="snapshot-grid mt-6">
+                      <div class="snapshot-grid mt-5">
                         <div>
                           <span>User ID</span>
                           <strong>{{ user.id || 'N/A' }}</strong>
@@ -202,11 +202,11 @@
 
                 <div class="col-span-12 lg:col-span-6">
                   <mat-card class="cardWithShadow profile-side-card soft-panel">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Photo preview</mat-card-title>
                       <mat-card-subtitle class="text-sm">Vista rápida de la imagen actual</mat-card-subtitle>
 
-                      <div class="photo-preview mt-6">
+                      <div class="photo-preview mt-5">
                         <img [src]="activePhoto" alt="Profile preview" />
                         <p class="text-sm text-gray-600 mt-4">Abre la pestaña de edición para cambiarla.</p>
                       </div>
@@ -225,15 +225,15 @@
               </div>
             </ng-template>
 
-            <mat-card-content class="p-6">
-              <div class="grid grid-cols-12 gap-6">
+            <mat-card-content class="p-4 lg:p-5">
+              <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 lg:col-span-7">
                   <mat-card class="cardWithShadow profile-side-card">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Password status</mat-card-title>
                       <mat-card-subtitle class="text-sm">Información no editable en esta vista</mat-card-subtitle>
 
-                      <div class="mt-6 grid grid-cols-12 gap-5">
+                      <div class="mt-5 grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                           <mat-label class="field-label">Current Password</mat-label>
                           <div class="readonly-field masked">••••••••••</div>
@@ -255,11 +255,11 @@
 
                 <div class="col-span-12 lg:col-span-5">
                   <mat-card class="cardWithShadow profile-side-card soft-panel">
-                    <mat-card-content class="p-6">
+                    <mat-card-content class="p-4 lg:p-5">
                       <mat-card-title class="mb-1">Security notes</mat-card-title>
                       <mat-card-subtitle class="text-sm">Recomendaciones para mantener la cuenta protegida</mat-card-subtitle>
 
-                      <ul class="security-notes mt-6">
+                      <ul class="security-notes mt-5">
                         <li>Usa al menos 8 caracteres.</li>
                         <li>Combina mayúsculas, minúsculas, números y símbolos.</li>
                         <li>No reutilices contraseñas anteriores.</li>

@@ -1,7 +1,16 @@
 ::ng-deep {
+	.contentWrapper footer {
+		display: none;
+	}
+
+	.contentWrapper .pageWrapper {
+		min-height: auto;
+		padding-bottom: 0;
+	}
+
 	.profile-shell {
 		position: relative;
-		min-height: 100vh;
+		min-height: auto;
 		overflow: hidden;
 		background:
 			radial-gradient(circle at top left, rgba(79, 70, 229, 0.14), transparent 28%),
@@ -36,20 +45,22 @@
 		background: #fff;
 		border-radius: 18px;
 		overflow: hidden;
+		margin-bottom: 0;
 	}
 
 	.mat-mdc-tab-header {
 		border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 		background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+		padding-inline: 4px;
 	}
 
 	.mat-mdc-tab-labels {
-		padding: 6px 8px 0;
-		gap: 6px;
+		padding: 4px 6px 0;
+		gap: 4px;
 	}
 
 	.mat-mdc-tab {
-		min-height: 60px;
+		min-height: 54px;
 		border-radius: 14px 14px 0 0;
 		font-weight: 700;
 		letter-spacing: 0.2px;
@@ -229,6 +240,10 @@
 			padding-left: 0;
 			padding-right: 0;
 			overflow-x: auto;
+		}
+
+		.mat-mdc-tab {
+			min-height: 50px;
 		}
 
 		.pref-row,
