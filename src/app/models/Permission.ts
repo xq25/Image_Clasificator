@@ -18,5 +18,6 @@ export enum PermissionModel {
   PERMISSION = 'Permission',
   PROFILE    = 'Profile',
   ROLEEPERMISSION = 'RolePermission',
-  USERROLE   = 'UserRole'
+  USERROLE   = 'UserRole',
+  PHOTOS = 'Photo'
 }

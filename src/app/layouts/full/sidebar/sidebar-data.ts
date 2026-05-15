@@ -67,6 +67,11 @@ export const navItems: NavItem[] = [
     iconName: 'solar:lock-keyhole-minimalistic-line-duotone',
     route: '/permissions/list',
   },
+  {
+    displayName: 'Profile',
+    iconName: 'solar:user-circle-line-duotone',
+    route: '/profile',
+  },
 
   {
     navCap: 'Extra',

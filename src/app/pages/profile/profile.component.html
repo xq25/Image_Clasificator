@@ -1,0 +1,310 @@
+<div class="profile-shell">
+	<div class="profile-background"></div>
+
+	@if (loading()) {
+		<div class="min-h-screen flex items-center justify-center">
+			<mat-card class="cardWithShadow p-8 text-center max-w-md">
+				<mat-spinner diameter="42" class="mx-auto"></mat-spinner>
+				<p class="mt-4 text-gray-600">Cargando perfil...</p>
+			</mat-card>
+		</div>
+	} @else {
+		<div class="p-4 lg:p-6 relative z-10">
+			@if (errorMessage()) {
+				<mat-card class="cardWithShadow mb-6 border border-red-200 bg-red-50">
+					<div class="flex items-center gap-3 p-4 text-red-700">
+						<mat-icon>error</mat-icon>
+						<span>{{ errorMessage() }}</span>
+					</div>
+				</mat-card>
+			}
+
+			@if (successMessage()) {
+				<mat-card class="cardWithShadow mb-6 border border-green-200 bg-green-50">
+					<div class="flex items-center gap-3 p-4 text-green-700">
+						<mat-icon>check_circle</mat-icon>
+						<span>{{ successMessage() }}</span>
+					</div>
+				</mat-card>
+			}
+
+			<mat-card class="cardWithShadow profile-card overflow-hidden">
+				<mat-tab-group
+					mat-stretch-tabs="false"
+					animationDuration="0ms"
+					[selectedIndex]="selectedTabIndex"
+					(selectedTabChange)="onTabChanged($event.index)">
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<div class="flex items-center gap-2">
+								<mat-icon>account_circle</mat-icon>
+								<span>Account</span>
+							</div>
+						</ng-template>
+
+						<mat-card-content class="p-0">
+							<div class="grid grid-cols-12 gap-6 p-6">
+								<div class="sm:col-span-5 col-span-12">
+									<mat-card class="cardWithShadow h-full profile-side-card">
+										<mat-card-content class="p-6 text-center">
+											<mat-card-title class="mb-1">Change Profile</mat-card-title>
+											<mat-card-subtitle class="text-sm">Actualiza tu foto y apariencia pública</mat-card-subtitle>
+
+											<div class="avatar-wrap mt-8">
+												<img [src]="activePhoto" alt="Profile photo" class="avatar-image" />
+												<div class="avatar-initials">{{ getInitials() }}</div>
+											</div>
+
+											<div class="mt-6 flex flex-wrap justify-center gap-3">
+												<input #photoInput type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+												<button mat-flat-button color="primary" type="button" (click)="photoInput.click()">
+													Upload
+												</button>
+												<button mat-stroked-button color="warn" type="button" (click)="resetPhoto()">
+													Reset
+												</button>
+											</div>
+
+											<span class="text-sm mt-6 block text-gray-600">
+												JPG, GIF o PNG. Tamaño máximo recomendado 800K
+											</span>
+										</mat-card-content>
+									</mat-card>
+								</div>
+
+								<div class="sm:col-span-7 col-span-12">
+									<mat-card class="cardWithShadow h-full profile-side-card">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Personal Details</mat-card-title>
+											<mat-card-subtitle class="text-sm">Edita y guarda la información principal de tu cuenta</mat-card-subtitle>
+
+											<div class="grid grid-cols-12 gap-5 mt-6">
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">Your Name</mat-label>
+													<mat-form-field appearance="outline" class="w-full" color="primary">
+														<input matInput type="text" [ngModel]="userForm.name" placeholder="Nombre completo" disabled />
+													</mat-form-field>
+												</div>
+
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">Phone</mat-label>
+													<mat-form-field appearance="outline" class="w-full" color="primary">
+														<input matInput type="text" [(ngModel)]="profileForm.phone" placeholder="Tu teléfono" />
+													</mat-form-field>
+												</div>
+
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">Email</mat-label>
+													<mat-form-field appearance="outline" class="w-full" color="primary">
+														<input matInput type="email" [ngModel]="userForm.email" placeholder="correo@ejemplo.com" disabled />
+													</mat-form-field>
+												</div>
+
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">Profile ID</mat-label>
+													<mat-form-field appearance="outline" class="w-full" color="primary">
+														<input matInput type="text" [value]="profileId || 'Nuevo perfil'" disabled />
+													</mat-form-field>
+												</div>
+											</div>
+
+											<mat-label class="field-label mt-1">Photo URL</mat-label>
+											<mat-form-field appearance="outline" class="w-full" color="primary">
+												<input matInput type="text" [ngModel]="profileForm.photo" placeholder="URL de la foto" disabled />
+											</mat-form-field>
+										</mat-card-content>
+									</mat-card>
+								</div>
+							</div>
+						</mat-card-content>
+					</mat-tab>
+
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<div class="flex items-center gap-2">
+								<mat-icon>notifications</mat-icon>
+								<span>Notifications</span>
+							</div>
+						</ng-template>
+
+						<mat-card-content class="p-6">
+							<div class="grid grid-cols-12 gap-6">
+								<div class="col-span-12 lg:col-span-7">
+									<mat-card class="cardWithShadow h-full profile-side-card">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Notification preferences</mat-card-title>
+											<mat-card-subtitle class="text-sm">Define cómo quieres recibir avisos del sistema</mat-card-subtitle>
+
+											<div class="mt-6 space-y-4">
+												<div class="pref-row">
+													<div>
+														<p class="pref-title">Email updates</p>
+														<p class="pref-desc">Recibe notificaciones generales por correo</p>
+													</div>
+													<mat-slide-toggle [ngModel]="notifications.emailUpdates" disabled></mat-slide-toggle>
+												</div>
+
+												<div class="pref-row">
+													<div>
+														<p class="pref-title">Security alerts</p>
+														<p class="pref-desc">Alertas de acceso y seguridad</p>
+													</div>
+													<mat-slide-toggle [ngModel]="notifications.securityAlerts" disabled></mat-slide-toggle>
+												</div>
+
+												<div class="pref-row">
+													<div>
+														<p class="pref-title">Product news</p>
+														<p class="pref-desc">Nuevas funciones y anuncios</p>
+													</div>
+													<mat-slide-toggle [ngModel]="notifications.productNews" disabled></mat-slide-toggle>
+												</div>
+											</div>
+										</mat-card-content>
+									</mat-card>
+								</div>
+
+								<div class="col-span-12 lg:col-span-5">
+									<mat-card class="cardWithShadow h-full profile-side-card soft-panel">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Summary</mat-card-title>
+											<mat-card-subtitle class="text-sm">Estado actual de tus preferencias</mat-card-subtitle>
+
+											<div class="summary-list mt-6">
+												<div><span>Account updates</span><strong>{{ notifications.emailUpdates ? 'On' : 'Off' }}</strong></div>
+												<div><span>Security alerts</span><strong>{{ notifications.securityAlerts ? 'On' : 'Off' }}</strong></div>
+												<div><span>Product news</span><strong>{{ notifications.productNews ? 'On' : 'Off' }}</strong></div>
+											</div>
+										</mat-card-content>
+									</mat-card>
+								</div>
+							</div>
+						</mat-card-content>
+					</mat-tab>
+
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<div class="flex items-center gap-2">
+								<mat-icon>receipt_long</mat-icon>
+								<span>Bills</span>
+							</div>
+						</ng-template>
+
+						<mat-card-content class="p-6">
+							<div class="grid grid-cols-12 gap-6">
+								<div class="col-span-12 lg:col-span-6">
+									<mat-card class="cardWithShadow profile-side-card soft-panel">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Account snapshot</mat-card-title>
+											<mat-card-subtitle class="text-sm">Resumen de datos vinculados al perfil</mat-card-subtitle>
+
+											<div class="snapshot-grid mt-6">
+												<div>
+													<span>User ID</span>
+													<strong>{{ userForm.id || 'N/A' }}</strong>
+												</div>
+												<div>
+													<span>Profile ID</span>
+													<strong>{{ profileId || 'Pending' }}</strong>
+												</div>
+												<div>
+													<span>Email</span>
+													<strong>{{ userForm.email || 'N/A' }}</strong>
+												</div>
+												<div>
+													<span>Phone</span>
+													<strong>{{ profileForm.phone || 'N/A' }}</strong>
+												</div>
+											</div>
+										</mat-card-content>
+									</mat-card>
+								</div>
+
+								<div class="col-span-12 lg:col-span-6">
+									<mat-card class="cardWithShadow profile-side-card soft-panel">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Photo preview</mat-card-title>
+											<mat-card-subtitle class="text-sm">Vista rápida de la imagen actual</mat-card-subtitle>
+
+											<div class="photo-preview mt-6">
+												<img [src]="activePhoto" alt="Profile preview" />
+												<p class="text-sm text-gray-600 mt-4">La foto se actualiza automáticamente al guardar.</p>
+											</div>
+										</mat-card-content>
+									</mat-card>
+								</div>
+							</div>
+						</mat-card-content>
+					</mat-tab>
+
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<div class="flex items-center gap-2">
+								<mat-icon>lock</mat-icon>
+								<span>Security</span>
+							</div>
+						</ng-template>
+
+						<mat-card-content class="p-6">
+							<div class="grid grid-cols-12 gap-6">
+								<div class="col-span-12 lg:col-span-7">
+									<mat-card class="cardWithShadow profile-side-card">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Security</mat-card-title>
+											<mat-card-subtitle class="text-sm">Información protegida en modo solo lectura</mat-card-subtitle>
+
+											<div class="mt-6 grid grid-cols-12 gap-5">
+												<div class="col-span-12">
+													<mat-label class="field-label">Current Password</mat-label>
+													<div class="readonly-field masked">••••••••••</div>
+												</div>
+
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">New Password</mat-label>
+													<div class="readonly-field masked">No editable</div>
+												</div>
+
+												<div class="sm:col-span-6 col-span-12">
+													<mat-label class="field-label">Confirm Password</mat-label>
+													<div class="readonly-field masked">No editable</div>
+												</div>
+											</div>
+										</mat-card-content>
+									</mat-card>
+								</div>
+
+								<div class="col-span-12 lg:col-span-5">
+									<mat-card class="cardWithShadow profile-side-card soft-panel">
+										<mat-card-content class="p-6">
+											<mat-card-title class="mb-1">Security notes</mat-card-title>
+											<mat-card-subtitle class="text-sm">Recomendaciones para mantener la cuenta protegida</mat-card-subtitle>
+
+											<ul class="security-notes mt-6">
+												<li>Usa al menos 8 caracteres.</li>
+												<li>Combina mayúsculas, minúsculas, números y símbolos.</li>
+												<li>No reutilices contraseñas anteriores.</li>
+											</ul>
+										</mat-card-content>
+									</mat-card>
+								</div>
+							</div>
+						</mat-card-content>
+					</mat-tab>
+				</mat-tab-group>
+
+				<div class="text-end p-6 pt-0 flex flex-wrap gap-3 justify-end">
+					<button mat-flat-button color="primary" class="me-2" (click)="saveProfile()" [disabled]="saving()">
+						@if (saving()) {
+							Saving...
+						} @else {
+							Save
+						}
+					</button>
+					<button mat-flat-button class="btn-cancel" (click)="goBack()" [disabled]="saving()">
+						Cancel
+					</button>
+				</div>
+			</mat-card>
+		</div>
+	}
+</div>
