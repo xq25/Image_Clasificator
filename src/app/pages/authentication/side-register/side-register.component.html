@@ -1,41 +1,257 @@
-<div class="flex h-screen w-full items-center justify-center overflow-hidden p-2">
-  <mat-card class="cardWithShadow overflow-hidden auth-card mx-auto mb-0">
-    <div class="grid grid-cols-12 gap-6">
-      <div class="lg:col-span-6 col-span-12 flex items-stretch">
-        <div class="w-full p-10 flex flex-col justify-center aling-center">
-          <div class="text-center">Your Social Campaigns</div>
+<div class="flex h-screen w-full overflow-hidden bg-gray-50">
+  <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-12 flex-col items-center justify-center relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-200 to-transparent rounded-full -mr-48 -mt-48 opacity-50"></div>
 
-          <form class="mt-8">
-            <mat-label class="mat-subtitle-2 text-sm font-semibold mb-3 block">Name</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <input matInput />
-            </mat-form-field>
-            <mat-label class="mat-subtitle-2 text-sm font-semibold mb-3 block">Email Adddress</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <input matInput type="email" />
-            </mat-form-field>
-
-            <mat-label class="mat-subtitle-2 text-sm font-semibold mb-3 block">Password</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <input matInput type="password" />
-            </mat-form-field>
-
-            <a [routerLink]="['/']" mat-flat-button color="primary" class="w-full">
-              Sign Up
-            </a>
-          </form>
-          <span class="block font-medium text-center mt-6">Already have an Account?
-
-            <a [routerLink]="['/auth/authentication/login']" class="no-underline text-primary font-medium text-sm">
-              Sign In</a>
-          </span>
-        </div>
+    <div class="max-w-md relative z-10">
+      <div class="mb-8">
+        <h1 class="text-5xl font-bold text-gray-900 mb-4 leading-tight">Crea tu cuenta</h1>
+        <div class="w-16 h-1 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-full"></div>
       </div>
-      <div class="lg:col-span-6 col-span-12 relative hidden lg:flex justify-center items-stretch bg-light p-5">
-        <div class="flex items-center justify-center w-full">
-          <img src="/assets/images/backgrounds/login-bg.svg" alt="login" class="img-fluid object-cover" />
+
+      <p class="text-lg text-gray-700 leading-relaxed mb-8">
+        Regístrate para acceder al panel, administrar tus permisos y trabajar con una experiencia segura y consistente.
+      </p>
+
+      <div class="space-y-4 text-sm text-gray-600">
+        <div class="flex items-center">
+          <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white mr-3 flex-shrink-0">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          </span>
+          <span>Validación segura del correo</span>
+        </div>
+        <div class="flex items-center">
+          <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white mr-3 flex-shrink-0">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          </span>
+          <span>Contraseña fuerte y confirmada</span>
+        </div>
+        <div class="flex items-center">
+          <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white mr-3 flex-shrink-0">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          </span>
+          <span>Acceso inmediato al sistema</span>
         </div>
       </div>
     </div>
-  </mat-card>
+  </div>
+
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-6 bg-white">
+    <div class="w-full max-w-xl mt-6 mb-6 overflow-hidden">
+      <mat-card class="cardWithShadow overflow-hidden auth-card border-0 shadow-lg">
+        <div class="h-1 bg-gradient-to-r from-indigo-600 to-blue-600"></div>
+
+        <div class="p-6 lg:p-8">
+          @if (step === 1) {
+            <div class="mb-6">
+              <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-4">
+                <mat-icon class="!text-[16px]">person_add</mat-icon>
+                Paso 1 de 2
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Verifica tu correo</h2>
+              <p class="text-sm text-gray-600">Usaremos este correo como tu usuario principal en el sistema.</p>
+            </div>
+
+            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Correo electrónico</mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <mat-icon matPrefix>email</mat-icon>
+              <input
+                matInput
+                type="email"
+                [(ngModel)]="emailInput"
+                name="emailInput"
+                placeholder="tu@email.com"
+                (blur)="emailError = securityService.validateEmail(emailInput)"
+              />
+            </mat-form-field>
+
+            @if (emailError) {
+              <div class="mt-1 text-sm font-medium text-red-600">{{ emailError }}</div>
+            }
+
+            @if (feedbackMessage) {
+              <div class="mt-2 rounded-lg px-4 py-3 text-sm font-medium"
+                   [class.bg-blue-50]="feedbackType === 'info'"
+                   [class.text-blue-700]="feedbackType === 'info'"
+                   [class.bg-green-50]="feedbackType === 'success'"
+                   [class.text-green-700]="feedbackType === 'success'"
+                   [class.bg-red-50]="feedbackType === 'error'"
+                   [class.text-red-700]="feedbackType === 'error'">
+                {{ feedbackMessage }}
+              </div>
+            }
+
+            <button
+              mat-flat-button
+              color="primary"
+              class="w-full mt-4"
+              [disabled]="loading || !emailInput.trim()"
+              type="button"
+              (click)="checkEmail()">
+              @if (loading) {
+                <span>Verificando...</span>
+              } @else {
+                <span>Continuar</span>
+              }
+            </button>
+
+            <span class="block font-medium text-center mt-5 text-sm text-gray-600">
+              ¿Ya tienes cuenta?
+              <a (click)="goToLogin()" class="cursor-pointer no-underline text-primary font-medium text-xs lg:text-sm">
+                Inicia sesión
+              </a>
+            </span>
+          }
+
+          @if (step === 2) {
+            <div class="mb-6">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                  <mat-icon class="!text-[16px]">verified_user</mat-icon>
+                  Paso 2 de 2
+                </div>
+                <button
+                  mat-button
+                  type="button"
+                  class="!text-indigo-700"
+                  (click)="goBackToEmailStep()">
+                  Cambiar correo
+                </button>
+              </div>
+
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Completa tu registro</h2>
+              <p class="text-sm text-gray-600">Tu correo ya fue validado. Ahora define tu perfil y contraseña.</p>
+            </div>
+
+            <div class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-900">
+              <span class="font-semibold">Correo confirmado:</span>
+              <span class="ml-2 break-all">{{ emailInput }}</span>
+            </div>
+
+            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Nombre completo</mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <mat-icon matPrefix>person</mat-icon>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="formData.name"
+                name="name"
+                placeholder="Tu nombre completo"
+                (input)="validateName()"
+              />
+              @if (errors.name) {
+                <mat-error>{{ errors.name }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Contraseña</mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <mat-icon matPrefix>lock</mat-icon>
+              <input
+                matInput
+                [type]="hidePassword ? 'password' : 'text'"
+                [(ngModel)]="formData.password"
+                name="password"
+                placeholder="Crea una contraseña segura"
+                (input)="validatePassword()"
+              />
+              <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (errors.password) {
+                <mat-error>{{ errors.password }}</mat-error>
+              }
+            </mat-form-field>
+
+            @if (formData.password) {
+              <div class="mb-4 rounded-lg bg-gray-50 p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-gray-700">Fortaleza</span>
+                  <span class="text-xs font-bold" [class.text-red-600]="strength.level === 'weak'" [class.text-yellow-600]="strength.level === 'medium'" [class.text-green-600]="strength.level === 'strong'">
+                    {{ strength.text }}
+                  </span>
+                </div>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    class="h-2 rounded-full transition-all duration-300"
+                    [style.width.%]="strength.percent"
+                    [class.bg-red-500]="strength.level === 'weak'"
+                    [class.bg-yellow-500]="strength.level === 'medium'"
+                    [class.bg-green-500]="strength.level === 'strong'"></div>
+                </div>
+                <div class="mt-3 space-y-1 text-xs text-gray-600">
+                  <div [class.text-green-600]="strength.checks.length" class="flex items-center gap-1">
+                    <span>{{ strength.checks.length ? '✓' : '○' }}</span>
+                    <span>Mínimo 8 caracteres</span>
+                  </div>
+                  <div [class.text-green-600]="strength.checks.upper" class="flex items-center gap-1">
+                    <span>{{ strength.checks.upper ? '✓' : '○' }}</span>
+                    <span>Mayúscula (A-Z)</span>
+                  </div>
+                  <div [class.text-green-600]="strength.checks.lower" class="flex items-center gap-1">
+                    <span>{{ strength.checks.lower ? '✓' : '○' }}</span>
+                    <span>Minúscula (a-z)</span>
+                  </div>
+                  <div [class.text-green-600]="strength.checks.number" class="flex items-center gap-1">
+                    <span>{{ strength.checks.number ? '✓' : '○' }}</span>
+                    <span>Número (0-9)</span>
+                  </div>
+                  <div [class.text-green-600]="strength.checks.special" class="flex items-center gap-1">
+                    <span>{{ strength.checks.special ? '✓' : '○' }}</span>
+                    <span>Carácter especial</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Confirmar contraseña</mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <mat-icon matPrefix>lock</mat-icon>
+              <input
+                matInput
+                [type]="hideConfirmPassword ? 'password' : 'text'"
+                [(ngModel)]="formData.confirmPassword"
+                name="confirmPassword"
+                placeholder="Repite tu contraseña"
+                (input)="validateConfirmPassword()"
+              />
+              <button mat-icon-button matSuffix type="button" (click)="toggleConfirmPasswordVisibility()">
+                <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (errors.confirmPassword) {
+                <mat-error>{{ errors.confirmPassword }}</mat-error>
+              }
+            </mat-form-field>
+
+            @if (formData.confirmPassword && !errors.confirmPassword && formData.confirmPassword === formData.password) {
+              <div class="mb-2 flex items-center gap-2 text-sm font-medium text-green-600">
+                <mat-icon class="!text-[18px]">check_circle</mat-icon>
+                Las contraseñas coinciden
+              </div>
+            }
+
+            <button
+              mat-flat-button
+              color="primary"
+              class="w-full mt-4"
+              [disabled]="loading || !isFormValid()"
+              type="button"
+              (click)="register()">
+              @if (loading) {
+                <span>Creando cuenta...</span>
+              } @else {
+                <span>Crear cuenta</span>
+              }
+            </button>
+
+            <span class="block font-medium text-center mt-5 text-sm text-gray-600">
+              ¿Prefieres volver al login?
+              <a (click)="goToLogin()" class="cursor-pointer no-underline text-primary font-medium text-xs lg:text-sm">
+                Inicia sesión
+              </a>
+            </span>
+          }
+        </div>
+      </mat-card>
+    </div>
+  </div>
 </div>
