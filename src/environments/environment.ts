@@ -5,6 +5,7 @@
 export const environment = {
   production: false,
   url_backend: 'http://127.0.0.1:8080',
+  url_backend_clasificator: 'http://127.0.0.1:8081',
   firebase : {
     apiKey: "AIzaSyBtHeRhUXsgaeP0IzRba0N2M45l5XOw3nI",
     authDomain: "securityproyect-fd487.firebaseapp.com",

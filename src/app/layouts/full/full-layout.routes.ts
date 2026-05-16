@@ -37,6 +37,11 @@ export const FullLayoutRoutes: Routes = [
           import('../../pages/ms-security/users/users.routes').then((m) => m.UsersRoutes),
       },
       {
+        path: 'doctors',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/doctor/doctor.routes').then((m) => m.DoctorsRoutes),
+      },
+      {
         path: 'roles',
         loadChildren: () =>
           import('../../pages/ms-security/roles/roles.routes').then((m) => m.rolesRoutes),

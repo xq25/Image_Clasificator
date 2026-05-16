@@ -1,0 +1,9 @@
+export { DoctorService } from './doctor.service';
+export { PatientService } from './patient.service';
+export { EvaluationAreaService } from './evaluation-area.service';
+export { DoctorAreaService } from './doctor-area.service';
+export { MedicalDiagnosticService } from './medical-diagnostic.service';
+export { MedicalImageService } from './medical-image.service';
+export { ImageDiagnosticService } from './image-diagnostic.service';
+export { UIConfigService } from './ui-config.service';
+export { UIStateService } from './ui-state.service';

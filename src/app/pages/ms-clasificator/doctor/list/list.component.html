@@ -1,0 +1,35 @@
+<div class="p-6">
+  <mat-card class="cardWithShadow mb-6">
+    <div class="flex items-center justify-between p-4">
+      <div>
+        <h2 class="text-2xl font-bold">Gestión de Doctores</h2>
+        <p class="text-gray-600 text-sm">Administra los doctores del sistema</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="create()" class="flex items-center gap-2">
+        <mat-icon>add</mat-icon>
+        Nuevo Doctor
+      </button>
+    </div>
+  </mat-card>
+
+  <mat-card class="cardWithShadow">
+    @if (loading()) {
+      <div class="p-8 text-center">
+        <mat-icon class="animate-spin text-2xl">cached</mat-icon>
+        <p class="text-gray-600 mt-2">Cargando doctores...</p>
+      </div>
+    } @else if (doctors().length === 0) {
+      <div class="p-8 text-center">
+        <mat-icon class="text-4xl text-gray-400">medical_services</mat-icon>
+        <p class="text-gray-600 mt-2">No hay doctores registrados</p>
+      </div>
+    } @else {
+      <app-dynamic-table
+        [data]="doctors()"
+        [columns]="columns"
+        [actionButtons]="actionButtons"
+        (actionClicked)="handleAction($event)"
+      />
+    }
+  </mat-card>
+</div>

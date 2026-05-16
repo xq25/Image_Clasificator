@@ -58,6 +58,11 @@ export const navItems: NavItem[] = [
     route: '/users/list',
   },
   {
+    displayName: 'Doctors',
+    iconName: 'solar:stethoscope-line-duotone',
+    route: '/doctors/list',
+  },
+  {
     displayName: 'Roles',
     iconName: 'solar:shield-line-duotone',
     route: '/roles/list',

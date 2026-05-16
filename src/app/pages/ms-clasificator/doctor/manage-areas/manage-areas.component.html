@@ -1,0 +1,151 @@
+<div class="manage-areas-page p-6">
+
+  <div class="page-header mb-6">
+    <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="doctor-identity" *ngIf="doctor()">
+      <div class="doctor-avatar">{{ getDoctorInitials() }}</div>
+      <div class="doctor-info">
+        <h2 class="doctor-code">{{ doctor()?.code ?? 'Cargando...' }}</h2>
+        <span class="doctor-user">{{ doctor()?.userId ?? '' }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (toast()) {
+    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
+      {{ toast()!.message }}
+    </div>
+  }
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">medical_services</mat-icon>
+            <span>Áreas asignadas</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          @if (doctorAreas().length > 0) {
+            {{ doctorAreas().length }} área{{ doctorAreas().length !== 1 ? 's' : '' }} activa{{ doctorAreas().length !== 1 ? 's' : '' }}
+          } @else {
+            Sin áreas asignadas
+          }
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (loadingDoctorAreas()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (doctorAreas().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">link_off</mat-icon>
+            <p class="text-gray-600 mt-2">Este doctor no tiene áreas asignadas.</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (area of doctorAreas(); track area.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-primary">domain</mat-icon>
+                <div matListItemTitle>{{ area.name }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ area.codeArea }}</div>
+                <button
+                  mat-icon-button
+                  matListItemMeta
+                  color="warn"
+                  (click)="removeArea(area)"
+                  [disabled]="removingAreaId() === area.id?.toString()"
+                  class="ml-2"
+                >
+                  @if (removingAreaId() === area.id?.toString()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <mat-icon>delete</mat-icon>
+                  }
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">add_circle</mat-icon>
+            <span>Áreas disponibles</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ getAvailableAreas().length }} área{{ getAvailableAreas().length !== 1 ? 's' : '' }} disponible{{ getAvailableAreas().length !== 1 ? 's' : '' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="w-full mb-4">
+          <mat-label>Buscar área...</mat-label>
+          <input
+            matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($event.target.value)"
+            placeholder="Filtra por nombre o código"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (loadingAvailableAreas()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (getAvailableAreas().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">check_circle</mat-icon>
+            <p class="text-gray-600 mt-2">
+              @if (doctorAreas().length === allAreas().length) {
+                El doctor tiene todas las áreas disponibles.
+              } @else {
+                No hay áreas disponibles que coincidan con la búsqueda.
+              }
+            </p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (area of getAvailableAreas(); track area.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
+                <div matListItemTitle>{{ area.name }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ area.codeArea }}</div>
+                <button
+                  mat-raised-button
+                  matListItemMeta
+                  color="accent"
+                  (click)="assignArea(area)"
+                  [disabled]="addingAreaId() === area.id?.toString()"
+                  class="ml-2"
+                >
+                  @if (addingAreaId() === area.id?.toString()) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>add</mat-icon>
+                  }
+                  Asignar
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+</div>
