@@ -1,0 +1,59 @@
+.manage-areas-page {
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .doctor-identity {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-left: auto;
+
+      .doctor-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+      }
+
+      .doctor-info {
+        .doctor-code {
+          font-weight: 600;
+          margin: 0;
+          font-size: 16px;
+        }
+
+        .doctor-user {
+          font-size: 14px;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  .toast {
+    padding: 1rem;
+    border-radius: 8px;
+    position: relative;
+
+    &.toast-success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    &.toast-error {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+  }
+}
