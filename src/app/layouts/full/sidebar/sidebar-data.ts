@@ -50,6 +50,11 @@ export const navItems: NavItem[] = [
     iconName: 'solar:stethoscope-line-duotone',
     route: '/medical-diagnostics/list',
   },
+  {
+    displayName: 'UI Configs',
+    iconName: 'solar:monitor-line-duotone',
+    route: '/ui-configs/list',
+  },
   
   {
     displayName: 'Profile',

@@ -1,38 +1,81 @@
-<div class="manage-areas-page p-6">
+<div class="manage-subdiagnostic-page p-6">
+
   <div class="page-header mb-6">
-    <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
+    <button mat-stroked-button type="button" (click)="goBack()" class="flex items-center gap-2">
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
-    <div class="doctor-identity" *ngIf="parent()">
-      <div class="doctor-avatar">{{ (parent()?.diagnosticCode ?? '') | slice:0:2 | uppercase }}</div>
-      <div class="doctor-info">
-        <h2 class="doctor-code">{{ parent()?.diagnosticName ?? 'Cargando...' }}</h2>
-        <span class="doctor-user">{{ parent()?.diagnosticCode ?? '' }}</span>
+    <div class="diagnostic-identity" *ngIf="parent()">
+      <div class="diagnostic-avatar">{{ (parent()?.diagnosticCode ?? '') | slice:0:2 | uppercase }}</div>
+      <div class="diagnostic-info">
+        <h2 class="diagnostic-name">{{ parent()?.diagnosticName ?? 'Cargando...' }}</h2>
+        <span class="diagnostic-code">{{ parent()?.diagnosticCode ?? '' }}</span>
       </div>
     </div>
   </div>
 
   @if (toast()) {
-    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">{{ toast()!.message }}</div>
+    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
+      {{ toast()!.message }}
+    </div>
   }
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
     <mat-card class="cardWithShadow">
       <mat-card-header class="mb-4 pb-4 border-b">
         <mat-card-title>
-          <div class="flex items-center gap-2"><mat-icon class="text-2xl">medical_services</mat-icon><span>Sub-diagnósticos asignados</span></div>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">medical_services</mat-icon>
+            <span>Sub-diagnósticos asignados</span>
+          </div>
         </mat-card-title>
         <mat-card-subtitle>
-          @if (subDiagnostics().length > 0) { {{ subDiagnostics().length }} sub-diagnóstico{{ subDiagnostics().length !== 1 ? 's' : '' }} } @else { Sin sub-diagnósticos }
+          @if (subDiagnostics().length > 0) {
+            {{ subDiagnostics().length }} sub-diagnóstico{{ subDiagnostics().length !== 1 ? 's' : '' }} activo{{ subDiagnostics().length !== 1 ? 's' : '' }}
+          } @else {
+            Sin sub-diagnósticos asignados
+          }
         </mat-card-subtitle>
       </mat-card-header>
+
       <mat-card-content>
-        @if (loadingSubs()) { <div class="flex items-center justify-center py-8"><mat-spinner diameter="30"></mat-spinner></div> }
-        @else if (subDiagnostics().length === 0) {
-          <div class="text-center py-8"><mat-icon class="text-4xl text-gray-300">link_off</mat-icon><p class="text-gray-600 mt-2">No hay sub-diagnósticos asignados.</p></div>
+        @if (loadingSubs()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (subDiagnostics().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">link_off</mat-icon>
+            <p class="text-gray-600 mt-2">No hay sub-diagnósticos asignados.</p>
+          </div>
         } @else {
-          <div class="space-y-2">@for (s of subDiagnostics(); track s.id) {<mat-list-item class="border rounded p-3 mb-2"><mat-icon matListItemIcon class="text-primary">subdirectory_arrow_right</mat-icon><div matListItemTitle>{{ s.diagnosticName }}</div><div matListItemLine class="text-xs text-gray-600">{{ s.diagnosticCode }}</div><button mat-icon-button matListItemMeta color="warn" (click)="remove(s)" [disabled]="removingId() === s.id?.toString()" class="ml-2">@if (removingId() === s.id?.toString()) {<mat-spinner diameter="20"></mat-spinner>} @else {<mat-icon>delete</mat-icon>}</button></mat-list-item>}
+          <div class="space-y-2">
+            @for (sub of subDiagnostics(); track sub.id) {
+              <div class="diagnostic-row border rounded p-3 mb-2">
+                <div class="diagnostic-content">
+                  <mat-icon class="text-primary">subdirectory_arrow_right</mat-icon>
+                  <div>
+                    <div class="diagnostic-title">{{ sub.diagnosticName }}</div>
+                    <div class="diagnostic-description text-xs text-gray-600">{{ sub.diagnosticCode }}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="warn"
+                  (click)="onRemove($event, sub)"
+                  [disabled]="removingId() === sub.id?.toString()"
+                  class="ml-2 action-btn"
+                >
+                  @if (removingId() === sub.id?.toString()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <mat-icon>delete</mat-icon>
+                  }
+                </button>
+              </div>
+            }
           </div>
         }
       </mat-card-content>
@@ -41,20 +84,70 @@
     <mat-card class="cardWithShadow">
       <mat-card-header class="mb-4 pb-4 border-b">
         <mat-card-title>
-          <div class="flex items-center gap-2"><mat-icon class="text-2xl">add_circle</mat-icon><span>Sub-diagnósticos disponibles</span></div>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">add_circle</mat-icon>
+            <span>Sub-diagnósticos disponibles</span>
+          </div>
         </mat-card-title>
-        <mat-card-subtitle>{{ getAvailable().length }} disponible{{ getAvailable().length !== 1 ? 's' : '' }}</mat-card-subtitle>
+        <mat-card-subtitle>
+          {{ getAvailable().length }} sub-diagnóstico{{ getAvailable().length !== 1 ? 's' : '' }} disponible{{ getAvailable().length !== 1 ? 's' : '' }}
+        </mat-card-subtitle>
       </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="outline" class="w-full mb-4"><mat-label>Buscar sub-diagnóstico...</mat-label><input matInput [value]="searchQuery()" (input)="searchQuery.set($event.target.value)" placeholder="Filtra por código o nombre"/><mat-icon matSuffix>search</mat-icon></mat-form-field>
 
-        @if (loadingAvailable()) { <div class="flex items-center justify-center py-8"><mat-spinner diameter="30"></mat-spinner></div> }
-        @else if (getAvailable().length === 0) { <div class="text-center py-8"><mat-icon class="text-4xl text-gray-300">check_circle</mat-icon><p class="text-gray-600 mt-2">No hay sub-diagnósticos disponibles que coincidan con la búsqueda.</p></div> }
-        @else {
-          <div class="space-y-2">@for (d of getAvailable(); track d.id) {<mat-list-item class="border rounded p-3 mb-2"><mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon><div matListItemTitle>{{ d.diagnosticName }}</div><div matListItemLine class="text-xs text-gray-600">{{ d.diagnosticCode }}</div><button mat-raised-button matListItemMeta color="accent" (click)="assign(d)" [disabled]="addingId() === d.id?.toString()" class="ml-2">@if (addingId() === d.id?.toString()) {<mat-spinner diameter="16"></mat-spinner>} @else {<mat-icon>add</mat-icon>}Asignar</button></mat-list-item>}
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="w-full mb-4">
+          <mat-label>Buscar sub-diagnóstico...</mat-label>
+          <input
+            matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($event.target.value)"
+            placeholder="Filtra por código o nombre"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (loadingAvailable()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (getAvailable().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">check_circle</mat-icon>
+            <p class="text-gray-600 mt-2">No hay sub-diagnósticos disponibles que coincidan con la búsqueda.</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (sub of getAvailable(); track sub.id) {
+              <div class="diagnostic-row border rounded p-3 mb-2">
+                <div class="diagnostic-content">
+                  <mat-icon class="text-success">add_circle_outline</mat-icon>
+                  <div>
+                    <div class="diagnostic-title">{{ sub.diagnosticName }}</div>
+                    <div class="diagnostic-description text-xs text-gray-600">{{ sub.diagnosticCode }}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  mat-raised-button
+                  color="accent"
+                  (click)="onAssign($event, sub)"
+                  [disabled]="addingId() === sub.id?.toString()"
+                  class="ml-2 action-btn"
+                >
+                  @if (addingId() === sub.id?.toString()) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>add</mat-icon>
+                  }
+                  Asignar
+                </button>
+              </div>
+            }
           </div>
         }
       </mat-card-content>
     </mat-card>
+
   </div>
+
 </div>

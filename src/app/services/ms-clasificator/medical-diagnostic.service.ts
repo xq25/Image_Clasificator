@@ -27,6 +27,13 @@ export class MedicalDiagnosticService {
   }
 
   /**
+   * Obtener los diagnósticos médicos hijos por ID de padre
+   */
+  findByParentId(parentId: number): Observable<ApiResponse<MedicalDiagnostic[]>> {
+    return this.http.get<ApiResponse<MedicalDiagnostic[]>>(`${apiUrl}/parentId/${parentId}`);
+  }
+
+  /**
    * Crear un nuevo diagnóstico médico
    */
   create(medicalDiagnostic: Partial<MedicalDiagnostic>): Observable<ApiResponse<MedicalDiagnostic>> {
