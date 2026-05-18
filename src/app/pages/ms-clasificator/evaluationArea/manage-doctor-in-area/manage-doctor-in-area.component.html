@@ -1,0 +1,151 @@
+<div class="manage-areas-page p-6">
+
+  <div class="page-header mb-6">
+    <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="doctor-identity" *ngIf="evaluationArea()">
+      <div class="doctor-avatar">{{ getEvaluationAreaLabel().slice(0, 2).toUpperCase() }}</div>
+      <div class="doctor-info">
+        <h2 class="doctor-code">{{ evaluationArea()?.name ?? 'Cargando...' }}</h2>
+        <span class="doctor-user">{{ evaluationArea()?.codeArea ?? '' }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (toast()) {
+    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
+      {{ toast()!.message }}
+    </div>
+  }
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">medical_services</mat-icon>
+            <span>Doctores asignados</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          @if (doctorsInArea().length > 0) {
+            {{ doctorsInArea().length }} doctor{{ doctorsInArea().length !== 1 ? 'es' : '' }} activo{{ doctorsInArea().length !== 1 ? 's' : '' }}
+          } @else {
+            Sin doctores asignados
+          }
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (loadingDoctorsInArea()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (doctorsInArea().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">link_off</mat-icon>
+            <p class="text-gray-600 mt-2">Esta área no tiene doctores asignados.</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (doctor of doctorsInArea(); track doctor.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-primary">person</mat-icon>
+                <div matListItemTitle>{{ doctor.code }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ doctor.userId }}</div>
+                <button
+                  mat-icon-button
+                  matListItemMeta
+                  color="warn"
+                  (click)="removeDoctor(doctor)"
+                  [disabled]="removingDoctorId() === doctor.id?.toString()"
+                  class="ml-2"
+                >
+                  @if (removingDoctorId() === doctor.id?.toString()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <mat-icon>delete</mat-icon>
+                  }
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cardWithShadow">
+      <mat-card-header class="mb-4 pb-4 border-b">
+        <mat-card-title>
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-2xl">add_circle</mat-icon>
+            <span>Doctores disponibles</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ getAvailableDoctors().length }} doctor{{ getAvailableDoctors().length !== 1 ? 'es' : '' }} disponible{{ getAvailableDoctors().length !== 1 ? 's' : '' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="w-full mb-4">
+          <mat-label>Buscar doctor...</mat-label>
+          <input
+            matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($event.target.value)"
+            placeholder="Filtra por código o usuario"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (loadingAvailableDoctors()) {
+          <div class="flex items-center justify-center py-8">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (getAvailableDoctors().length === 0) {
+          <div class="text-center py-8">
+            <mat-icon class="text-4xl text-gray-300">check_circle</mat-icon>
+            <p class="text-gray-600 mt-2">
+              @if (doctorsInArea().length === allDoctors().length) {
+                Esta área tiene todos los doctores disponibles.
+              } @else {
+                No hay doctores disponibles que coincidan con la búsqueda.
+              }
+            </p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (doctor of getAvailableDoctors(); track doctor.id) {
+              <mat-list-item class="border rounded p-3 mb-2">
+                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
+                <div matListItemTitle>{{ doctor.code }}</div>
+                <div matListItemLine class="text-xs text-gray-600">{{ doctor.userId }}</div>
+                <button
+                  mat-raised-button
+                  matListItemMeta
+                  color="accent"
+                  (click)="assignDoctor(doctor)"
+                  [disabled]="addingDoctorId() === doctor.id?.toString()"
+                  class="ml-2"
+                >
+                  @if (addingDoctorId() === doctor.id?.toString()) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>add</mat-icon>
+                  }
+                  Asignar
+                </button>
+              </mat-list-item>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+</div>

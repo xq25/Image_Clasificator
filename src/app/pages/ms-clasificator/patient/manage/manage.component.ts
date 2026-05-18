@@ -6,8 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
-import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
-import { Doctor } from '@app/models/ms-clasificator';
+import { PatientService } from '@app/services/ms-clasificator/patient.service';
+import { Patient } from '@app/models/ms-clasificator';
 
 @Component({
   selector: 'app-manage',
@@ -24,7 +24,7 @@ export class ManageComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private doctorService: DoctorService,
+    private patientService: PatientService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -38,40 +38,40 @@ export class ManageComponent implements OnInit {
       this.cdr.detectChanges();
 
     } else if (routePath === 'view/:id' && id) {
-      this.loadDoctor(id, 0);
+      this.loadPatient(id, 0);
 
     } else if (routePath === 'edit/:id' && id) {
-      this.loadDoctor(id, 2);
+      this.loadPatient(id, 2);
 
     } else {
       console.warn('[ManageComponent] Ruta no reconocida:', routePath);
-      this.router.navigate(['doctors/list']);
+      this.router.navigate(['patients/list']);
     }
   }
 
-  private loadDoctor(id: string, mode: 0 | 2): void {
-    this.doctorService.findById(Number(id)).subscribe({
+  private loadPatient(id: string, mode: 0 | 2): void {
+    this.patientService.findById(Number(id)).subscribe({
       next: (response) => {
-        const doctor = response?.data ?? null;
+        const patient = response?.data ?? null;
 
-        if (!doctor) {
-          alert('Error: No se pudo cargar el doctor');
-          this.router.navigate(['doctors/list']);
+        if (!patient) {
+          alert('Error: No se pudo cargar el paciente');
+          this.router.navigate(['patients/list']);
           return;
         }
 
-        this.buildConfig(mode, doctor);
+        this.buildConfig(mode, patient);
         this.loading = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('Error: No se pudo cargar el doctor');
-        this.router.navigate(['doctors/list']);
+        alert('Error: No se pudo cargar el paciente');
+        this.router.navigate(['patients/list']);
       }
     });
   }
 
-  buildConfig(mode: 0 | 1 | 2, model: Doctor | null): void {
+  buildConfig(mode: 0 | 1 | 2, model: Patient | null): void {
     this.formConfig = {
       mode,
       model,
@@ -82,11 +82,18 @@ export class ManageComponent implements OnInit {
           type: 'text'
         },
         {
-          name: 'code',
-          label: 'Código',
+          name: 'document',
+          label: 'Documento',
           type: 'text',
-          placeholder: 'Ingresa el código del doctor',
-          validators: [Validators.required, Validators.minLength(2)]
+          placeholder: 'Ingresa el documento del paciente',
+          validators: [Validators.required, Validators.minLength(4)]
+        },
+        {
+          name: 'years',
+          label: 'Años',
+          type: 'number',
+          placeholder: 'Ingresa la edad en años',
+          validators: [Validators.required, Validators.min(0)]
         },
         {
           name: 'userId',
@@ -104,32 +111,32 @@ export class ManageComponent implements OnInit {
     const mode = this.formConfig.mode;
 
     if (mode === 1) {
-      this.doctorService.create(data).subscribe({
+      this.patientService.create(data).subscribe({
         next: () => {
-          alert('Doctor creado exitosamente');
-          this.router.navigate(['doctors/list']);
+          alert('Paciente creado exitosamente');
+          this.router.navigate(['patients/list']);
         },
         error: (error) => {
-          console.error('Error al crear doctor:', error);
-          alert('Error al crear doctor');
+          console.error('Error al crear paciente:', error);
+          alert('Error al crear paciente');
         }
       });
 
     } else if (mode === 2) {
-      this.doctorService.update(Number(data.id), data).subscribe({
+      this.patientService.update(Number(data.id), data).subscribe({
         next: () => {
-          alert('Doctor actualizado exitosamente');
-          this.router.navigate(['doctors/list']);
+          alert('Paciente actualizado exitosamente');
+          this.router.navigate(['patients/list']);
         },
         error: (error) => {
-          console.error('Error al actualizar doctor:', error);
-          alert('Error al actualizar doctor');
+          console.error('Error al actualizar paciente:', error);
+          alert('Error al actualizar paciente');
         }
       });
     }
   }
 
   handleFormCancel(): void {
-    this.router.navigate(['doctors/list']);
+    this.router.navigate(['patients/list']);
   }
 }

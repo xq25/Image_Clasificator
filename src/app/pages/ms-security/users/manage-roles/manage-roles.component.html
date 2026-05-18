@@ -56,17 +56,21 @@
         } @else {
           <div class="space-y-2">
             @for (role of userRoles(); track role.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-primary">verified_user</mat-icon>
-                <div matListItemTitle>{{ role.name }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ role.description }}</div>
+              <div class="role-row border rounded p-3 mb-2">
+                <div class="role-content">
+                  <mat-icon class="text-primary">verified_user</mat-icon>
+                  <div>
+                    <div class="role-title">{{ role.name }}</div>
+                    <div class="role-description text-xs text-gray-600">{{ role.description }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-icon-button
-                  matListItemMeta
                   color="warn"
-                  (click)="removeRole(role)"
+                  (click)="onRemoveRole($event, role)"
                   [disabled]="removingRoleId() === role.id"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (removingRoleId() === role.id) {
                     <mat-spinner diameter="20"></mat-spinner>
@@ -74,7 +78,7 @@
                     <mat-icon>delete</mat-icon>
                   }
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }
@@ -126,17 +130,21 @@
         } @else {
           <div class="space-y-2">
             @for (role of getAvailableRoles(); track role.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
-                <div matListItemTitle>{{ role.name }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ role.description }}</div>
+              <div class="role-row border rounded p-3 mb-2">
+                <div class="role-content">
+                  <mat-icon class="text-success">add_circle_outline</mat-icon>
+                  <div>
+                    <div class="role-title">{{ role.name }}</div>
+                    <div class="role-description text-xs text-gray-600">{{ role.description }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-raised-button
-                  matListItemMeta
                   color="accent"
-                  (click)="assignRole(role)"
+                  (click)="onAssignRole($event, role)"
                   [disabled]="addingRoleId() === role.id"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (addingRoleId() === role.id) {
                     <mat-spinner diameter="16"></mat-spinner>
@@ -145,7 +153,7 @@
                   }
                   Asignar
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }

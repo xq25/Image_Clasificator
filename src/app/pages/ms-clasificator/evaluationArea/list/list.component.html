@@ -1,0 +1,64 @@
+<div class="p-6">
+  <mat-card class="cardWithShadow mb-6">
+    <div class="flex items-center justify-between p-4">
+      <div>
+        <h2 class="text-2xl font-bold">Gestión de Áreas de Evaluación</h2>
+        <p class="text-gray-600 text-sm">Administra las áreas de evaluación del sistema</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="create()" class="flex items-center gap-2">
+        <mat-icon>add</mat-icon>
+        Nueva Área
+      </button>
+    </div>
+  </mat-card>
+
+  <mat-card class="cardWithShadow">
+    @if (loading()) {
+      <div class="p-8 text-center">
+        <mat-icon class="animate-spin text-2xl">cached</mat-icon>
+        <p class="text-gray-600 mt-2">Cargando áreas de evaluación...</p>
+      </div>
+    } @else if (evaluationAreas().length === 0) {
+      <div class="p-8 text-center">
+        <mat-icon class="text-4xl text-gray-400">domain</mat-icon>
+        <p class="text-gray-600 mt-2">No hay áreas de evaluación registradas</p>
+      </div>
+    } @else {
+      <div class="relative overflow-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="text-left p-4">ID</th>
+              <th class="text-left p-4">Código</th>
+              <th class="text-left p-4">Nombre</th>
+              <th class="text-center p-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (area of evaluationAreas(); track area.id) {
+              <tr class="border-t">
+                <td class="p-4">{{ area.id }}</td>
+                <td class="p-4">{{ area.codeArea }}</td>
+                <td class="p-4">{{ area.name }}</td>
+                <td class="p-4 text-center">
+                  <button mat-icon-button class="btn-view" title="Ver" (click)="view(area.id!.toString())">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button class="btn-edit" title="Editar" (click)="edit(area.id!.toString())">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button class="btn-delete" title="Eliminar" (click)="delete(area.id!.toString())">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button mat-icon-button class="btn-manage-roles" title="Manage DoctorInArea" (click)="manageDoctorInArea(area.id!.toString())">
+                    <mat-icon>medical_services</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </mat-card>
+</div>

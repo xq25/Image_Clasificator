@@ -19,6 +19,7 @@ export class LoginFormComponent {
   @Output() formSubmit = new EventEmitter<LoginFormData>();
   @Output() loginWithGoogle = new EventEmitter<void>();
   @Output() loginWithGithub = new EventEmitter<void>();
+  @Output() loginWithMicrosoft = new EventEmitter<void>();
   @Input() selectedUserType: { id: string | number; name: string } | null = null;
 
   hidePassword = true;
@@ -56,5 +57,9 @@ export class LoginFormComponent {
 
   onGithubClick(): void {
     this.loginWithGithub.emit();
+  }
+
+  onMicrosoftClick(): void {
+    this.loginWithMicrosoft.emit();
   }
 }

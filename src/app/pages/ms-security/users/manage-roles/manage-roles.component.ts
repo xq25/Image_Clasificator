@@ -132,12 +132,23 @@ export class ManageRolesComponent implements OnInit {
 
   // ─── AGREGAR ROL ──────────────────────────────────────────────
 
+  onAssignRole(event: Event, role: Role): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.assignRole(role);
+  }
+
   assignRole(role: Role): void {
+    if (!role.id) {
+      this.showToast('No se pudo determinar el ID del rol', 'error');
+      return;
+    }
+
     if (this.hasRole(role)) return;
 
-    this.addingRoleId.set(role.id!);
+    this.addingRoleId.set(role.id);
 
-    this.userRoleService.addUserRole(this.userId, role.id!).subscribe({
+    this.userRoleService.addUserRole(this.userId, role.id).subscribe({
       next: () => {
         this.showToast(`Rol "${role.name}" asignado exitosamente`, 'success');
         this.addingRoleId.set(null);
@@ -153,7 +164,18 @@ export class ManageRolesComponent implements OnInit {
 
   // ─── ELIMINAR ROL ─────────────────────────────────────────────
 
+  onRemoveRole(event: Event, role: Role): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.removeRole(role);
+  }
+
   removeRole(role: Role): void {
+    if (!role.id) {
+      this.showToast('No se pudo determinar el ID del rol', 'error');
+      return;
+    }
+
     if (!confirm(`¿Desasignar el rol "${role.name}"?`)) return;
 
     const userRole = this.userRoleRelations().find(
@@ -165,7 +187,7 @@ export class ManageRolesComponent implements OnInit {
       return;
     }
 
-    this.removingRoleId.set(role.id!);
+  this.removingRoleId.set(role.id);
 
     this.userRoleService.removeUserRole(userRole.id).subscribe({
       next: () => {

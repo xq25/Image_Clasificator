@@ -42,6 +42,21 @@ export const FullLayoutRoutes: Routes = [
           import('../../pages/ms-clasificator/doctor/doctor.routes').then((m) => m.DoctorsRoutes),
       },
       {
+        path: 'patients',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/patient/patient.routes').then((m) => m.PatientsRoutes),
+      },
+      {
+        path: 'evaluation-areas',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/evaluationArea/evaluation-area.routes').then((m) => m.EvaluationAreasRoutes),
+      },
+      {
+        path: 'medical-diagnostics',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/medicalDiagnostic/medical-diagnostic.routes').then((m) => m.MedicalDiagnosticsRoutes),
+      },
+      {
         path: 'roles',
         loadChildren: () =>
           import('../../pages/ms-security/roles/roles.routes').then((m) => m.rolesRoutes),
