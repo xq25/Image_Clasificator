@@ -43,7 +43,6 @@
                     [formControlName]="field.name" 
                     [placeholder]="field.placeholder || ''"
                     rows="4"
-                    [disabled]="isViewMode()"
                   ></textarea>
                   @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
                     <mat-error>
@@ -71,7 +70,6 @@
                   </mat-label>
                   <mat-select 
                     [formControlName]="field.name"
-                    [disabled]="isViewMode()"
                   >
                     <mat-option value="">Seleccione...</mat-option>
                     @for (opt of field.options ?? []; track opt.value) {
@@ -100,7 +98,6 @@
                     type="file"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     (change)="onFileSelected($event, field.name)"
-                    [disabled]="isViewMode()"
                   >
                   @if (previewUrls[field.name]) {
                     <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
@@ -126,7 +123,6 @@
                     [type]="field.type || 'text'"
                     [formControlName]="field.name"
                     [placeholder]="field.placeholder || ''"
-                    [disabled]="isViewMode()"
                   >
                   @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
                     <mat-error>

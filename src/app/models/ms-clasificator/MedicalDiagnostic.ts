@@ -7,9 +7,5 @@ export interface MedicalDiagnostic {
   diagnosticCode: string;
   diagnosticName?: string;
   parentDiagnosticId?: number;
-  parentDiagnostic?: MedicalDiagnostic;
-  subDiagnostics?: MedicalDiagnostic[];
-  uiStates?: UIState[];
-  uiConfigs?: UIConfig[];
-  imageDiagnostics?: ImageDiagnostic[];
+
 }

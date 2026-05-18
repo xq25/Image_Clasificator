@@ -139,7 +139,7 @@ button[type="submit"] {
 
 .social-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 8px;
 }
@@ -212,5 +212,18 @@ button[type="submit"] {
   &:hover {
     background: linear-gradient(135deg, #f3f4f6 0%, #eff0f3 100%);
     border-color: rgba(31, 41, 55, 0.3);
+  }
+}
+
+.microsoft-btn {
+  color: #1f2937;
+
+  i {
+    color: #2563eb;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #eff6ff 0%, #eaf3ff 100%);
+    border-color: rgba(37, 99, 235, 0.3);
   }
 }

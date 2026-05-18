@@ -6,8 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
-import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
-import { Doctor } from '@app/models/ms-clasificator';
+import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
+import { EvaluationArea } from '@app/models/ms-clasificator';
 
 @Component({
   selector: 'app-manage',
@@ -24,7 +24,7 @@ export class ManageComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private doctorService: DoctorService,
+    private evaluationAreaService: EvaluationAreaService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -38,40 +38,40 @@ export class ManageComponent implements OnInit {
       this.cdr.detectChanges();
 
     } else if (routePath === 'view/:id' && id) {
-      this.loadDoctor(id, 0);
+      this.loadEvaluationArea(id, 0);
 
     } else if (routePath === 'edit/:id' && id) {
-      this.loadDoctor(id, 2);
+      this.loadEvaluationArea(id, 2);
 
     } else {
       console.warn('[ManageComponent] Ruta no reconocida:', routePath);
-      this.router.navigate(['doctors/list']);
+      this.router.navigate(['evaluation-areas/list']);
     }
   }
 
-  private loadDoctor(id: string, mode: 0 | 2): void {
-    this.doctorService.findById(Number(id)).subscribe({
+  private loadEvaluationArea(id: string, mode: 0 | 2): void {
+    this.evaluationAreaService.findById(Number(id)).subscribe({
       next: (response) => {
-        const doctor = response?.data ?? null;
+        const evaluationArea = response?.data ?? null;
 
-        if (!doctor) {
-          alert('Error: No se pudo cargar el doctor');
-          this.router.navigate(['doctors/list']);
+        if (!evaluationArea) {
+          alert('Error: No se pudo cargar el área de evaluación');
+          this.router.navigate(['evaluation-areas/list']);
           return;
         }
 
-        this.buildConfig(mode, doctor);
+        this.buildConfig(mode, evaluationArea);
         this.loading = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('Error: No se pudo cargar el doctor');
-        this.router.navigate(['doctors/list']);
+        alert('Error: No se pudo cargar el área de evaluación');
+        this.router.navigate(['evaluation-areas/list']);
       }
     });
   }
 
-  buildConfig(mode: 0 | 1 | 2, model: Doctor | null): void {
+  buildConfig(mode: 0 | 1 | 2, model: EvaluationArea | null): void {
     this.formConfig = {
       mode,
       model,
@@ -82,19 +82,18 @@ export class ManageComponent implements OnInit {
           type: 'text'
         },
         {
-          name: 'code',
-          label: 'Código',
+          name: 'codeArea',
+          label: 'Código de área',
           type: 'text',
-          placeholder: 'Ingresa el código del doctor',
+          placeholder: 'Ingresa el código del área',
           validators: [Validators.required, Validators.minLength(2)]
         },
         {
-          name: 'userId',
-          label: 'ID de usuario',
+          name: 'name',
+          label: 'Nombre',
           type: 'text',
-          placeholder: 'ID del usuario asociado',
-          disabled: mode === 2,
-          validators: [Validators.required]
+          placeholder: 'Ingresa el nombre del área',
+          validators: [Validators.required, Validators.minLength(2)]
         }
       ]
     };
@@ -104,32 +103,32 @@ export class ManageComponent implements OnInit {
     const mode = this.formConfig.mode;
 
     if (mode === 1) {
-      this.doctorService.create(data).subscribe({
+      this.evaluationAreaService.create(data).subscribe({
         next: () => {
-          alert('Doctor creado exitosamente');
-          this.router.navigate(['doctors/list']);
+          alert('Área de evaluación creada exitosamente');
+          this.router.navigate(['evaluation-areas/list']);
         },
         error: (error) => {
-          console.error('Error al crear doctor:', error);
-          alert('Error al crear doctor');
+          console.error('Error al crear área de evaluación:', error);
+          alert('Error al crear área de evaluación');
         }
       });
 
     } else if (mode === 2) {
-      this.doctorService.update(Number(data.id), data).subscribe({
+      this.evaluationAreaService.update(Number(data.id), data).subscribe({
         next: () => {
-          alert('Doctor actualizado exitosamente');
-          this.router.navigate(['doctors/list']);
+          alert('Área de evaluación actualizada exitosamente');
+          this.router.navigate(['evaluation-areas/list']);
         },
         error: (error) => {
-          console.error('Error al actualizar doctor:', error);
-          alert('Error al actualizar doctor');
+          console.error('Error al actualizar área de evaluación:', error);
+          alert('Error al actualizar área de evaluación');
         }
       });
     }
   }
 
   handleFormCancel(): void {
-    this.router.navigate(['doctors/list']);
+    this.router.navigate(['evaluation-areas/list']);
   }
 }

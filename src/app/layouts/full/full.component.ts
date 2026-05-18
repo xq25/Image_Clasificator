@@ -15,7 +15,9 @@ import { TablerIconsModule } from 'angular-tabler-icons';
 import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { AppNavItemComponent } from './sidebar/nav-item/nav-item.component';
-import { navItems } from './sidebar/sidebar-data';
+import { NavItem } from './sidebar/nav-item/nav-item';
+import { SidebarSection } from '@app/models/sideBarRules';
+import { SideBarService } from '@app/services/side-bar.service';
 
 const MOBILE_VIEW = 'screen and (max-width: 768px)';
 const TABLET_VIEW = 'screen and (min-width: 769px) and (max-width: 1024px)';
@@ -54,7 +56,7 @@ interface quicklinks {
   encapsulation: ViewEncapsulation.None
 })
 export class FullComponent implements OnInit {
-  navItems = navItems;
+  navItems: NavItem[] = [];
 
 
 
@@ -65,6 +67,7 @@ export class FullComponent implements OnInit {
   //get options from service
   options = this.settings.getOptions();
   private layoutChangesSubscription = Subscription.EMPTY;
+  private sidebarSubscription = Subscription.EMPTY;
   private isMobileScreen = false;
   private isContentWidthFixed = true;
   private isCollapsedWidthFixed = false;
@@ -186,7 +189,9 @@ export class FullComponent implements OnInit {
     private mediaMatcher: MediaMatcher,
     private router: Router,
     private breakpointObserver: BreakpointObserver,
-    private navService: NavService, private cdr: ChangeDetectorRef
+    private navService: NavService,
+    private cdr: ChangeDetectorRef,
+    private sideBarService: SideBarService
   ) {
     this.htmlElement = document.querySelector('html')!;
     this.layoutChangesSubscription = this.breakpointObserver
@@ -221,10 +226,39 @@ export class FullComponent implements OnInit {
     this.cdr.detectChanges(); // Ensures Angular updates the view
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.sidebarSubscription = this.sideBarService.getSideBarSections().subscribe({
+      next: (sections) => {
+        this.navItems = this.mapSectionsToNavItems(sections);
+      },
+      error: (error) => {
+        console.error('[FullComponent] Error loading sidebar sections:', error);
+        this.navItems = [];
+      }
+    });
+  }
 
   ngOnDestroy() {
     this.layoutChangesSubscription.unsubscribe();
+    this.sidebarSubscription.unsubscribe();
+  }
+
+  private mapSectionsToNavItems(sections: SidebarSection[]): NavItem[] {
+    const items: NavItem[] = [];
+
+    for (const section of sections) {
+      items.push({ navCap: section.navCap });
+
+      for (const route of section.routes) {
+        items.push({
+          displayName: route.displayName,
+          iconName: route.iconName,
+          route: route.route,
+        });
+      }
+    }
+
+    return items;
   }
 
   toggleCollapsed() {
