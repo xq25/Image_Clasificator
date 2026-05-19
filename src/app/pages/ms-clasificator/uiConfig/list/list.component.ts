@@ -24,12 +24,14 @@ export class ListComponent {
 
   columns: TableColumn[] = [
     { key: 'id', label: 'ID' },
-    { key: 'medicalDiagnosticId', label: 'Diagnóstico Médico ID' }
+    { key: 'medicalDiagnosticId', label: 'Diagnóstico Médico ID' },
+    { key: 'evaluationAreaId', label: 'Área de Evaluación ID' }
   ];
 
   actionButtons: TableAction[] = [
     { action: 'view', icon: 'visibility', class: 'btn-view' },
     { action: 'edit', icon: 'edit', class: 'btn-edit' },
+    { action: 'assignToArea', icon: 'swap_vert', class: 'btn-manage-state' },
     { action: 'manageState', icon: 'settings', class: 'btn-manage-state' },
     { action: 'delete', icon: 'delete', class: 'btn-delete' },
   ];
@@ -63,6 +65,9 @@ export class ListComponent {
       case 'edit':
         this.edit(row.id);
         break;
+      case 'assignToArea':
+        this.assignToArea(row.id);
+        break;
       case 'manageState':
         this.manageState(row.id);
         break;
@@ -86,6 +91,10 @@ export class ListComponent {
 
   edit(id: string) {
     this.router.navigate([`${this.initialPath}/edit/${id}`]);
+  }
+
+  assignToArea(id: string) {
+    this.router.navigate([`${this.initialPath}/assign-to-area/${id}`]);
   }
 
   delete(id: string) {

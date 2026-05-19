@@ -33,6 +33,10 @@ export class UIConfigService {
     return this.http.get<ApiResponse<UIConfig[]>>(`${apiUrl}/diagnostic/${medicalDiagnosticId}`);
   }
 
+  findByEvaluationAreaId(evaluationAreaId: number): Observable<ApiResponse<UIConfig>> {
+    return this.http.get<ApiResponse<UIConfig>>(`${apiUrl}/area/${evaluationAreaId}`);
+  }
+
   /**
    * Crear una nueva configuración UI
    */
@@ -52,5 +56,19 @@ export class UIConfigService {
    */
   delete(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);
+  }
+
+  /**
+   * Asignar una configuración UI a un área de evaluación
+   */
+  assignToEvaluationArea(uiConfigId: number, evaluationAreaId: number): Observable<ApiResponse<UIConfig>> {
+    return this.http.put<ApiResponse<UIConfig>>(`${apiUrl}/${uiConfigId}/evaluation-area/${evaluationAreaId}`, {});
+  }
+
+  /**
+   * Remover una configuración UI de su área de evaluación
+   */
+  removeFromEvaluationArea(uiConfigId: number): Observable<ApiResponse<UIConfig>> {
+    return this.http.put<ApiResponse<UIConfig>>(`${apiUrl}/removeFromArea/${uiConfigId}`, {});
   }
 }

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ListComponent } from './list/list.component';
 import { ManageComponent } from './manage/manage.component';
 import { ManageStateComponent } from './manage-state/manage-state.component';
+import { AssignToAreaComponent } from './assign-to-area/assign-to-area.component';
 
 export const UIConfigRoutes: Routes = [
   {
@@ -23,5 +24,9 @@ export const UIConfigRoutes: Routes = [
   {
     path: 'manage-state/:id',
     component: ManageStateComponent
+  },
+  {
+    path: 'assign-to-area/:id',
+    component: AssignToAreaComponent
   }
 ];
