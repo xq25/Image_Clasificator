@@ -95,11 +95,13 @@ export class ForgotPasswordComponent implements OnInit {
   validateToken(token: string): void {
     // Antes de generar la sesión temporal, se valida que el token sea válido
     this.securityService.getTemporalSession(token).subscribe({
-      next: (data) => {
+      next: (response) => {
         this.tokenLoading = false;
         this.tokenError = false;
         // Guardamos la sesión temporal — se usará para el PUT /users/{id}
-        this.securityService.saveSession(data.session);
+        if (response.data) {
+          this.securityService.saveSession(response.data);
+        }
         this.cdr.detectChanges();
       },
       error: () => {

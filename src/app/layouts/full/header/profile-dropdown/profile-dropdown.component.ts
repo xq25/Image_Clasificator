@@ -5,6 +5,8 @@ import { ProfileService } from '@app/services/profile-service';
 import { SecurityService } from '@app/services/ms-security/security';
 import { Router } from '@angular/router';
 import { Subject, catchError, of, takeUntil } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Profile } from '@app/models/Profile';
 
 @Component({
   selector: 'app-profile-dropdown',
@@ -40,9 +42,10 @@ export class ProfileDropdownComponent implements OnInit, OnDestroy {
     });
 
     this.profileService.getProfileByUserID(sessionUser.id).pipe(
+      map((response) => response.data ?? null),
       takeUntil(this.destroy$),
       catchError(() => of(null))
-    ).subscribe((profile) => {
+    ).subscribe((profile: Profile | null) => {
       this.profileService.setProfilePhoto(profile?.photo || null);
     });
   }

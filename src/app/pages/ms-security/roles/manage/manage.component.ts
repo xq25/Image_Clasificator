@@ -51,8 +51,8 @@ export class ManageComponent implements OnInit {
 
   private loadRole(id: string, mode: 0 | 2): void {
     this.roleService.getRoleById(id).subscribe({
-      next: (role) => {
-        this.buildConfig(mode, role);
+      next: (response) => {
+        this.buildConfig(mode, response.data ?? null);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -102,8 +102,8 @@ export class ManageComponent implements OnInit {
 
   private createRole(data: Role): void {
     this.roleService.createRole(data).subscribe({
-      next: () => {
-        alert('Rol creado exitosamente');
+      next: (response) => {
+        alert(response.message || 'Rol creado exitosamente');
         this.router.navigate(['roles/list']);
       },
       error: (error) => {
@@ -115,8 +115,8 @@ export class ManageComponent implements OnInit {
 
   private updateRole(data: Role): void {
     this.roleService.updateRole(data.id, data).subscribe({
-      next: () => {
-        alert('Rol actualizado exitosamente');
+      next: (response) => {
+        alert(response.message || 'Rol actualizado exitosamente');
         this.router.navigate(['roles/list']);
       },
       error: (error) => {

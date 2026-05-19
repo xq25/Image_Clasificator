@@ -5,10 +5,9 @@ import { environment } from '@environments/environment';
 import { Session } from '@app/models/Session';
 import { User } from '@app/models/User';
 import { map } from 'rxjs/operators';
+import { ApiResponse } from '@app/models/ms-clasificator/ApiResponse';
 
-export interface AuthResponse {
-  session: Session;
-}
+export type AuthResponse = ApiResponse<Session>;
 
 export interface PasswordStrength {
   level: string;       // 'weak' | 'medium' | 'strong'
@@ -68,7 +67,7 @@ export class SecurityService {
   }
 
   // LOGOUT
-  logout() {
+  logout(): void {
     const session = this.getCurrentSession();
 
     // Limpiamos primero para que guards y navegación reaccionen de inmediato.
@@ -79,7 +78,7 @@ export class SecurityService {
       return;
     }
 
-    this.http.put<{ message: string }>(
+    this.http.put<ApiResponse<void>>(
       `${environment.url_backend}/api/public/security/logout`,
       { id: session.id }
     ).subscribe({
@@ -102,8 +101,8 @@ export class SecurityService {
   }
 
   // REESTABLECER CONTRASEÑA (ENVIAR EMAIL)
-  resetPassword(email: string): Observable<any> {
-    return this.http.post(
+  resetPassword(email: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(
       `${environment.url_backend}/api/public/security/reset-password`,
       { email }
     );
@@ -126,7 +125,7 @@ export class SecurityService {
   // VALIDAR CÓDIGO 2FA
   validate2FACode(code: string): Observable<boolean> {
     const session = this.getCurrentSession();
-    return this.http.put<{ isValid: boolean; session?: Session }>(
+    return this.http.put<AuthResponse>(
       `${environment.url_backend}/api/public/security/validateCode2FA`,
       { 
         code2FA: code, 
@@ -134,21 +133,23 @@ export class SecurityService {
       }
     ).pipe(
       map(response => {
-        if (response.isValid && response.session) {
+        if (response.success && response.data) {
           // Guardar la sesión completa desde el backend
-          this.saveSession(response.session);
+          this.saveSession(response.data);
+          return true;
         }
-        return response.isValid;
+
+        return false;
       })
     );
   }
 //Validaciones (FORMULARIOS)------------
   // VERIFICAR SI EXISTE EMAIL
   existUserValidate(email: string): Observable<boolean> {
-    return this.http.get<{ exists: boolean }>(
+    return this.http.get<ApiResponse<boolean>>(
       `${environment.url_backend}/api/public/security/user-exist/email/${email}`
     ).pipe(
-      map(response => response.exists)
+      map(response => !!response.data)
     );
   }
 

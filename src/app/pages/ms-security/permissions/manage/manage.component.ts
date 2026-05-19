@@ -51,8 +51,8 @@ export class ManageComponent implements OnInit {
 
   private loadPermission(id: string, mode: 0 | 2): void {
     this.permissionService.getPermissionById(id).subscribe({
-      next: (permission) => {
-        this.buildConfig(mode, permission);
+      next: (response) => {
+        this.buildConfig(mode, response.data ?? null);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -109,8 +109,8 @@ export class ManageComponent implements OnInit {
 
   private createPermission(data: Permission): void {
     this.permissionService.createPermission(data).subscribe({
-      next: () => {
-        alert('Permiso creado exitosamente');
+      next: (response) => {
+        alert(response.message || 'Permiso creado exitosamente');
         this.router.navigate(['permissions/list']);
       },
       error: (error) => {
@@ -122,8 +122,8 @@ export class ManageComponent implements OnInit {
 
   private updatePermission(data: Permission): void {
     this.permissionService.updatePermission(data.id, data).subscribe({
-      next: () => {
-        alert('Permiso actualizado exitosamente');
+      next: (response) => {
+        alert(response.message || 'Permiso actualizado exitosamente');
         this.router.navigate(['permissions/list']);
       },
       error: (error) => {

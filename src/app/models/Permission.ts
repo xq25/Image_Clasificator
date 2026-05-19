@@ -17,7 +17,12 @@ export enum PermissionModel {
   USER       = 'User',
   PERMISSION = 'Permission',
   PROFILE    = 'Profile',
-  ROLEEPERMISSION = 'RolePermission',
-  USERROLE   = 'UserRole',
-  PHOTOS = 'Photo'
+  ROLE_PERMISSION = 'RolePermission',
+  USER_ROLE   = 'UserRole',
+  PHOTOS = 'Photo',
+  DOCTOR = 'Doctor',
+  PATIENT = 'Patient',
+  MEDICAL_DIAGNOSTIC = 'MedicalDiagnostic',
+  MEDICAL_IMAGE = 'MedicalImage',
+
 }

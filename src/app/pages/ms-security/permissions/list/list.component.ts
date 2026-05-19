@@ -44,8 +44,8 @@ export class ListComponent {
   loadPermissions(): void {
     this.loading.set(true);
     this.permissionService.getPermissions().subscribe({
-      next: (response: any) => {
-        const permissions = Array.isArray(response) ? response : (response?.content ?? response?.data ?? []);
+      next: (response) => {
+        const permissions = response.data ?? [];
         this.permissions.set(permissions);
         this.loading.set(false);
       },

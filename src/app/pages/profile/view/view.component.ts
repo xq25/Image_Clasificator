@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 
 import { MaterialModule } from '@app/material.module';
 import { Profile } from '@app/models/Profile';
@@ -64,9 +65,11 @@ export class ProfileViewComponent implements OnInit {
 
     forkJoin({
       user: this.userService.getUserById(sessionUser.id).pipe(
+        map((response) => response.data ?? sessionUser as User),
         catchError(() => of(sessionUser as User))
       ),
       profile: this.profileService.getProfileByUserID(sessionUser.id).pipe(
+        map((response) => response.data ?? null),
         catchError(() => of(null))
       )
     }).subscribe({

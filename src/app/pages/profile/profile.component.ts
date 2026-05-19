@@ -3,7 +3,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 import { MaterialModule } from '@app/material.module';
 import { ProfileService } from '@app/services/profile-service';
@@ -76,9 +76,11 @@ export class ProfileComponent implements OnInit {
 
     forkJoin({
       user: this.userService.getUserById(sessionUser.id).pipe(
+        map((response) => response.data ?? sessionUser as User),
         catchError(() => of(sessionUser as User))
       ),
       profile: this.profileService.getProfileByUserID(sessionUser.id).pipe(
+        map((response) => response.data ?? null),
         catchError(() => of(null))
       )
     }).subscribe({
@@ -168,7 +170,14 @@ export class ProfileComponent implements OnInit {
         : this.profileService.createProfile(payload);
 
       request.subscribe({
-        next: (savedProfile) => {
+        next: (response) => {
+          const savedProfile = response.data;
+          if (!savedProfile) {
+            this.saving.set(false);
+            this.errorMessage.set('No se pudo actualizar el perfil.');
+            return;
+          }
+
           if (!this.profileId) {
             this.profileId = savedProfile.id;
           }
@@ -197,7 +206,14 @@ export class ProfileComponent implements OnInit {
       }
 
       this.userService.updateUser(this.userForm.id, this.userForm).subscribe({
-        next: (updatedUser) => {
+        next: (response) => {
+          const updatedUser = response.data;
+          if (!updatedUser) {
+            this.saving.set(false);
+            this.errorMessage.set('No se pudo actualizar el usuario.');
+            return;
+          }
+
           this.userForm = {
             ...this.userForm,
             ...updatedUser,

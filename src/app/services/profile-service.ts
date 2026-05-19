@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { Profile } from '@app/models/Profile';
+import { ApiResponse } from '@app/models/ms-clasificator/ApiResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -29,40 +30,40 @@ export class ProfileService {
   // ===============================
   // GET ALL PROFILES
   // ===============================
-  getProfiles(): Observable<Profile[]> {
-    return this.http.get<Profile[]>(this.apiUrl);
+  getProfiles(): Observable<ApiResponse<Profile[]>> {
+    return this.http.get<ApiResponse<Profile[]>>(this.apiUrl);
   }
 
   // ===============================
   // GET PROFILE BY ID
   // ===============================
-  getProfileById(id: string): Observable<Profile> {
-    return this.http.get<Profile>(`${this.apiUrl}/${id}`);
+  getProfileById(id: string): Observable<ApiResponse<Profile>> {
+    return this.http.get<ApiResponse<Profile>>(`${this.apiUrl}/${id}`);
   }
 
-  getProfileByUserID(user_id: string): Observable<Profile> {
-    return this.http.get<Profile>(`${this.apiUrl}/user/${user_id}`);
+  getProfileByUserID(user_id: string): Observable<ApiResponse<Profile>> {
+    return this.http.get<ApiResponse<Profile>>(`${this.apiUrl}/user/${user_id}`);
   }
 
   // ===============================
   // CREATE PROFILE
   // ===============================
-  createProfile(profile: Profile): Observable<Profile> {
-    return this.http.post<Profile>(this.apiUrl, profile);
+  createProfile(profile: Profile): Observable<ApiResponse<Profile>> {
+    return this.http.post<ApiResponse<Profile>>(this.apiUrl, profile);
   }
 
   // ===============================
   // UPDATE PROFILE
   // ===============================
-  updateProfile(id: string, profile: Profile): Observable<Profile> {
-    return this.http.put<Profile>(`${this.apiUrl}/${id}`, profile);
+  updateProfile(id: string, profile: Profile): Observable<ApiResponse<Profile>> {
+    return this.http.put<ApiResponse<Profile>>(`${this.apiUrl}/${id}`, profile);
   }
 
   // ===============================
   // DELETE PROFILE
   // ===============================
-  deleteProfile(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deleteProfile(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }
 
 }

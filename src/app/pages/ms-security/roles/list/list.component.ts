@@ -44,7 +44,7 @@ export class ListComponent {
     this.loading.set(true);
     this.roleService.getRoles().subscribe({
       next: (response) => {
-        this.roles.set(response);
+        this.roles.set(response.data ?? []);
         this.loading.set(false);
       },
       error: (error) => {

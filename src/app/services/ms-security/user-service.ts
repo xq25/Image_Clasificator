@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { User } from '@app/models/User';
+import { ApiResponse } from '@app/models/ms-clasificator/ApiResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -17,43 +18,47 @@ export class UserService {
   // ===============================
   // GET ALL USERS
   // ===============================
-  getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(this.apiUrl);
+  getUsers(): Observable<ApiResponse<User[]>> {
+    return this.http.get<ApiResponse<User[]>>(this.apiUrl);
   }
 
   // ===============================
   // GET USER BY ID
   // ===============================
-  getUserById(id: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`);
+  getUserById(id: string): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`);
+  }
+
+  getUserByEmail(email: string): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(`${this.apiUrl}/email/${email}`);
   }
 
   // ===============================
   // CREATE USER
   // ===============================
-  createUser(user: User): Observable<User> {
-    return this.http.post<User>(this.apiUrl, user);
+  createUser(user: User): Observable<ApiResponse<User>> {
+    return this.http.post<ApiResponse<User>>(this.apiUrl, user);
   }
 
   // ===============================
   // UPDATE USER
   // ===============================
-  updateUser(id: string, user: User): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+  updateUser(id: string, user: User): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, user);
   }
 
   // ===============================
   // DELETE USER
   // ===============================
-  deleteUser(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deleteUser(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }
 
   // ===============================
   // ADD PROFILE TO USER
   // ===============================
-  addProfileToUser(userId: string, profileId: string): Observable<any> {
-    return this.http.post(
+  addProfileToUser(userId: string, profileId: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/${userId}/profile/${profileId}`,
       {}
     );
@@ -62,8 +67,8 @@ export class UserService {
   // ===============================
   // REMOVE PROFILE FROM USER
   // ===============================
-  removeProfileFromUser(userId: string, profileId: string): Observable<any> {
-    return this.http.delete(
+  removeProfileFromUser(userId: string, profileId: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(
       `${this.apiUrl}/${userId}/profile/${profileId}`
     );
   }
@@ -71,8 +76,8 @@ export class UserService {
   // ===============================
   // ADD SESSION TO USER
   // ===============================
-  addSessionToUser(userId: string, sessionId: string): Observable<any> {
-    return this.http.post(
+  addSessionToUser(userId: string, sessionId: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/${userId}/session/${sessionId}`,
       {}
     );
@@ -81,8 +86,8 @@ export class UserService {
   // ===============================
   // REMOVE SESSION FROM USER
   // ===============================
-  removeSessionFromUser(userId: string, sessionId: string): Observable<any> {
-    return this.http.delete(
+  removeSessionFromUser(userId: string, sessionId: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(
       `${this.apiUrl}/${userId}/session/${sessionId}`
     );
   }

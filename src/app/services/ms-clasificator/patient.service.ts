@@ -27,6 +27,13 @@ export class PatientService {
   }
 
   /**
+   * Obtener un paciente por userId
+   */
+  findByUserId(userId: string): Observable<ApiResponse<Patient>> {
+    return this.http.get<ApiResponse<Patient>>(`${apiUrl}/user-id/${userId}`);
+  }
+
+  /**
    * Obtener un paciente por documento
    */
   findByDocument(document: string): Observable<ApiResponse<Patient>> {

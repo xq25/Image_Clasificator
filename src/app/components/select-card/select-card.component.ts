@@ -12,6 +12,7 @@ export interface CardItem {
 
 @Component({
   selector: 'app-select-card',
+  standalone: true,
   imports: [MaterialModule, CommonModule],
   templateUrl: './select-card.component.html',
   styleUrl: './select-card.component.scss',
