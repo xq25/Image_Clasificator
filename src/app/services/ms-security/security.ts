@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import { Session } from '@app/models/Session';
 import { User } from '@app/models/User';
+import { RegisterRequest } from '@app/models/RegisterRequest';
 import { map } from 'rxjs/operators';
 import { ApiResponse } from '@app/models/ms-clasificator/ApiResponse';
 
@@ -43,10 +44,10 @@ export class SecurityService {
   }
 
   // REGISTER
-  register(newUser: User): Observable<AuthResponse> {
+  register(registerRequest: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(
       `${environment.url_backend}/api/public/security/register`,
-      newUser
+      registerRequest
     );
   }
 
