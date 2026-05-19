@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MedicalImg, ApiResponse } from '@models/ms-clasificator';
 
-const apiUrl = `${environment.url_backend_clasificator}/medical-images`;
+const apiUrl = `${environment.url_backend_clasificator}/api/medical-images`;
 
 @Injectable({
   providedIn: 'root'
