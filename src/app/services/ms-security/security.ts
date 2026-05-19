@@ -153,6 +153,12 @@ export class SecurityService {
     );
   }
 
+  findUserByEmail(email: string): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(
+      `${environment.url_backend}/api/public/security/user/email/${email}`
+    );
+  }
+
   // VALIDAR EMAIL
   validateEmail(email: string): string {
     if (!email) return 'El correo es requerido';

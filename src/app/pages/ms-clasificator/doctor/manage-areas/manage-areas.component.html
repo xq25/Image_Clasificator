@@ -52,17 +52,21 @@
         } @else {
           <div class="space-y-2">
             @for (area of doctorAreas(); track area.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-primary">domain</mat-icon>
-                <div matListItemTitle>{{ area.name }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ area.codeArea }}</div>
+              <div class="area-row border rounded p-3 mb-2">
+                <div class="area-content">
+                  <div class="area-avatar">{{ getAreaInitials(area) }}</div>
+                  <div>
+                    <div class="area-title">{{ area.name }}</div>
+                    <div class="area-description text-xs text-gray-600">{{ area.codeArea }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-icon-button
-                  matListItemMeta
                   color="warn"
-                  (click)="removeArea(area)"
+                  (click)="onRemoveArea($event, area)"
                   [disabled]="removingAreaId() === area.id?.toString()"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (removingAreaId() === area.id?.toString()) {
                     <mat-spinner diameter="20"></mat-spinner>
@@ -70,7 +74,7 @@
                     <mat-icon>delete</mat-icon>
                   }
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }
@@ -120,17 +124,21 @@
         } @else {
           <div class="space-y-2">
             @for (area of getAvailableAreas(); track area.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
-                <div matListItemTitle>{{ area.name }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ area.codeArea }}</div>
+              <div class="area-row border rounded p-3 mb-2">
+                <div class="area-content">
+                  <div class="area-avatar area-avatar--muted">{{ getAreaInitials(area) }}</div>
+                  <div>
+                    <div class="area-title">{{ area.name }}</div>
+                    <div class="area-description text-xs text-gray-600">{{ area.codeArea }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-raised-button
-                  matListItemMeta
                   color="accent"
-                  (click)="assignArea(area)"
+                  (click)="onAssignArea($event, area)"
                   [disabled]="addingAreaId() === area.id?.toString()"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (addingAreaId() === area.id?.toString()) {
                     <mat-spinner diameter="16"></mat-spinner>
@@ -139,7 +147,7 @@
                   }
                   Asignar
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }

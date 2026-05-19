@@ -99,16 +99,16 @@
 
         <form [formGroup]="stateForm" class="state-form-layout" (ngSubmit)="handleAddState()">
           <mat-form-field appearance="outline">
-            <mat-label>Diagnóstico médico</mat-label>
+            <mat-label>Subdiagnóstico</mat-label>
             <mat-select formControlName="medicalDiagnosticId">
-              @for (diagnostic of medicalDiagnostics; track diagnostic.id) {
+              @for (diagnostic of getSubDiagnosticOptions(); track diagnostic.id) {
                 <mat-option [value]="diagnostic.id">
-                  {{ (diagnostic.diagnosticName ?? diagnostic.diagnosticCode) }} ({{ diagnostic.diagnosticCode }})
+                  {{ diagnostic.diagnosticName ?? diagnostic.diagnosticCode }} ({{ diagnostic.diagnosticCode }})
                 </mat-option>
               }
             </mat-select>
             @if (stateForm.get('medicalDiagnosticId')?.touched && stateForm.get('medicalDiagnosticId')?.invalid) {
-              <mat-error>Seleccione un diagnóstico médico.</mat-error>
+              <mat-error>Seleccione un subdiagnóstico.</mat-error>
             }
           </mat-form-field>
 
