@@ -47,6 +47,7 @@ export class ManageStateComponent implements OnInit {
   configDiagnostic: MedicalDiagnostic | null = null;
   uiStates: UIState[] = [];
   medicalDiagnostics: MedicalDiagnostic[] = [];
+  availableSubDiagnostics: MedicalDiagnostic[] = [];
 
   previewCards: PreviewCard[] = [
     {
@@ -88,10 +89,12 @@ export class ManageStateComponent implements OnInit {
     this.medicalDiagnosticService.findAll().subscribe({
       next: (diagnostics) => {
         this.medicalDiagnostics = diagnostics ?? [];
+        this.refreshAvailableSubDiagnostics();
         this.loadContext();
       },
       error: () => {
         this.medicalDiagnostics = [];
+        this.availableSubDiagnostics = [];
         this.loadContext();
       }
     });
@@ -109,6 +112,7 @@ export class ManageStateComponent implements OnInit {
         }
 
         this.configDiagnostic = this.findDiagnosticById(this.uiConfig.medicalDiagnosticId);
+        this.refreshAvailableSubDiagnostics();
         this.loadStates();
       },
       error: () => {
@@ -147,8 +151,25 @@ export class ManageStateComponent implements OnInit {
     return `${diagnostic.diagnosticName ?? diagnostic.diagnosticCode} (${diagnostic.diagnosticCode})`;
   }
 
+  getSubDiagnosticOptions(): MedicalDiagnostic[] {
+    return this.availableSubDiagnostics;
+  }
+
   private findDiagnosticById(id: number): MedicalDiagnostic | null {
     return this.medicalDiagnostics.find(diagnostic => diagnostic.id === id) ?? null;
+  }
+
+  private refreshAvailableSubDiagnostics(): void {
+    const parentDiagnosticId = this.uiConfig?.medicalDiagnosticId;
+
+    if (parentDiagnosticId == null) {
+      this.availableSubDiagnostics = [];
+      return;
+    }
+
+    this.availableSubDiagnostics = this.medicalDiagnostics.filter(
+      diagnostic => diagnostic.parentDiagnosticId === parentDiagnosticId
+    );
   }
 
   handleAddState(): void {

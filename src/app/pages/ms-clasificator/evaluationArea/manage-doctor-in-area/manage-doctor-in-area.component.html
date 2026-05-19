@@ -1,15 +1,15 @@
-<div class="manage-areas-page p-6">
+<div class="manage-doctor-in-area-page p-6">
 
   <div class="page-header mb-6">
     <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
-    <div class="doctor-identity" *ngIf="evaluationArea()">
-      <div class="doctor-avatar">{{ getEvaluationAreaLabel().slice(0, 2).toUpperCase() }}</div>
-      <div class="doctor-info">
-        <h2 class="doctor-code">{{ evaluationArea()?.name ?? 'Cargando...' }}</h2>
-        <span class="doctor-user">{{ evaluationArea()?.codeArea ?? '' }}</span>
+    <div class="area-identity" *ngIf="evaluationArea()">
+      <div class="area-avatar">{{ getEvaluationAreaLabel().slice(0, 2).toUpperCase() }}</div>
+      <div class="area-info">
+        <h2 class="area-name">{{ evaluationArea()?.name ?? 'Cargando...' }}</h2>
+        <span class="area-code">{{ evaluationArea()?.codeArea ?? '' }}</span>
       </div>
     </div>
   </div>
@@ -52,17 +52,21 @@
         } @else {
           <div class="space-y-2">
             @for (doctor of doctorsInArea(); track doctor.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-primary">person</mat-icon>
-                <div matListItemTitle>{{ doctor.code }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ doctor.userId }}</div>
+              <div class="doctor-row border rounded p-3 mb-2">
+                <div class="doctor-content">
+                  <div class="doctor-avatar">{{ getDoctorInitials(doctor) }}</div>
+                  <div>
+                    <div class="doctor-title">{{ doctor.code }}</div>
+                    <div class="doctor-description text-xs text-gray-600">{{ doctor.userId }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-icon-button
-                  matListItemMeta
                   color="warn"
-                  (click)="removeDoctor(doctor)"
+                  (click)="onRemoveDoctor($event, doctor)"
                   [disabled]="removingDoctorId() === doctor.id?.toString()"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (removingDoctorId() === doctor.id?.toString()) {
                     <mat-spinner diameter="20"></mat-spinner>
@@ -70,7 +74,7 @@
                     <mat-icon>delete</mat-icon>
                   }
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }
@@ -120,17 +124,21 @@
         } @else {
           <div class="space-y-2">
             @for (doctor of getAvailableDoctors(); track doctor.id) {
-              <mat-list-item class="border rounded p-3 mb-2">
-                <mat-icon matListItemIcon class="text-success">add_circle_outline</mat-icon>
-                <div matListItemTitle>{{ doctor.code }}</div>
-                <div matListItemLine class="text-xs text-gray-600">{{ doctor.userId }}</div>
+              <div class="doctor-row border rounded p-3 mb-2">
+                <div class="doctor-content">
+                  <div class="doctor-avatar doctor-avatar--muted">{{ getDoctorInitials(doctor) }}</div>
+                  <div>
+                    <div class="doctor-title">{{ doctor.code }}</div>
+                    <div class="doctor-description text-xs text-gray-600">{{ doctor.userId }}</div>
+                  </div>
+                </div>
                 <button
+                  type="button"
                   mat-raised-button
-                  matListItemMeta
                   color="accent"
-                  (click)="assignDoctor(doctor)"
+                  (click)="onAssignDoctor($event, doctor)"
                   [disabled]="addingDoctorId() === doctor.id?.toString()"
-                  class="ml-2"
+                  class="ml-2 action-btn"
                 >
                   @if (addingDoctorId() === doctor.id?.toString()) {
                     <mat-spinner diameter="16"></mat-spinner>
@@ -139,7 +147,7 @@
                   }
                   Asignar
                 </button>
-              </mat-list-item>
+              </div>
             }
           </div>
         }

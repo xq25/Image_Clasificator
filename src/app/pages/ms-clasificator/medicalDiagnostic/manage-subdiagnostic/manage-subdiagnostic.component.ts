@@ -128,7 +128,7 @@ export class ManageSubDiagnosticComponent implements OnInit {
     return this.allDiagnostics().filter(d => !this.hasSub(d) && (!q || d.diagnosticCode?.toLowerCase().includes(q) || d.diagnosticName?.toLowerCase().includes(q)));
   });
 
-  goBack(): void { this.router.navigate(['../list'], { relativeTo: this.route }); }
+  goBack(): void { this.router.navigate(['medical-diagnostics/list']); }
 
   private showToast(message: string, type: 'success' | 'error') { this.toast.set({ message, type }); clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast.set(null), 3000); }
 }

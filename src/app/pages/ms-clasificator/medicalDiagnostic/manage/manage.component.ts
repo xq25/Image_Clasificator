@@ -4,6 +4,7 @@ import { Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { forkJoin } from 'rxjs';
 
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { MedicalDiagnosticService } from '@app/services/ms-clasificator/medical-diagnostic.service';
@@ -20,6 +21,7 @@ export class ManageComponent implements OnInit {
 
   formConfig!: DynamicFormConfig;
   loading = true;
+  allDiagnostics: MedicalDiagnostic[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -33,9 +35,7 @@ export class ManageComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
 
     if (routePath === 'create') {
-      this.buildConfig(1, null);
-      this.loading = false;
-      this.cdr.detectChanges();
+      this.loadDiagnosticsAndBuild(1, null);
 
     } else if (routePath === 'view/:id' && id) {
       this.loadDiagnostic(id, 0);
@@ -49,10 +49,34 @@ export class ManageComponent implements OnInit {
     }
   }
 
+  private loadDiagnosticsAndBuild(mode: 0 | 1 | 2, model: MedicalDiagnostic | null): void {
+    this.loading = true;
+
+    forkJoin({
+      diagnostics: this.medicalDiagnosticService.findAll(),
+    }).subscribe({
+      next: ({ diagnostics }) => {
+        this.allDiagnostics = diagnostics ?? [];
+        this.buildConfig(mode, model);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        alert('Error: No se pudo cargar el catálogo de diagnósticos');
+        this.router.navigate(['medical-diagnostics/list']);
+      }
+    });
+  }
+
   private loadDiagnostic(id: string, mode: 0 | 2): void {
-    this.medicalDiagnosticService.findById(Number(id)).subscribe({
+    this.loading = true;
+
+    forkJoin({
+      diagnostic: this.medicalDiagnosticService.findById(Number(id)),
+      diagnostics: this.medicalDiagnosticService.findAll(),
+    }).subscribe({
       next: (response) => {
-        const diagnostic = response?.data ?? null;
+        const diagnostic = response.diagnostic?.data ?? null;
 
         if (!diagnostic) {
           alert('Error: No se pudo cargar el diagnóstico');
@@ -60,6 +84,7 @@ export class ManageComponent implements OnInit {
           return;
         }
 
+        this.allDiagnostics = response.diagnostics ?? [];
         this.buildConfig(mode, diagnostic);
         this.loading = false;
         this.cdr.detectChanges();
@@ -72,6 +97,14 @@ export class ManageComponent implements OnInit {
   }
 
   buildConfig(mode: 0 | 1 | 2, model: MedicalDiagnostic | null): void {
+    const parentOptions = this.allDiagnostics
+      .filter(diagnostic => !model?.id || diagnostic.id !== model.id)
+      .filter(diagnostic => diagnostic.id)
+      .map(diagnostic => ({
+        value: diagnostic.id,
+        label: this.getDiagnosticLabel(diagnostic),
+      }));
+
     this.formConfig = {
       mode,
       model,
@@ -79,9 +112,15 @@ export class ManageComponent implements OnInit {
         { name: 'id', label: 'ID', type: 'text' },
         { name: 'diagnosticCode', label: 'Código', type: 'text', placeholder: 'Código del diagnóstico', validators: [Validators.required, Validators.minLength(2)] },
         { name: 'diagnosticName', label: 'Nombre', type: 'text', placeholder: 'Nombre del diagnóstico', validators: [Validators.required, Validators.minLength(2)] },
-        { name: 'parentDiagnosticId', label: 'ID Padre', type: 'text', placeholder: 'ID del diagnóstico padre' }
+        { name: 'parentDiagnosticId', label: 'Diagnóstico padre', type: 'select', placeholder: 'Selecciona el diagnóstico padre', options: [{ value: '', label: 'Sin diagnóstico padre' }, ...parentOptions] }
       ]
     };
+  }
+
+  getDiagnosticLabel(diagnostic: MedicalDiagnostic): string {
+    const name = diagnostic.diagnosticName?.trim() || 'Sin nombre';
+    const code = diagnostic.diagnosticCode?.trim() || 'Sin código';
+    return `${name} (${code})`;
   }
 
   handleFormSubmit(data: any): void {

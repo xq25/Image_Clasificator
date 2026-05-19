@@ -43,7 +43,7 @@ export class DoctorAreaService {
   /**
    * Crear una nueva relación DoctorArea
    */
-  create(doctorArea: Partial<DoctorArea>): Observable<ApiResponse<DoctorArea>> {
+  create(doctorArea: { doctorId: number; evaluationAreaId: number }): Observable<ApiResponse<DoctorArea>> {
     return this.http.post<ApiResponse<DoctorArea>>(`${apiUrl}`, doctorArea);
   }
 

@@ -1,0 +1,106 @@
+.manage-doctor-in-area-page {
+	.page-header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+
+		.area-identity {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			margin-left: auto;
+
+			.area-avatar {
+				width: 48px;
+				height: 48px;
+				border-radius: 50%;
+				background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: white;
+				font-weight: 700;
+				font-size: 18px;
+			}
+
+			.area-info {
+				.area-name {
+					font-weight: 600;
+					margin: 0;
+					font-size: 16px;
+				}
+
+				.area-code {
+					font-size: 14px;
+					color: #666;
+				}
+			}
+		}
+	}
+
+	.toast {
+		padding: 1rem;
+		border-radius: 8px;
+		position: relative;
+
+		&.toast-success {
+			background-color: #d4edda;
+			color: #155724;
+			border: 1px solid #c3e6cb;
+		}
+
+		&.toast-error {
+			background-color: #f8d7da;
+			color: #721c24;
+			border: 1px solid #f5c6cb;
+		}
+	}
+
+	.doctor-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.doctor-content {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.doctor-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #1d4ed8 0%, #38bdf8 100%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		font-weight: 700;
+		font-size: 14px;
+		flex-shrink: 0;
+
+		&.doctor-avatar--muted {
+			background: linear-gradient(135deg, #0f766e 0%, #5eead4 100%);
+		}
+	}
+
+	.doctor-title {
+		font-weight: 600;
+	}
+
+	.doctor-description {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.action-btn {
+		flex-shrink: 0;
+	}
+}

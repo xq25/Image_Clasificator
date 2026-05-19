@@ -6,7 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
@@ -30,7 +29,6 @@ interface Toast {
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatListModule,
     MatInputModule,
     MatFormFieldModule
   ],
@@ -79,6 +77,12 @@ export class ManageDoctorInAreaComponent implements OnInit {
     });
   }
 
+  onAssignDoctor(event: Event, doctor: Doctor): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.assignDoctor(doctor);
+  }
+
   loadDoctorsInArea(): void {
     this.loadingDoctorsInArea.set(true);
 
@@ -125,9 +129,9 @@ export class ManageDoctorInAreaComponent implements OnInit {
     this.addingDoctorId.set(doctor.id!.toString());
 
     this.doctorAreaService.create({
-      doctor: { id: doctor.id } as Doctor,
-      evaluationArea: { id: Number(this.evaluationAreaId) } as EvaluationArea,
-    } as Partial<DoctorArea>).subscribe({
+      doctorId: Number(doctor.id),
+      evaluationAreaId: Number(this.evaluationAreaId),
+    }).subscribe({
       next: () => {
         this.showToast(`Doctor "${doctor.code}" asignado exitosamente`, 'success');
         this.addingDoctorId.set(null);
@@ -141,7 +145,18 @@ export class ManageDoctorInAreaComponent implements OnInit {
     });
   }
 
+  onRemoveDoctor(event: Event, doctor: Doctor): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.removeDoctor(doctor);
+  }
+
   removeDoctor(doctor: Doctor): void {
+    if (!doctor.id) {
+      this.showToast('No se pudo determinar el ID del doctor', 'error');
+      return;
+    }
+
     if (!confirm(`¿Desasignar el doctor "${doctor.code}"?`)) return;
 
     const doctorArea = this.doctorAreaRelations().find(
@@ -190,7 +205,24 @@ export class ManageDoctorInAreaComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['../list'], { relativeTo: this.route });
+    this.router.navigate(['evaluation-areas/list']);
+  }
+
+  getDoctorInitials(doctor: Doctor): string {
+    const value = (doctor.code ?? doctor.userId ?? '').trim();
+
+    if (!value) {
+      return 'DO';
+    }
+
+    const compact = value.replace(/[^a-zA-Z0-9]+/g, ' ').trim();
+    return compact
+      .split(' ')
+      .filter(Boolean)
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
   }
 
   private showToast(message: string, type: 'success' | 'error'): void {

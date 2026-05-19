@@ -39,6 +39,53 @@
     }
   }
 
+  .area-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .area-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .area-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+
+    &.area-avatar--muted {
+      background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
+    }
+  }
+
+  .area-title {
+    font-weight: 600;
+  }
+
+  .area-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .action-btn {
+    flex-shrink: 0;
+  }
+
   .toast {
     padding: 1rem;
     border-radius: 8px;
