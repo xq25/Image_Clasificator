@@ -1,0 +1,183 @@
+<div class="classification-page">
+  @if (loading) {
+    <div class="loading-shell">
+      <mat-spinner></mat-spinner>
+      <p>Preparando la pantalla de clasificación...</p>
+    </div>
+  } @else {
+    <header class="page-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Clasificación de imágenes</p>
+        <h1>{{ getAreaLabel() }}</h1>
+        <p class="hero-text">Doctor {{ getDoctorLabel(currentDoctor) }}. El foco está en la imagen y en las acciones de clasificación.</p>
+      </div>
+
+      <div class="hero-actions">
+        <button mat-stroked-button color="primary" type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="skipImage()" [disabled]="!hasImages">
+          <mat-icon>skip_next</mat-icon>
+          Omitir
+        </button>
+      </div>
+    </header>
+
+    @if (statusMessage) {
+      <mat-card class="status-card status-{{ statusType || 'warning' }}">
+        <mat-icon>{{ statusType === 'success' ? 'check_circle' : statusType === 'error' ? 'error' : 'info' }}</mat-icon>
+        <span>{{ statusMessage }}</span>
+      </mat-card>
+    }
+
+    <section class="mini-context">
+      <span class="pill">{{ getConfigLabel() }}</span>
+      <span class="pill">Pendientes: {{ pendingImages.length }}</span>
+      <span class="pill">UIStates: {{ uiStates.length }}</span>
+      <span class="pill">Clasificadas: {{ classifiedImageIds.length }}</span>
+    </section>
+
+    <section class="workspace-grid">
+      <mat-card class="access-panel">
+        <div class="panel-head compact">
+          <div>
+            <p class="card-label">Acceso</p>
+            <h3>{{ doctorsWithAccess.length }}</h3>
+          </div>
+          <span class="pill">{{ accessDenied ? 'Sin acceso' : 'Activo' }}</span>
+        </div>
+
+        <div class="doctor-list">
+          @for (doctor of doctorsWithAccess; track doctor.id) {
+            <div class="doctor-row">
+              <div>
+                <strong>{{ doctor.code }}</strong>
+                <p>{{ doctor.userId }}</p>
+              </div>
+              @if (doctor.id === doctorId) {
+                <span class="pill pill-highlight">Actual</span>
+              }
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="image-stage">
+        @if (currentImage) {
+          <div class="stage-topbar">
+            <div>
+              <p class="card-label">Imagen actual</p>
+              <h2>{{ getImageProgressLabel() }}</h2>
+              <p class="stage-caption">{{ currentImageMessage }}</p>
+            </div>
+            <button mat-button type="button" (click)="openImageInNewTab()">
+              <mat-icon>open_in_new</mat-icon>
+              Abrir
+            </button>
+          </div>
+
+          @if (uiStates.length <= 3) {
+            <div class="tinder-stage">
+              <button
+                mat-fab
+                extended
+                type="button"
+                class="tinder-action tinder-left"
+                [hidden]="!leftState"
+                [disabled]="!canClassify || !leftState"
+                (click)="leftState && classify(leftState)"
+              >
+                <mat-icon>west</mat-icon>
+                {{ leftState?.label }}
+              </button>
+
+              <button
+                mat-fab
+                extended
+                type="button"
+                class="tinder-action tinder-up"
+                [hidden]="!upState"
+                [disabled]="!canClassify || !upState"
+                (click)="upState && classify(upState)"
+              >
+                <mat-icon>north</mat-icon>
+                {{ upState?.label }}
+              </button>
+
+              <button
+                mat-fab
+                extended
+                type="button"
+                class="tinder-action tinder-right"
+                [hidden]="!rightState"
+                [disabled]="!canClassify || !rightState"
+                (click)="rightState && classify(rightState)"
+              >
+                <mat-icon>east</mat-icon>
+                {{ rightState?.label }}
+              </button>
+
+              <div class="image-frame">
+                <img [src]="currentImage.imageUrl" [alt]="currentImage.imageKey" />
+              </div>
+            </div>
+          } @else {
+            <div class="image-and-actions">
+              <div class="image-frame">
+                <img [src]="currentImage.imageUrl" [alt]="currentImage.imageKey" />
+              </div>
+
+              <div class="states-grid compact-grid">
+                @for (state of stateButtons; track state.id) {
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    class="state-grid-button"
+                    [disabled]="!canClassify"
+                    (click)="classify(state)"
+                  >
+                    <mat-icon>gesture</mat-icon>
+                    <span>{{ state.label }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="image-meta">
+            <div>
+              <span>Clave</span>
+              <strong>{{ currentImage.imageKey }}</strong>
+            </div>
+            <div>
+              <span>Proveedor</span>
+              <strong>{{ currentImage.provider }}</strong>
+            </div>
+            <div>
+              <span>Archivo</span>
+              <strong>{{ currentImage.contentType || 'N/D' }}</strong>
+            </div>
+          </div>
+
+          <div class="stage-actions">
+            <button mat-stroked-button type="button" (click)="previousImage()" [disabled]="!hasImages">
+              <mat-icon>chevron_left</mat-icon>
+              Anterior
+            </button>
+            <button mat-flat-button color="accent" type="button" (click)="nextImage()" [disabled]="!hasImages">
+              <mat-icon>chevron_right</mat-icon>
+              Siguiente
+            </button>
+          </div>
+        } @else {
+          <div class="empty-stage">
+            <mat-icon>image_not_supported</mat-icon>
+            <h2>No hay imágenes pendientes</h2>
+            <p>Este doctor ya no tiene imágenes por clasificar en esta área.</p>
+          </div>
+        }
+      </mat-card>
+    </section>
+  }
+</div>
