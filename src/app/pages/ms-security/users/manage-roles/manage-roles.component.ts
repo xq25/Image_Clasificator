@@ -81,7 +81,7 @@ export class ManageRolesComponent implements OnInit {
 
   loadUser(): void {
     this.userService.getUserById(this.userId).subscribe({
-      next: (u) => this.user.set(u),
+      next: (response) => this.user.set(response.data ?? null),
       error: () => this.showToast('Error al cargar el usuario', 'error'),
     });
   }
@@ -90,10 +90,8 @@ export class ManageRolesComponent implements OnInit {
     this.loadingUserRoles.set(true);
 
     this.userRoleService.getUserRoles(this.userId).subscribe({
-      next: (data: any) => {
-        const relations: UserRole[] = Array.isArray(data)
-          ? data
-          : (data?.content ?? data?.data ?? []);
+      next: (response) => {
+        const relations: UserRole[] = response.data ?? [];
 
         const safeRelations = relations.filter(ur => ur?.role?.id);
 
@@ -114,10 +112,8 @@ export class ManageRolesComponent implements OnInit {
     this.loadingAvailableRoles.set(true);
 
     this.roleService.getRoles().subscribe({
-      next: (data: any) => {
-        const roles = Array.isArray(data)
-          ? data
-          : (data?.content ?? data?.data ?? []);
+      next: (response) => {
+        const roles = response.data ?? [];
 
         this.allRoles.set(roles);
         this.loadingAvailableRoles.set(false);

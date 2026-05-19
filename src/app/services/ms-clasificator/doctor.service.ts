@@ -27,6 +27,13 @@ export class DoctorService {
   }
 
   /**
+   * Obtener doctores por userId
+   */
+  findByUserId(userId: string): Observable<Doctor[]> {
+    return this.http.get<Doctor[]>(`${apiUrl}/user-id/${userId}`);
+  }
+  
+  /**
    * Obtener un doctor por código
    */
   findByCode(code: string): Observable<ApiResponse<Doctor>> {

@@ -28,6 +28,7 @@ export class SideBarService {
     }
 
     return this.userRoleService.getUserRoles(userId).pipe(
+      map((response) => response.data ?? []),
       map((userRoles) =>
         userRoles.map((userRole) => userRole.role?.id).filter((roleId): roleId is string => !!roleId)
       ),

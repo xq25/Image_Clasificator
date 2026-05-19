@@ -44,7 +44,7 @@ export class ListComponent {
     this.loading.set(true);
     this.userService.getUsers().subscribe({
       next: (response) => {
-        this.users.set(response);
+        this.users.set(response.data ?? []);
         this.loading.set(false);
       },
       error: (error) => {

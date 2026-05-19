@@ -85,7 +85,7 @@ export class ManagePermissionsComponent implements OnInit {
 
   loadRole(): void {
     this.roleService.getRoleById(this.roleId).subscribe({
-      next: (r) => this.role.set(r),
+      next: (response) => this.role.set(response.data ?? null),
       error: () => this.showToast('Error al cargar el rol', 'error'),
     });
   }
@@ -94,8 +94,8 @@ export class ManagePermissionsComponent implements OnInit {
     this.loading.set(true);
 
     this.permissionService.getPermissions().subscribe({
-      next: (data: any) => {
-        const permissions = Array.isArray(data) ? data : (data?.content ?? data?.data ?? []);
+      next: (response) => {
+        const permissions = response.data ?? [];
         this.allPermissions.set(permissions);
         this.loadAssigned();
       },
@@ -108,10 +108,8 @@ export class ManagePermissionsComponent implements OnInit {
 
   loadAssigned(): void {
     this.rolePermissionService.getRolePermissions(this.roleId).subscribe({
-      next: (data: any) => {
-        const relations: RolePermission[] = Array.isArray(data)
-          ? data
-          : (data?.content ?? data?.data ?? []);
+      next: (response) => {
+        const relations: RolePermission[] = response.data ?? [];
 
         const safeRelations = relations.filter(rp => rp?.permission?.id);
         this.rolePermissionRelations.set(safeRelations);
@@ -145,7 +143,14 @@ export class ManagePermissionsComponent implements OnInit {
     this.processingId.set(permission.id!);
 
     this.rolePermissionService.addRolePermission(this.roleId, permission.id!).subscribe({
-      next: (newRelation: RolePermission) => {
+      next: (response) => {
+        const newRelation = response.data;
+        if (!newRelation) {
+          this.processingId.set(null);
+          this.showToast('No se pudo asignar el permiso', 'error');
+          return;
+        }
+
         const safeRelation: RolePermission = {
           ...newRelation,
           permission: newRelation.permission ?? permission

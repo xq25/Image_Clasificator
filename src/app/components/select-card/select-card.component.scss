@@ -12,15 +12,15 @@
 
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 24px;
-  padding: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 8px;
   width: 100%;
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px;
-    padding: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    padding: 6px;
   }
 
   @media (max-width: 480px) {
@@ -37,12 +37,12 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  min-height: 220px;
+  min-height: 130px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 12px;
 
   &:hover {
     box-shadow: 0 8px 24px rgba(83, 155, 255, 0.15);
@@ -76,7 +76,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     padding: 0 !important;
     text-align: center;
     width: 100%;
@@ -87,8 +87,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   margin-bottom: 8px;
@@ -96,16 +96,16 @@
 }
 
 .card-icon {
-  font-size: 40px;
-  width: 40px;
-  height: 40px;
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
   color: #539bff;
   transition: all 0.3s ease;
 }
 
 .card-name {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1976d2;
   line-height: 1.4;
@@ -116,7 +116,7 @@
 
 .card-value {
   margin: 0;
-  font-size: 24px;
+  font-size: 15px;
   font-weight: 700;
   color: #0d47a1;
   letter-spacing: -0.5px;
@@ -133,9 +133,9 @@
 }
 
 .checkmark-icon {
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
   color: #13deb9;
   opacity: 0;
   transform: scale(0.5);

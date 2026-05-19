@@ -5,17 +5,34 @@ import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
 import { MaterialModule } from 'src/app/material.module';
+import { SelectCardComponent, CardItem } from 'src/app/components/select-card/select-card.component';
 import { User } from '@app/models/User';
 import { PasswordStrength, SecurityService } from '@app/services/ms-security/security';
 
 @Component({
   selector: 'app-side-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, SelectCardComponent],
   templateUrl: './side-register.component.html',
   styleUrl: './side-register.component.scss',
 })
 export class AppSideRegisterComponent {
+  userTypeCards: CardItem[] = [
+    {
+      id: 'doctor',
+      name: 'Doctor',
+      value: 'Registro para doctor',
+      icon: 'medical_services',
+    },
+    {
+      id: 'patient',
+      name: 'Patient',
+      value: 'Registro para paciente',
+      icon: 'person',
+    },
+  ];
+
+  selectedUserType: CardItem | null = null;
   step: 1 | 2 = 1;
   loading = false;
   feedbackMessage = '';
@@ -57,7 +74,26 @@ export class AppSideRegisterComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
+  onUserTypeSelected(card: CardItem): void {
+    this.selectedUserType = card;
+  }
+
+  private requireUserTypeSelection(): boolean {
+    if (this.selectedUserType) {
+      return true;
+    }
+
+    this.feedbackMessage = 'Selecciona Doctor o Patient antes de continuar.';
+    this.feedbackType = 'error';
+    Swal.fire('Selecciona un tipo de usuario', 'Debes elegir Doctor o Patient antes de validar el correo', 'warning');
+    return false;
+  }
+
   checkEmail(): void {
+    if (!this.requireUserTypeSelection()) {
+      return;
+    }
+
     this.emailError = this.securityService.validateEmail(this.emailInput.trim());
     if (this.emailError) {
       this.feedbackMessage = this.emailError;
@@ -126,6 +162,10 @@ export class AppSideRegisterComponent {
   }
 
   register(): void {
+    if (!this.requireUserTypeSelection()) {
+      return;
+    }
+
     this.validateName();
     this.validatePassword();
     this.validateConfirmPassword();
@@ -143,12 +183,20 @@ export class AppSideRegisterComponent {
     };
 
     this.securityService.register(newUser).subscribe({
-      next: (data) => {
+      next: (response) => {
         this.loading = false;
-        this.securityService.saveSession(data.session);
-          this.feedbackMessage = 'Cuenta creada correctamente.';
-          this.feedbackType = 'success';
-        Swal.fire('¡Bienvenido!', 'Tu cuenta ha sido creada exitosamente', 'success');
+        if (response.data) {
+          this.securityService.saveSession(response.data);
+        }
+        localStorage.setItem(
+          'userType',
+          JSON.stringify({
+            type: this.selectedUserType?.id,
+          })
+        );
+        this.feedbackMessage = response.message || 'Cuenta creada correctamente.';
+        this.feedbackType = 'success';
+        Swal.fire('¡Bienvenido!', response.message || 'Tu cuenta ha sido creada exitosamente', 'success');
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {

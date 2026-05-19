@@ -90,12 +90,14 @@ export class AppSideLoginComponent implements OnInit {
         
         // Enviar credenciales + captchaToken al backend
         this.securityService.login(loginData.email, loginData.password, captchaToken).subscribe({
-          next: (data) => {
-            this.securityService.saveSession(data.session);
+          next: (response) => {
+            if (response.data) {
+              this.securityService.saveSession(response.data);
+            }
             this.removeRecaptcha();
             this.isLoading = false;
             
-            Swal.fire('Login exitoso', 'Has iniciado sesión correctamente', 'success');
+            Swal.fire('Login exitoso', response.message || 'Has iniciado sesión correctamente', 'success');
             
             // Verificar si requiere 2FA
             this.router.navigate(['/auth/authentication/validate2FA']);
@@ -125,12 +127,14 @@ export class AppSideLoginComponent implements OnInit {
       }
 
       this.oAuthService.loginOAuthGoogle(idToken).subscribe({
-        next: (data) => {
-          this.securityService.saveSession(data.session);
+        next: (response) => {
+          if (response.data) {
+            this.securityService.saveSession(response.data);
+          }
           this.removeRecaptcha();
           this.isLoading = false;
           
-          Swal.fire('Login exitoso', 'Has iniciado sesión con Google', 'success');
+          Swal.fire('Login exitoso', response.message || 'Has iniciado sesión con Google', 'success');
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
@@ -155,12 +159,14 @@ export class AppSideLoginComponent implements OnInit {
       }
 
       this.oAuthService.loginOAuthGithub(idToken).subscribe({
-        next: (data) => {
-          this.securityService.saveSession(data.session);
+        next: (response) => {
+          if (response.data) {
+            this.securityService.saveSession(response.data);
+          }
           this.removeRecaptcha();
           this.isLoading = false;
           
-          Swal.fire('Login exitoso', 'Has iniciado sesión con GitHub', 'success');
+          Swal.fire('Login exitoso', response.message || 'Has iniciado sesión con GitHub', 'success');
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
@@ -185,12 +191,14 @@ export class AppSideLoginComponent implements OnInit {
       }
 
       this.oAuthService.loginOAuthMicrosoft(idToken).subscribe({
-        next: (data) => {
-          this.securityService.saveSession(data.session);
+        next: (response) => {
+          if (response.data) {
+            this.securityService.saveSession(response.data);
+          }
           this.removeRecaptcha();
           this.isLoading = false;
           
-          Swal.fire('Login exitoso', 'Has iniciado sesión con Microsoft', 'success');
+          Swal.fire('Login exitoso', response.message || 'Has iniciado sesión con Microsoft', 'success');
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {

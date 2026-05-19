@@ -35,21 +35,37 @@
     </div>
   </div>
 
-  <div class="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-6 bg-white">
-    <div class="w-full max-w-xl mt-6 mb-6 overflow-hidden">
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-2 lg:p-3 bg-white overflow-hidden">
+    <div class="w-full max-w-md my-2 overflow-hidden">
       <mat-card class="cardWithShadow overflow-hidden auth-card border-0 shadow-lg">
         <div class="h-1 bg-gradient-to-r from-indigo-600 to-blue-600"></div>
 
-        <div class="p-6 lg:p-8">
+        <div class="p-3 lg:p-4">
           @if (step === 1) {
-            <div class="mb-6">
-              <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-4">
+            <div class="mb-4">
+              <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-3">
                 <mat-icon class="!text-[16px]">person_add</mat-icon>
                 Paso 1 de 2
               </div>
-              <h2 class="text-2xl font-bold text-gray-900 mb-2">Verifica tu correo</h2>
+              <h2 class="text-xl font-bold text-gray-900 mb-1">Verifica tu correo</h2>
               <p class="text-sm text-gray-600">Usaremos este correo como tu usuario principal en el sistema.</p>
             </div>
+
+            <div class="mb-4 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-2 lg:p-3 max-h-[260px] overflow-hidden">
+              <app-select-card
+                [cards]="userTypeCards"
+                title="Selecciona tu tipo de usuario"
+                description="Este paso es obligatorio antes de validar el correo"
+                (cardSelected)="onUserTypeSelected($event)">
+              </app-select-card>
+            </div>
+
+            @if (selectedUserType) {
+              <div class="mb-3 rounded-lg border border-indigo-100 bg-indigo-50/60 px-4 py-2 text-sm text-indigo-900">
+                <span class="font-semibold">Tipo seleccionado:</span>
+                <span class="ml-2">{{ selectedUserType.name }}</span>
+              </div>
+            }
 
             <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Correo electrónico</mat-label>
             <mat-form-field appearance="outline" class="w-full" color="primary">
@@ -83,8 +99,8 @@
             <button
               mat-flat-button
               color="primary"
-              class="w-full mt-4"
-              [disabled]="loading || !emailInput.trim()"
+              class="w-full mt-3"
+              [disabled]="loading || !emailInput.trim() || !selectedUserType"
               type="button"
               (click)="checkEmail()">
               @if (loading) {
@@ -94,7 +110,7 @@
               }
             </button>
 
-            <span class="block font-medium text-center mt-5 text-sm text-gray-600">
+            <span class="block font-medium text-center mt-4 text-sm text-gray-600">
               ¿Ya tienes cuenta?
               <a (click)="goToLogin()" class="cursor-pointer no-underline text-primary font-medium text-xs lg:text-sm">
                 Inicia sesión

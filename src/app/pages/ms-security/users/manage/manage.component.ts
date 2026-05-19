@@ -51,8 +51,8 @@ export class ManageComponent implements OnInit {
 
   private loadUser(id: string, mode: 0 | 2): void {
     this.userService.getUserById(id).subscribe({
-      next: (user) => {
-        this.buildConfig(mode, user);
+      next: (response) => {
+        this.buildConfig(mode, response.data ?? null);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -107,8 +107,8 @@ export class ManageComponent implements OnInit {
     if (mode === 1) {
       // CREATE
       this.userService.createUser(data).subscribe({
-        next: () => {
-          alert('Usuario creado exitosamente');
+        next: (response) => {
+          alert(response.message || 'Usuario creado exitosamente');
           this.router.navigate(['users/list']);
         },
         error: (error) => {
@@ -120,8 +120,8 @@ export class ManageComponent implements OnInit {
     } else if (mode === 2) {
       // UPDATE
       this.userService.updateUser(data.id, data).subscribe({
-        next: () => {
-          alert('Usuario actualizado exitosamente');
+        next: (response) => {
+          alert(response.message || 'Usuario actualizado exitosamente');
           this.router.navigate(['users/list']);
         },
         error: (error) => {
