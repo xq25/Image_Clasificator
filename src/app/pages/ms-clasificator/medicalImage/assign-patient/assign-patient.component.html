@@ -1,0 +1,39 @@
+<div class="p-6">
+  <mat-card class="cardWithShadow">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <p class="eyebrow">Asignar paciente</p>
+        <h2>Asignar paciente a la imagen</h2>
+      </div>
+      <button mat-stroked-button color="primary" type="button" (click)="back()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="p-8 text-center">
+        <mat-spinner></mat-spinner>
+        <p>Cargando pacientes...</p>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="p-4">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Paciente</mat-label>
+          <mat-select formControlName="patientId">
+            @for (patient of patients(); track patient.id) {
+              <mat-option [value]="patient.id">{{ patient.document }} ({{ patient.userId }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="mt-4">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+            <mat-icon>person_add</mat-icon>
+            {{ saving ? 'Procesando...' : 'Asignar paciente' }}
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</div>

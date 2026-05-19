@@ -1,9 +1,11 @@
-import { ImageDiagnostic } from './ImageDiagnostic';
-
 export interface MedicalImg {
   id?: number;
-  url: string;
+  imageKey: string;
+  imageUrl: string;
+  provider: string;
+  contentType?: string;
+  fileSize?: number;
   evaluationAreaId: number;
   patientId?: number;
-  imageDiagnostics?: ImageDiagnostic[];
+  createdAt?: Date | string;
 }

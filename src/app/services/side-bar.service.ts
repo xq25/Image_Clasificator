@@ -73,6 +73,7 @@ export class SideBarService {
           { displayName: 'Evaluation Areas', iconName: 'solar:map-point-wave-line-duotone', route: '/evaluation-areas/list', visible: hasClasificatorAccess },
           { displayName: 'Doctors', iconName: 'solar:stethoscope-line-duotone', route: '/doctors/list', visible: hasClasificatorAccess },
           { displayName: 'Medical Diagnostics', iconName: 'solar:stethoscope-line-duotone', route: '/medical-diagnostics/list', visible: hasClasificatorAccess },
+          { displayName: 'Medical Images', iconName: 'solar:gallery-line-duotone', route: '/medical-images/list', visible: hasClasificatorAccess },
           { displayName: 'UI Configs', iconName: 'solar:monitor-line-duotone', route: '/ui-configs/list', visible: hasClasificatorAccess }
         ]
       }

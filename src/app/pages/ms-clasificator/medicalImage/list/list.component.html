@@ -1,0 +1,36 @@
+<div class="p-6 medical-image-list-page">
+  <mat-card class="cardWithShadow mb-6 hero-card">
+    <div class="flex items-center justify-between p-4 gap-4 hero-content">
+      <div>
+        <p class="eyebrow">Módulo de imágenes médicas</p>
+        <h2 class="text-2xl font-bold">Gestión de Imágenes Médicas</h2>
+        <p class="text-gray-600 text-sm">Administra las imágenes subidas al sistema y sus relaciones clínicas.</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="create()" class="flex items-center gap-2">
+        <mat-icon>cloud_upload</mat-icon>
+        Nueva Imagen
+      </button>
+    </div>
+  </mat-card>
+
+  <mat-card class="cardWithShadow table-card">
+    @if (loading()) {
+      <div class="p-8 text-center">
+        <mat-icon class="animate-spin text-2xl">cached</mat-icon>
+        <p class="text-gray-600 mt-2">Cargando imágenes médicas...</p>
+      </div>
+    } @else if (images().length === 0) {
+      <div class="p-8 text-center">
+        <mat-icon class="text-4xl text-gray-400">image_search</mat-icon>
+        <p class="text-gray-600 mt-2">No hay imágenes médicas registradas</p>
+      </div>
+    } @else {
+      <app-dynamic-table
+        [columns]="columns"
+        [data]="images()"
+        [actionButtons]="actionButtons"
+        (actionClicked)="handleAction($event)"
+      />
+    }
+  </mat-card>
+</div>

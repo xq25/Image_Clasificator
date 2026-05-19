@@ -15,8 +15,8 @@ export class MedicalImageService {
   /**
    * Obtener todas las imágenes médicas
    */
-  findAll(): Observable<MedicalImg[]> {
-    return this.http.get<MedicalImg[]>(`${apiUrl}`);
+  findAll(): Observable<ApiResponse<MedicalImg[]>> {
+    return this.http.get<ApiResponse<MedicalImg[]>>(`${apiUrl}`);
   }
 
   /**
@@ -34,24 +34,20 @@ export class MedicalImageService {
   }
 
   /**
-   * Crear una nueva imagen médica
+   * Subir una nueva imagen médica con metadatos
    */
-  create(medicalImg: Partial<MedicalImg>): Observable<ApiResponse<MedicalImg>> {
-    return this.http.post<ApiResponse<MedicalImg>>(`${apiUrl}`, medicalImg);
-  }
+  upload(file: File, evaluationAreaId: number, patientId?: number, folder = 'diagnostics'): Observable<ApiResponse<MedicalImg>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('evaluationAreaId', String(evaluationAreaId));
 
-  /**
-   * Actualizar una imagen médica existente
-   */
-  update(id: number, medicalImg: Partial<MedicalImg>): Observable<ApiResponse<MedicalImg>> {
-    return this.http.put<ApiResponse<MedicalImg>>(`${apiUrl}/${id}`, medicalImg);
-  }
+    if (patientId != null) {
+      formData.append('patientId', String(patientId));
+    }
 
-  /**
-   * Eliminar una imagen médica
-   */
-  delete(id: number): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);
+    formData.append('folder', folder);
+
+    return this.http.post<ApiResponse<MedicalImg>>(`${apiUrl}/upload`, formData);
   }
 
   /**
@@ -62,9 +58,26 @@ export class MedicalImageService {
   }
 
   /**
+   * Eliminar una imagen médica
+   */
+  delete(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);
+  }
+
+  /**
    * Remover un paciente de una imagen médica
    */
   removePatient(medicalImgId: number): Observable<ApiResponse<MedicalImg>> {
     return this.http.delete<ApiResponse<MedicalImg>>(`${apiUrl}/${medicalImgId}/remove-patient`);
+  }
+
+  /**
+   * Cambiar el área de evaluación de una imagen médica
+   */
+  changeEvaluationArea(medicalImgId: number, evaluationAreaId: number): Observable<ApiResponse<MedicalImg>> {
+    return this.http.put<ApiResponse<MedicalImg>>(
+      `${apiUrl}/${medicalImgId}/change-evaluation-area/${evaluationAreaId}`,
+      {}
+    );
   }
 }
