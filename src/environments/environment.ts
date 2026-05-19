@@ -8,7 +8,9 @@ export const environment = {
   url_backend_clasificator: 'http://127.0.0.1:8081',
   securityRoles: {
     fullAccessRoleId: '69b06a2cb182c24e02435d7c',
-    securityAccessRoleId: '6a0a9c11dd10e0339de643eb'
+    securityAccessRoleId: '6a0a9c11dd10e0339de643eb',
+    patientRole: '6a0b6a301041bc61dc39cbf5',
+    doctorRole: '6a0b69f11041bc61dc39cbf4'
   },
   firebase : {
     apiKey: "AIzaSyBtHeRhUXsgaeP0IzRba0N2M45l5XOw3nI",

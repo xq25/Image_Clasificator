@@ -41,14 +41,14 @@
         <div class="h-1 bg-gradient-to-r from-indigo-600 to-blue-600"></div>
 
         <div class="p-3 lg:p-4">
-          @if (step === 1) {
+          @if (currentStep === 'identity') {
             <div class="mb-4">
               <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-3">
                 <mat-icon class="!text-[16px]">person_add</mat-icon>
-                Paso 1 de 2
+                {{ stepBadgeText }}
               </div>
-              <h2 class="text-xl font-bold text-gray-900 mb-1">Verifica tu correo</h2>
-              <p class="text-sm text-gray-600">Usaremos este correo como tu usuario principal en el sistema.</p>
+              <h2 class="text-xl font-bold text-gray-900 mb-1">{{ stepTitle }}</h2>
+              <p class="text-sm text-gray-600">{{ stepDescription }}</p>
             </div>
 
             <div class="mb-4 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-2 lg:p-3 max-h-[260px] overflow-hidden">
@@ -106,7 +106,7 @@
               @if (loading) {
                 <span>Verificando...</span>
               } @else {
-                <span>Continuar</span>
+                  <span>{{ stepActionLabel }}</span>
               }
             </button>
 
@@ -118,12 +118,12 @@
             </span>
           }
 
-          @if (step === 2) {
+          @if (currentStep !== 'identity') {
             <div class="mb-6">
               <div class="flex items-center justify-between gap-3 mb-4">
                 <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                   <mat-icon class="!text-[16px]">verified_user</mat-icon>
-                  Paso 2 de 2
+                  {{ stepBadgeText }}
                 </div>
                 <button
                   mat-button
@@ -134,8 +134,8 @@
                 </button>
               </div>
 
-              <h2 class="text-2xl font-bold text-gray-900 mb-2">Completa tu registro</h2>
-              <p class="text-sm text-gray-600">Tu correo ya fue validado. Ahora define tu perfil y contraseña.</p>
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ stepTitle }}</h2>
+              <p class="text-sm text-gray-600">{{ stepDescription }}</p>
             </div>
 
             <div class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-900">
@@ -143,105 +143,168 @@
               <span class="ml-2 break-all">{{ emailInput }}</span>
             </div>
 
-            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Nombre completo</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <mat-icon matPrefix>person</mat-icon>
-              <input
-                matInput
-                type="text"
-                [(ngModel)]="formData.name"
-                name="name"
-                placeholder="Tu nombre completo"
-                (input)="validateName()"
-              />
-              @if (errors.name) {
-                <mat-error>{{ errors.name }}</mat-error>
-              }
-            </mat-form-field>
+            @if (currentStep === 'user-form') {
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Nombre completo</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>person</mat-icon>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="formData.name"
+                  name="name"
+                  placeholder="Tu nombre completo"
+                  (input)="validateName()"
+                />
+                @if (errors.name) {
+                  <mat-error>{{ errors.name }}</mat-error>
+                }
+              </mat-form-field>
 
-            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Contraseña</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <mat-icon matPrefix>lock</mat-icon>
-              <input
-                matInput
-                [type]="hidePassword ? 'password' : 'text'"
-                [(ngModel)]="formData.password"
-                name="password"
-                placeholder="Crea una contraseña segura"
-                (input)="validatePassword()"
-              />
-              <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
-                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              @if (errors.password) {
-                <mat-error>{{ errors.password }}</mat-error>
-              }
-            </mat-form-field>
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Contraseña</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>lock</mat-icon>
+                <input
+                  matInput
+                  [type]="hidePassword ? 'password' : 'text'"
+                  [(ngModel)]="formData.password"
+                  name="password"
+                  placeholder="Crea una contraseña segura"
+                  (input)="validatePassword()"
+                />
+                <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+                  <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                @if (errors.password) {
+                  <mat-error>{{ errors.password }}</mat-error>
+                }
+              </mat-form-field>
 
-            @if (formData.password) {
-              <div class="mb-4 rounded-lg bg-gray-50 p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-gray-700">Fortaleza</span>
-                  <span class="text-xs font-bold" [class.text-red-600]="strength.level === 'weak'" [class.text-yellow-600]="strength.level === 'medium'" [class.text-green-600]="strength.level === 'strong'">
-                    {{ strength.text }}
-                  </span>
+              @if (formData.password) {
+                <div class="mb-4 rounded-lg bg-gray-50 p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-gray-700">Fortaleza</span>
+                    <span class="text-xs font-bold" [class.text-red-600]="strength.level === 'weak'" [class.text-yellow-600]="strength.level === 'medium'" [class.text-green-600]="strength.level === 'strong'">
+                      {{ strength.text }}
+                    </span>
+                  </div>
+                  <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                    <div
+                      class="h-2 rounded-full transition-all duration-300"
+                      [style.width.%]="strength.percent"
+                      [class.bg-red-500]="strength.level === 'weak'"
+                      [class.bg-yellow-500]="strength.level === 'medium'"
+                      [class.bg-green-500]="strength.level === 'strong'"></div>
+                  </div>
+                  <div class="mt-3 space-y-1 text-xs text-gray-600">
+                    <div [class.text-green-600]="strength.checks.length" class="flex items-center gap-1">
+                      <span>{{ strength.checks.length ? '✓' : '○' }}</span>
+                      <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div [class.text-green-600]="strength.checks.upper" class="flex items-center gap-1">
+                      <span>{{ strength.checks.upper ? '✓' : '○' }}</span>
+                      <span>Mayúscula (A-Z)</span>
+                    </div>
+                    <div [class.text-green-600]="strength.checks.lower" class="flex items-center gap-1">
+                      <span>{{ strength.checks.lower ? '✓' : '○' }}</span>
+                      <span>Minúscula (a-z)</span>
+                    </div>
+                    <div [class.text-green-600]="strength.checks.number" class="flex items-center gap-1">
+                      <span>{{ strength.checks.number ? '✓' : '○' }}</span>
+                      <span>Número (0-9)</span>
+                    </div>
+                    <div [class.text-green-600]="strength.checks.special" class="flex items-center gap-1">
+                      <span>{{ strength.checks.special ? '✓' : '○' }}</span>
+                      <span>Carácter especial</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    class="h-2 rounded-full transition-all duration-300"
-                    [style.width.%]="strength.percent"
-                    [class.bg-red-500]="strength.level === 'weak'"
-                    [class.bg-yellow-500]="strength.level === 'medium'"
-                    [class.bg-green-500]="strength.level === 'strong'"></div>
+              }
+
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Confirmar contraseña</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>lock</mat-icon>
+                <input
+                  matInput
+                  [type]="hideConfirmPassword ? 'password' : 'text'"
+                  [(ngModel)]="formData.confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Repite tu contraseña"
+                  (input)="validateConfirmPassword()"
+                />
+                <button mat-icon-button matSuffix type="button" (click)="toggleConfirmPasswordVisibility()">
+                  <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                @if (errors.confirmPassword) {
+                  <mat-error>{{ errors.confirmPassword }}</mat-error>
+                }
+              </mat-form-field>
+
+              @if (formData.confirmPassword && !errors.confirmPassword && formData.confirmPassword === formData.password) {
+                <div class="mb-2 flex items-center gap-2 text-sm font-medium text-green-600">
+                  <mat-icon class="!text-[18px]">check_circle</mat-icon>
+                  Las contraseñas coinciden
                 </div>
-                <div class="mt-3 space-y-1 text-xs text-gray-600">
-                  <div [class.text-green-600]="strength.checks.length" class="flex items-center gap-1">
-                    <span>{{ strength.checks.length ? '✓' : '○' }}</span>
-                    <span>Mínimo 8 caracteres</span>
-                  </div>
-                  <div [class.text-green-600]="strength.checks.upper" class="flex items-center gap-1">
-                    <span>{{ strength.checks.upper ? '✓' : '○' }}</span>
-                    <span>Mayúscula (A-Z)</span>
-                  </div>
-                  <div [class.text-green-600]="strength.checks.lower" class="flex items-center gap-1">
-                    <span>{{ strength.checks.lower ? '✓' : '○' }}</span>
-                    <span>Minúscula (a-z)</span>
-                  </div>
-                  <div [class.text-green-600]="strength.checks.number" class="flex items-center gap-1">
-                    <span>{{ strength.checks.number ? '✓' : '○' }}</span>
-                    <span>Número (0-9)</span>
-                  </div>
-                  <div [class.text-green-600]="strength.checks.special" class="flex items-center gap-1">
-                    <span>{{ strength.checks.special ? '✓' : '○' }}</span>
-                    <span>Carácter especial</span>
-                  </div>
-                </div>
+              }
+            }
+
+            @if (currentStep === 'profile-form' && selectedUserTypeId === 'doctor') {
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Código del doctor</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>badge</mat-icon>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="profileData.code"
+                  name="doctorCode"
+                  placeholder="Código del doctor"
+                  (input)="validateCode()"
+                />
+                @if (errors.code) {
+                  <mat-error>{{ errors.code }}</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="mb-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Este perfil se vinculará al usuario activo y quedará listo para operar en el sistema.
               </div>
             }
 
-            <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Confirmar contraseña</mat-label>
-            <mat-form-field appearance="outline" class="w-full" color="primary">
-              <mat-icon matPrefix>lock</mat-icon>
-              <input
-                matInput
-                [type]="hideConfirmPassword ? 'password' : 'text'"
-                [(ngModel)]="formData.confirmPassword"
-                name="confirmPassword"
-                placeholder="Repite tu contraseña"
-                (input)="validateConfirmPassword()"
-              />
-              <button mat-icon-button matSuffix type="button" (click)="toggleConfirmPasswordVisibility()">
-                <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              @if (errors.confirmPassword) {
-                <mat-error>{{ errors.confirmPassword }}</mat-error>
-              }
-            </mat-form-field>
+            @if (currentStep === 'profile-form' && selectedUserTypeId === 'patient') {
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Documento del paciente</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>assignment_ind</mat-icon>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="profileData.document"
+                  name="patientDocument"
+                  placeholder="Documento de identidad"
+                  (input)="validateDocument()"
+                />
+                @if (errors.document) {
+                  <mat-error>{{ errors.document }}</mat-error>
+                }
+              </mat-form-field>
 
-            @if (formData.confirmPassword && !errors.confirmPassword && formData.confirmPassword === formData.password) {
-              <div class="mb-2 flex items-center gap-2 text-sm font-medium text-green-600">
-                <mat-icon class="!text-[18px]">check_circle</mat-icon>
-                Las contraseñas coinciden
+              <mat-label class="mat-subtitle-2 text-xs lg:text-sm font-semibold mb-2 block">Años</mat-label>
+              <mat-form-field appearance="outline" class="w-full" color="primary">
+                <mat-icon matPrefix>calendar_month</mat-icon>
+                <input
+                  matInput
+                  type="number"
+                  min="1"
+                  [(ngModel)]="profileData.years"
+                  name="patientYears"
+                  placeholder="Cantidad de años"
+                  (input)="validateYears()"
+                />
+                @if (errors.years) {
+                  <mat-error>{{ errors.years }}</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="mb-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                Este perfil se vinculará al usuario activo y quedará listo para operar en el sistema.
               </div>
             }
 
@@ -249,13 +312,13 @@
               mat-flat-button
               color="primary"
               class="w-full mt-4"
-              [disabled]="loading || !isFormValid()"
+              [disabled]="loading || (currentStep === 'user-form' ? !isUserFormValid() : !isProfileFormValid())"
               type="button"
               (click)="register()">
               @if (loading) {
-                <span>Creando cuenta...</span>
+                <span>Procesando...</span>
               } @else {
-                <span>Crear cuenta</span>
+                <span>{{ stepActionLabel }}</span>
               }
             </button>
 
