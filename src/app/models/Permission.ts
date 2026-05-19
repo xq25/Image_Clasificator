@@ -24,5 +24,10 @@ export enum PermissionModel {
   PATIENT = 'Patient',
   MEDICAL_DIAGNOSTIC = 'MedicalDiagnostic',
   MEDICAL_IMAGE = 'MedicalImage',
+  EVALUATION_AREA = 'EvaluationArea',
+  DOCTOR_AREA = 'DoctorArea',
+  IMAGE_DIAGNOSTIC = 'ImageDiagnostic',
+  UI_CONFIG = 'UIConfig',
+  UI_STATE = 'UIState',
 
 }

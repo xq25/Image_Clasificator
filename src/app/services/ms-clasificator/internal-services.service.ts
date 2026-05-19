@@ -8,7 +8,7 @@ import { Doctor, Patient } from '@app/models/ms-clasificator';
   providedIn: 'root',
 })
 export class InternalServicesService {
-  private apiUrl = `${environment.url_backend_clasificator}/internal`;
+  private apiUrl = `${environment.url_backend_clasificator}/api/public/internal`;
 
   constructor(private http: HttpClient) {}
 
