@@ -15,7 +15,7 @@ declare const grecaptcha: any;
 @Component({
   selector: 'app-side-login',
   standalone: true,
-  imports: [RouterModule, CommonModule, MaterialModule, LoginFormComponent, SelectCardComponent],
+  imports: [RouterModule, CommonModule, MaterialModule, LoginFormComponent],
   templateUrl: './side-login.component.html',
   styleUrl: './side-login.component.scss',
 })

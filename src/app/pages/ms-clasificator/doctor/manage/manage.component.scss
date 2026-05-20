@@ -1,0 +1,17 @@
+.toast {
+	padding: 1rem;
+	border-radius: 8px;
+	position: relative;
+
+	&.toast-success {
+		background-color: #d1fae5;
+		color: #065f46;
+		border: 1px solid #a7f3d0;
+	}
+
+	&.toast-error {
+		background-color: #fee2e2;
+		color: #991b1b;
+		border: 1px solid #fecaca;
+	}
+}

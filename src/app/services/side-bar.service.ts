@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { SidebarSection, NavCap } from '@app/models/sideBarRules';
 import { SecurityService } from '@app/services/ms-security/security';
 import { UserRoleService } from '@app/services/ms-security/user-role-service';
+import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
+import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
+import { Doctor, EvaluationArea, ApiResponse } from '@app/models/ms-clasificator';
 
 @Injectable({
   providedIn: 'root',
@@ -13,10 +16,13 @@ export class SideBarService {
 
   private readonly fullAccessRoleId = environment.securityRoles.fullAccessRoleId;
   private readonly securityAccessRoleId = environment.securityRoles.securityAccessRoleId;
+  private readonly doctorAccessRoleId = environment.securityRoles.doctorRole;
 
   constructor(
     private securityService: SecurityService,
-    private userRoleService: UserRoleService
+    private userRoleService: UserRoleService,
+    private doctorService: DoctorService,
+    private evaluationAreaService: EvaluationAreaService
   ) {}
 
   // Regla principal del sidebar por roles del usuario actual.
@@ -28,22 +34,117 @@ export class SideBarService {
     }
 
     return this.userRoleService.getUserRoles(userId).pipe(
-      map((response) => response.data ?? []),
-      map((userRoles) =>
-        userRoles.map((userRole) => userRole.role?.id).filter((roleId): roleId is string => !!roleId)
-      ),
-      map((roleIds) => {
-        const hasFullAccess = roleIds.includes(this.fullAccessRoleId);
-        const hasSecurityAccess = hasFullAccess || roleIds.includes(this.securityAccessRoleId);
-        const hasClasificatorAccess = hasFullAccess;
+      map((response) => this.extractRoleIds(response)),
+      switchMap((roleIds) => {
+        const fullAccessRoleId = this.fullAccessRoleId?.trim();
+        const securityAccessRoleId = this.securityAccessRoleId?.trim();
+        const doctorAccessRoleId = this.doctorAccessRoleId?.trim();
 
-        return this.buildSections(hasSecurityAccess, hasClasificatorAccess);
+        const hasFullAccess = !!fullAccessRoleId && roleIds.includes(fullAccessRoleId);
+        const hasSecurityAccess = hasFullAccess || (!!securityAccessRoleId && roleIds.includes(securityAccessRoleId));
+        const hasClasificatorAccess = hasFullAccess;
+        const hasDoctorAccess = !!doctorAccessRoleId && roleIds.includes(doctorAccessRoleId);
+
+        const baseSections = this.buildSections(hasSecurityAccess, hasClasificatorAccess);
+
+        if (!hasDoctorAccess) {
+          return of(baseSections);
+        }
+
+        return forkJoin({
+          doctors: this.doctorService.findByUserId(userId),
+          evaluationAreas: this.evaluationAreaService.findAll(),
+        }).pipe(
+          map(({ doctors, evaluationAreas }) => {
+            const doctorsList = this.normalizeDoctors(doctors);
+            const evaluationAreasList = this.normalizeEvaluationAreas(evaluationAreas);
+            return this.addClassificationSection(baseSections, doctorsList, evaluationAreasList);
+          }),
+          catchError((error) => {
+            console.error('[SideBarService] Error al obtener datos para clasificación:', error);
+            return of(baseSections);
+          })
+        );
       }),
       catchError((error) => {
         console.error('[SideBarService] Error al obtener roles del usuario:', error);
         return of(this.buildSections(false, false));
       })
     );
+  }
+
+  private addClassificationSection(
+    sections: SidebarSection[],
+    doctors: Doctor[],
+    evaluationAreas: EvaluationArea[]
+  ): SidebarSection[] {
+    const doctor = doctors.find((item) => item?.id != null);
+
+    if (!doctor?.id || !evaluationAreas.length) {
+      return sections;
+    }
+
+    const classificationRoutes = evaluationAreas
+      .filter((area) => area?.id != null)
+      .map((area) => ({
+        displayName: `${area.name} (${area.codeArea})`,
+        iconName: 'solar:stethoscope-line-duotone',
+        route: `/medical-images/classify/${area.id}/${doctor.id}`,
+        visible: true,
+      }));
+
+    if (!classificationRoutes.length) {
+      return sections;
+    }
+
+    return [
+      ...sections,
+      {
+        navCap: NavCap.CLASIFICATION,
+        visible: true,
+        routes: classificationRoutes,
+      }
+    ];
+  }
+
+  private extractRoleIds(response: unknown): string[] {
+    const userRoles = this.unwrapData<unknown[]>(response, []);
+
+    return userRoles
+      .map((userRole) => {
+        const role = (userRole as { role?: { id?: string; _id?: string } })?.role;
+        return role?.id ?? role?._id ?? null;
+      })
+      .filter((roleId): roleId is string => !!roleId)
+      .map((roleId) => roleId.trim());
+  }
+
+  private normalizeDoctors(response: unknown): Doctor[] {
+    const doctors = this.unwrapData<Doctor[] | Doctor | null>(response, [] as Doctor[] | Doctor | null);
+
+    if (Array.isArray(doctors)) {
+      return doctors;
+    }
+
+    return doctors ? [doctors] : [];
+  }
+
+  private normalizeEvaluationAreas(response: unknown): EvaluationArea[] {
+    const areas = this.unwrapData<EvaluationArea[] | EvaluationArea | null>(response, [] as EvaluationArea[] | EvaluationArea | null);
+
+    if (Array.isArray(areas)) {
+      return areas;
+    }
+
+    return areas ? [areas] : [];
+  }
+
+  private unwrapData<T>(response: unknown, fallback: T): T {
+    if (response && typeof response === 'object' && 'data' in (response as ApiResponse<T>)) {
+      return ((response as ApiResponse<T>).data ?? fallback) as T;
+    }
+
+    return (response as T) ?? fallback;
   }
 
   private buildSections(hasSecurityAccess: boolean, hasClasificatorAccess: boolean): SidebarSection[] {

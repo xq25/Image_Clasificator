@@ -1,3 +1,14 @@
+.login-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.login-card-body {
+  min-height: 0;
+}
+
 .selected-user-badge {
   display: flex;
   align-items: center;

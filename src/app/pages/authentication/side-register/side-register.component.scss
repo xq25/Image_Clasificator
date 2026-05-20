@@ -6,12 +6,20 @@
   border-radius: 20px;
 }
 
+.auth-card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.password-guidance {
+}
+
 .mat-mdc-button-base {
   border-radius: 14px;
 }
 
 .mat-mdc-form-field {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
 }
 
 .mat-mdc-form-field .mat-mdc-text-field-wrapper {
@@ -19,5 +27,5 @@
 }
 
 .mat-mdc-form-field-subscript-wrapper {
-  margin-top: 4px;
+  margin-top: 2px;
 }

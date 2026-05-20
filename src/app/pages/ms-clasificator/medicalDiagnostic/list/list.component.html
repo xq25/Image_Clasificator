@@ -18,39 +18,13 @@
         <mat-icon class="animate-spin text-2xl">cached</mat-icon>
         <p class="text-gray-600 mt-2">Cargando diagnósticos...</p>
       </div>
-    } @else if (diagnostics().length === 0) {
-      <div class="p-8 text-center">
-        <mat-icon class="text-4xl text-gray-400">medication</mat-icon>
-        <p class="text-gray-600 mt-2">No hay diagnósticos registrados</p>
-      </div>
     } @else {
-      <div class="relative overflow-auto">
-        <table class="min-w-full">
-          <thead>
-            <tr>
-              <th class="text-left p-4">ID</th>
-              <th class="text-left p-4">Código</th>
-              <th class="text-left p-4">Nombre</th>
-              <th class="text-center p-4">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of diagnostics(); track d.id) {
-              <tr class="border-t">
-                <td class="p-4">{{ d.id }}</td>
-                <td class="p-4">{{ d.diagnosticCode }}</td>
-                <td class="p-4">{{ d.diagnosticName }}</td>
-                <td class="p-4 text-center">
-                  <button mat-icon-button title="Ver" (click)="view(d.id!.toString())"><mat-icon>visibility</mat-icon></button>
-                  <button mat-icon-button title="Editar" (click)="edit(d.id!.toString())"><mat-icon>edit</mat-icon></button>
-                  <button mat-icon-button title="Eliminar" (click)="delete(d.id!.toString())"><mat-icon>delete</mat-icon></button>
-                  <button mat-icon-button title="Sub-diagnósticos" (click)="subDiagnostics(d.id!.toString())"><mat-icon>subdirectory_arrow_right</mat-icon></button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-dynamic-table
+        [data]="diagnostics()"
+        [columns]="columns"
+        [actionButtons]="actionButtons"
+        (actionClicked)="handleAction($event)"
+      />
     }
   </mat-card>
 </div>

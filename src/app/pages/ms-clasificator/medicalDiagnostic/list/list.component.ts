@@ -5,13 +5,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 
+import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { MedicalDiagnostic } from '@app/models/ms-clasificator';
 import { MedicalDiagnosticService } from '@app/services/ms-clasificator/medical-diagnostic.service';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatCardModule],
+  imports: [CommonModule, DynamicTableComponent, MatButtonModule, MatIconModule, MatCardModule],
   templateUrl: './list.component.html',
 })
 export class ListComponent {
@@ -19,6 +20,19 @@ export class ListComponent {
   private initialPath = '/medical-diagnostics';
   diagnostics = signal<MedicalDiagnostic[]>([]);
   loading = signal(true);
+
+  columns: TableColumn[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'diagnosticCode', label: 'Código' },
+    { key: 'diagnosticName', label: 'Nombre' },
+  ];
+
+  actionButtons: TableAction[] = [
+    { action: 'view', icon: 'visibility', class: 'btn-view' },
+    { action: 'edit', icon: 'edit', class: 'btn-edit' },
+    { action: 'delete', icon: 'delete', class: 'btn-delete' },
+    { action: 'subDiagnostics', icon: 'subdirectory_arrow_right', class: 'btn-manage-roles' },
+  ];
 
   constructor(private router: Router, private medicalDiagnosticService: MedicalDiagnosticService) {}
 
@@ -40,7 +54,8 @@ export class ListComponent {
     });
   }
 
-  handleAction(action: string, row: any) {
+  handleAction(event: any) {
+    const { action, row } = event;
     switch (action) {
       case 'view':
         this.view(row.id);
