@@ -1,4 +1,10 @@
 <div class="p-6">
+  @if (toast()) {
+    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
+      {{ toast()!.message }}
+    </div>
+  }
+
   @if (loading) {
     <div class="flex items-center justify-center h-screen">
       <mat-spinner></mat-spinner>

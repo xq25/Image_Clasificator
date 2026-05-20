@@ -4,11 +4,16 @@
     border-collapse: collapse;
     background: transparent;
 
+    .mat-mdc-header-row,
+    .mat-mdc-header-cell {
+      background-color: var(--primary-color, #3f51b5) !important;
+    }
+
     .mdc-data-table__header-cell {
       font-weight: 700;
       font-size: 0.875rem;
       color: #ffffff;
-      background-color: var(--primary-color, #3f51b5);
+      background-color: var(--primary-color, #3f51b5) !important;
       border-bottom: 2px solid var(--border-color);
       padding: 1.25rem 1rem;
       text-transform: capitalize;
@@ -34,7 +39,7 @@
 .table-header {
   font-weight: 700;
   color: #ffffff;
-  background-color: var(--primary-color, #3f51b5);
+  background-color: var(--primary-color, #3f51b5) !important;
 }
 
 .table-cell {

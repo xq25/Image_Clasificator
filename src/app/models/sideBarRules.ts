@@ -21,5 +21,6 @@ export interface SidebarRoute {
 export enum NavCap{
     HOME = 'Home',
     SECURITY_ADMIN = 'Security Admin',
-    MANAGEMENT_CLASIFICATOR = 'Management Clasificator'
+    MANAGEMENT_CLASIFICATOR = 'Management Clasificator',
+    CLASIFICATION = 'Classification'
 }

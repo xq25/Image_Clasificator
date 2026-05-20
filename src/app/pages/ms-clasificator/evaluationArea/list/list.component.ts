@@ -4,13 +4,15 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+
+import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { EvaluationArea } from '@app/models/ms-clasificator';
 import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatCardModule],
+  imports: [CommonModule, DynamicTableComponent, MatButtonModule, MatIconModule, MatCardModule],
   templateUrl: './list.component.html',
 })
 export class ListComponent {
@@ -18,6 +20,19 @@ export class ListComponent {
   private initialPath = '/evaluation-areas';
   evaluationAreas = signal<EvaluationArea[]>([]);
   loading = signal(true);
+
+  columns: TableColumn[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'codeArea', label: 'Código' },
+    { key: 'name', label: 'Nombre' },
+  ];
+
+  actionButtons: TableAction[] = [
+    { action: 'view', icon: 'visibility', class: 'btn-view' },
+    { action: 'edit', icon: 'edit', class: 'btn-edit' },
+    { action: 'delete', icon: 'delete', class: 'btn-delete' },
+    { action: 'manageDoctorInArea', icon: 'medical_services', class: 'btn-manage-roles' },
+  ];
 
   constructor(private router: Router, private evaluationAreaService: EvaluationAreaService) {}
 
