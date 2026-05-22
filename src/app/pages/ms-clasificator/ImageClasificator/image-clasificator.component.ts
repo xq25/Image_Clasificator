@@ -127,6 +127,7 @@ export class ImageClasificatorComponent {
       currentDoctor: this.doctorService.findById(this.doctorId),
       doctors: this.doctorService.findAll(),
       doctorAreas: this.doctorAreaService.findByEvaluationAreaId(this.evaluationAreaId),
+      doctorMembership: this.doctorAreaService.findByDoctorId(this.doctorId),
       medicalDiagnostics: this.medicalDiagnosticService.findAll(),
       medicalImages: this.medicalImageService.findByEvaluationAreaId(this.evaluationAreaId),
       imageDiagnostics: this.imageDiagnosticService.findAll(),
@@ -148,6 +149,7 @@ export class ImageClasificatorComponent {
 
         const doctors = response.doctors ?? [];
         const doctorAreas = this.unwrapData(response.doctorAreas, []) ?? [];
+        const doctorMembership = this.unwrapData(response.doctorMembership, []) ?? [];
         const areaDoctorIds = new Set(
           (doctorAreas as DoctorArea[])
             .map((item) => item.doctor?.id)
@@ -159,6 +161,8 @@ export class ImageClasificatorComponent {
             ...doctor,
             accessLabel: this.getDoctorLabel(doctor),
           }));
+
+        this.accessDenied = !doctorMembership.some((doctorArea) => doctorArea.evaluationArea?.id === this.evaluationAreaId);
 
         this.uiStateService.findByUiConfigId(uiConfig.id ?? 0).subscribe({
           next: (statesResponse) => {
@@ -340,11 +344,7 @@ export class ImageClasificatorComponent {
   }
 
   private hasDoctorAccess(): boolean {
-    if (!this.currentDoctor?.id) {
-      return false;
-    }
-
-    return this.doctorsWithAccess.some((doctor) => doctor.id === this.currentDoctor?.id);
+    return !this.accessDenied;
   }
 
   private setStatus(message: string, type: 'success' | 'warning' | 'error'): void {

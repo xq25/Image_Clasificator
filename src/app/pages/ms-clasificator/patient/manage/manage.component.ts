@@ -7,7 +7,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { PatientService } from '@app/services/ms-clasificator/patient.service';
+import { UserService } from '@app/services/ms-security/user-service';
 import { Patient } from '@app/models/ms-clasificator';
+import { User } from '@app/models/User';
 
 @Component({
   selector: 'app-manage',
@@ -20,11 +22,13 @@ export class ManageComponent implements OnInit {
 
   formConfig!: DynamicFormConfig;
   loading = true;
+  allUsers: User[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private patientService: PatientService,
+    private userService: UserService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -33,9 +37,7 @@ export class ManageComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
 
     if (routePath === 'create') {
-      this.buildConfig(1, null);
-      this.loading = false;
-      this.cdr.detectChanges();
+      this.loadUsersAndBuildConfig(1, null);
 
     } else if (routePath === 'view/:id' && id) {
       this.loadPatient(id, 0);
@@ -47,6 +49,23 @@ export class ManageComponent implements OnInit {
       console.warn('[ManageComponent] Ruta no reconocida:', routePath);
       this.router.navigate(['patients/list']);
     }
+  }
+
+  private loadUsersAndBuildConfig(mode: 0 | 1 | 2, model: Patient | null): void {
+    this.loading = true;
+
+    this.userService.getUsers().subscribe({
+      next: (response) => {
+        this.allUsers = response.data ?? [];
+        this.buildConfig(mode, model);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        alert('Error: No se pudo cargar el catálogo de usuarios');
+        this.router.navigate(['patients/list']);
+      }
+    });
   }
 
   private loadPatient(id: string, mode: 0 | 2): void {
@@ -72,6 +91,15 @@ export class ManageComponent implements OnInit {
   }
 
   buildConfig(mode: 0 | 1 | 2, model: Patient | null): void {
+    const userOptions = mode === 1
+      ? this.allUsers
+        .filter(user => user.id)
+        .map(user => ({
+          value: user.id,
+          label: user.email || user.id || 'Sin correo'
+        }))
+      : [];
+
     this.formConfig = {
       mode,
       model,
@@ -98,10 +126,11 @@ export class ManageComponent implements OnInit {
         {
           name: 'userId',
           label: 'ID de usuario',
-          type: 'text',
-          placeholder: 'ID del usuario asociado',
+          type: mode === 1 ? 'select' : 'text',
+          placeholder: mode === 1 ? 'Selecciona un usuario' : 'ID del usuario asociado',
           disabled: mode === 2,
-          validators: [Validators.required]
+          validators: [Validators.required],
+          options: userOptions
         }
       ]
     };
