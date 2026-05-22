@@ -143,7 +143,8 @@ export class ManageComponent implements OnInit {
 
     if (mode === 1) {
       this.doctorService.create(data).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log(response)
           this.showToast('Doctor creado exitosamente', 'success');
           this.navigateAfterToast();
         },

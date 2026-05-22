@@ -281,7 +281,7 @@ export class AppSideRegisterComponent {
 				}
 
 				this.showFeedback('Registro completado con exito. Ya puedes iniciar sesion.', 'success');
-				this.router.navigate(['/auth/authentication/login']);
+				this.router.navigate(['/dashboard']);
 			},
 			error: (error) => {
 				this.loading = false;

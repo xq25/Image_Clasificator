@@ -6,8 +6,9 @@ import { SidebarSection, NavCap } from '@app/models/sideBarRules';
 import { SecurityService } from '@app/services/ms-security/security';
 import { UserRoleService } from '@app/services/ms-security/user-role-service';
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
+import { DoctorAreaService } from '@app/services/ms-clasificator/doctor-area.service';
 import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
-import { Doctor, EvaluationArea, ApiResponse } from '@app/models/ms-clasificator';
+import { Doctor, DoctorArea, EvaluationArea, ApiResponse } from '@app/models/ms-clasificator';
 
 @Injectable({
   providedIn: 'root',
@@ -22,6 +23,7 @@ export class SideBarService {
     private securityService: SecurityService,
     private userRoleService: UserRoleService,
     private doctorService: DoctorService,
+    private doctorAreaService: DoctorAreaService,
     private evaluationAreaService: EvaluationAreaService
   ) {}
 
@@ -55,10 +57,25 @@ export class SideBarService {
           doctors: this.doctorService.findByUserId(userId),
           evaluationAreas: this.evaluationAreaService.findAll(),
         }).pipe(
-          map(({ doctors, evaluationAreas }) => {
+          switchMap(({ doctors, evaluationAreas }) => {
             const doctorsList = this.normalizeDoctors(doctors);
             const evaluationAreasList = this.normalizeEvaluationAreas(evaluationAreas);
-            return this.addClassificationSection(baseSections, doctorsList, evaluationAreasList);
+            const doctor = doctorsList.find((item) => item?.id != null);
+
+            if (!doctor?.id) {
+              return of(baseSections);
+            }
+
+            return this.doctorAreaService.findByDoctorId(doctor.id).pipe(
+              map((doctorAreas) => {
+                const doctorAreasList = this.normalizeDoctorAreas(doctorAreas);
+                return this.addClassificationSection(baseSections, doctor, doctorAreasList, evaluationAreasList);
+              }),
+              catchError((error) => {
+                console.error('[SideBarService] Error al obtener áreas del doctor:', error);
+                return of(baseSections);
+              })
+            );
           }),
           catchError((error) => {
             console.error('[SideBarService] Error al obtener datos para clasificación:', error);
@@ -75,17 +92,22 @@ export class SideBarService {
 
   private addClassificationSection(
     sections: SidebarSection[],
-    doctors: Doctor[],
+    doctor: Doctor,
+    doctorAreas: DoctorArea[],
     evaluationAreas: EvaluationArea[]
   ): SidebarSection[] {
-    const doctor = doctors.find((item) => item?.id != null);
+    const allowedEvaluationAreaIds = new Set(
+      doctorAreas
+        .map((item) => item?.evaluationArea?.id)
+        .filter((evaluationAreaId): evaluationAreaId is number => evaluationAreaId != null)
+    );
 
-    if (!doctor?.id || !evaluationAreas.length) {
+    if (!doctor?.id || !evaluationAreas.length || !allowedEvaluationAreaIds.size) {
       return sections;
     }
 
     const classificationRoutes = evaluationAreas
-      .filter((area) => area?.id != null)
+      .filter((area) => area?.id != null && allowedEvaluationAreaIds.has(area.id))
       .map((area) => ({
         displayName: `${area.name} (${area.codeArea})`,
         iconName: 'solar:stethoscope-line-duotone',
@@ -129,6 +151,16 @@ export class SideBarService {
     return doctors ? [doctors] : [];
   }
 
+  private normalizeDoctorAreas(response: unknown): DoctorArea[] {
+    const doctorAreas = this.unwrapData<DoctorArea[] | DoctorArea | null>(response, [] as DoctorArea[] | DoctorArea | null);
+
+    if (Array.isArray(doctorAreas)) {
+      return doctorAreas;
+    }
+
+    return doctorAreas ? [doctorAreas] : [];
+  }
+
   private normalizeEvaluationAreas(response: unknown): EvaluationArea[] {
     const areas = this.unwrapData<EvaluationArea[] | EvaluationArea | null>(response, [] as EvaluationArea[] | EvaluationArea | null);
 
@@ -138,6 +170,7 @@ export class SideBarService {
 
     return areas ? [areas] : [];
   }
+
 
   private unwrapData<T>(response: unknown, fallback: T): T {
     if (response && typeof response === 'object' && 'data' in (response as ApiResponse<T>)) {
