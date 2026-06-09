@@ -15,9 +15,9 @@ export class DoctorService {
   /**
    * Obtener todos los doctores
    */
-  findAll(): Observable<Doctor[]> {
-    return this.http.get<Doctor[]>(`${apiUrl}`);
-  }
+ findAll(): Observable<ApiResponse<Doctor[]>> {
+  return this.http.get<ApiResponse<Doctor[]>>(`${apiUrl}`);
+}
 
   /**
    * Obtener un doctor por ID
