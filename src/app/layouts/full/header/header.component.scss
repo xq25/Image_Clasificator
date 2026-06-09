@@ -1,0 +1,15 @@
+// ============================================================
+// Header / Topbar
+// El sticky ya está declarado en full_component.scss (.topbar).
+// Este archivo gestiona estilos visuales propios del header.
+// ============================================================
+
+.topbar {
+  // Sombra discreta que refuerza visualmente la separación
+  // con el contenido de la página que queda debajo al hacer scroll.
+  box-shadow: 0 1px 0 0 var(--mat-sidenav-content-background-color, rgba(0,0,0,0.06)),
+              0 2px 8px 0 rgba(0, 0, 0, 0.05) !important;
+
+  // Fondo opaco siempre, aunque la página tenga fondos de color
+  background-color: var(--mat-toolbar-standard-height, inherit);
+}

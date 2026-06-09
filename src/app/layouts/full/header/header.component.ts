@@ -43,6 +43,7 @@ interface profiledd {
     ProfileDropdownComponent
   ],
   templateUrl: './header.component.html',
+  styleUrl: './header.component.scss',       // ← AÑADIDO
   encapsulation: ViewEncapsulation.None
 })
 export class HeaderComponent {

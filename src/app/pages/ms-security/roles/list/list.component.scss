@@ -1,1 +1,135 @@
-/* Estilos específicos para el list component */
+// ===============================
+// Layout principal
+// ===============================
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.panel-open {
+    grid-template-columns: minmax(0, 1fr) 420px;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ===============================
+// Columna izquierda
+// ===============================
+.table-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// ===============================
+// Header sticky
+// ===============================
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--mat-app-background-color, #f5f5f5);
+  padding-bottom: 0.5rem;
+}
+
+// Opcional: anima ligeramente la tarjeta
+.sticky-header .cardWithShadow {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ===============================
+// Tabla
+// ===============================
+.table-panel {
+  min-width: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ===============================
+// Panel lateral
+// ===============================
+.form-panel {
+  min-width: 0;
+  overflow-y: auto;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+
+  animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (max-width: 1024px) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+
+    width: min(420px, 100vw);
+    max-height: 100vh;
+
+    z-index: 200;
+
+    border-radius: 0;
+    overflow-y: auto;
+
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+
+    animation: slideInFromRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// ===============================
+// Animaciones
+// ===============================
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ===============================
+// Backdrop móvil
+// ===============================
+@media (max-width: 1024px) {
+  :host {
+    &:has(.form-panel)::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 199;
+      animation: fadeIn 0.3s ease;
+    }
+  }
+}

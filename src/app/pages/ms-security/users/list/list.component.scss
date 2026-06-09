@@ -1,0 +1,100 @@
+// Layout principal del split
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // align-items: start es CLAVE para que sticky funcione:
+  // sin esto el hijo se estira al alto del grid y sticky no tiene efecto
+  align-items: start;
+
+  &.panel-open {
+    grid-template-columns: 1fr 420px;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Panel de la tabla
+.table-panel {
+  min-width: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Panel lateral del formulario
+.form-panel {
+  min-width: 0;
+  overflow-y: auto;
+  animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Sticky en desktop: el panel se ancla al viewport al hacer scroll
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+
+  // En pantallas pequeñas el panel ocupa ancho completo como overlay
+  @media (max-width: 1024px) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(420px, 100vw);
+    max-height: 100vh;
+    z-index: 200;
+    border-radius: 0;
+    overflow-y: auto;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+    animation: slideInFromRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// Header card fijo al top: no desaparece al hacer scroll
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--mat-app-background-color, #f5f5f5);
+  padding-bottom: 1rem;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+// Backdrop para móvil cuando el panel está abierto
+@media (max-width: 1024px) {
+  :host {
+    &:has(.form-panel)::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 199;
+      animation: fadeIn 0.3s ease;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
