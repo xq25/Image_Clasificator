@@ -1,92 +1,146 @@
-/* Header del formulario */
-.form-header {
-  background-color: var(--primary-color, #3f51b5);
-  color: #ffffff;
-  padding: 1.5rem;
-  border-radius: 8px 8px 0 0;
-  margin: 0 0 1.5rem 0;
+// ─────────────────────────────────────────────────────────────
+// Dynamic Form Component — misma paleta que dynamic-table/list
+// ─────────────────────────────────────────────────────────────
+
+// Tokens (idénticos a dynamic-table.component.scss)
+$primary:       #4f46e5;
+$primary-light: #ede9fe;
+$primary-dark:  #3730a3;
+$border:        #e8eaf0;
+$text-main:     #1f2937;
+$text-muted:    #6b7280;
+$error:         #ef4444;
+
+// ── Root wrapper (sin padding extra — el panel ya lo tiene) ──
+.dynamic-form-root {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Badge para mostrar el modo del formulario */
+// ── Header ────────────────────────────────────────────────────
+.form-header {
+  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%);
+  color: #fff;
+  padding: 18px 20px 16px;
+  border-radius: 13px 13px 0 0;
+  margin: 0 0 20px;
+
+  h2 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: .01em;
+    margin: 0;
+  }
+}
+
+// ── Mode badge ────────────────────────────────────────────────
 .mode-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 5px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+  letter-spacing: .05em;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.28);
 
-.mode-badge mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-.mode-badge-0 {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.mode-badge-1 {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.mode-badge-2 {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Botones de acción */
-.btn-cancel {
-  color: #6b7280 !important;
-  border-color: #d1d5db !important;
-  
   mat-icon {
-    margin-right: 0.25rem;
-  }
-
-  &:hover {
-    background-color: #f3f4f6;
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
   }
 }
 
-.btn-create,
-.btn-update {
-  background-color: var(--primary-color, #3f51b5) !important;
-  color: white !important;
-  
-  mat-icon {
-    margin-right: 0.25rem;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-  }
-
-  &:not(:disabled):hover {
-    filter: brightness(1.1);
-  }
+// Los tres modos comparten el mismo look sobre el header degradado
+.mode-badge-0,
+.mode-badge-1,
+.mode-badge-2,
+.mode-badge-3 {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.28);
 }
 
-/* Estilos generales para el formulario */
+// ── Form fields ───────────────────────────────────────────────
 ::ng-deep {
-  .mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
-    padding-bottom: 0.5rem;
+  // Outline color → usa el mismo $primary
+  .mat-mdc-form-field-appearance-outline {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: $border !important;
+    }
+
+    &.mat-focused {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: $primary !important;
+        border-width: 2px !important;
+      }
+    }
+  }
+
+  // Label activo en el mismo violeta
+  .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+    color: $primary !important;
+  }
+
+  // Texto de error
+  .mat-mdc-form-field-error {
+    font-size: 11px;
+    color: $error !important;
   }
 
   .mat-mdc-form-field {
     width: 100%;
   }
 
-  .mat-mdc-form-field-error {
-    font-size: 0.75rem;
+  .mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+    padding-bottom: 0.5rem;
   }
+}
+
+// ── Divider inferior de acciones ──────────────────────────────
+form .border-t {
+  border-color: $border !important;
+}
+
+// ── Botón cancelar ────────────────────────────────────────────
+.btn-cancel {
+  color: $text-muted !important;
+  border-color: $border !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
+
+  &:hover { background: #f5f3ff !important; color: $primary !important; border-color: lighten($primary, 20%) !important; }
+}
+
+// ── Botones de submit ─────────────────────────────────────────
+.btn-create,
+.btn-update,
+.btn-send {
+  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, .32) !important;
+  transition: box-shadow .2s, transform .15s !important;
+
+  mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
+
+  &:not(:disabled):hover {
+    box-shadow: 0 4px 14px rgba(79, 70, 229, .44) !important;
+    transform: translateY(-1px);
+  }
+
+  &:disabled { opacity: .55; box-shadow: none !important; }
 }

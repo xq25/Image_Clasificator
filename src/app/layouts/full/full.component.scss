@@ -1,55 +1,59 @@
-// ============================================================
-// Full Layout Shell — modelo YouTube
-// Header estático arriba, solo .scroll-area se desplaza
-// ============================================================
+// ─────────────────────────────────────────────────────────────
+// Full Layout Shell
+// El layout NO impone modelo de altura a las páginas hijas.
+// Cada página decide si ocupa espacio fijo o genera scroll.
+// ─────────────────────────────────────────────────────────────
 
-// 1 — Contenedor raíz ocupa toda la pantalla
 .mainWrapper {
   height: 100vh !important;
   overflow: hidden !important;
 }
 
-// 2 — Sidebar: Material lo gestiona; ng-scrollbar maneja su scroll interno
 .sidebarNav {
   overflow: hidden !important;
 }
 
-// 3 — Área derecha completa (mat-sidenav-content)
-//     Flex column: header arriba (tamaño fijo) + scroll-area abajo (crece)
 .contentWrapper {
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
-  overflow: hidden !important;   // ← NO scrollea aquí; lo hace .scroll-area
+  overflow: hidden !important;
 }
 
-// 4 — Header: bloque estático, nunca se mueve ni desaparece
-//     El elemento host app-header recibe esta clase en el HTML
 .layout-header {
-  flex-shrink: 0;                // nunca se comprime
+  flex-shrink: 0;
   width: 100%;
   display: block;
   z-index: 100;
 }
 
-// El mat-toolbar dentro del header también debe ser bloque fijo
 .layout-header .topbar {
   width: 100%;
   display: flex !important;
 }
 
-// 5 — Zona scrolleable: ocupa todo el espacio restante
+// scroll-area: el único scroll del layout para páginas normales
+// Las páginas que quieran scroll exterior simplemente dejan
+// que su contenido crezca aquí.
+// Las páginas que quieran su propio scroll interno neutralizan
+// este overflow con height:100% en su :host.
 .scroll-area {
-  flex: 1 1 auto;               // crece para llenar lo que el header no ocupa
-  overflow-y: auto;             // ← ÚNICO scroll del layout
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
 
-// 6 — Área de páginas: crece para empujar el footer al fondo
+// pageWrapper: contenedor neutro, no fuerza altura ni scroll
+// Solo aplica el padding estándar de la página
 .pageWrapper {
-  flex: 1 0 auto;
+  // 1 1 auto: puede crecer Y encogerse → el hijo (list :host) recibe altura real
+  flex: 1 1 auto;
+  min-height: 0;
+  // height: 100% permite que el list :host pueda usar height:100%
+  height: 100%;
   width: 100%;
   box-sizing: border-box;
   padding: 24px;
@@ -60,7 +64,6 @@
   }
 }
 
-// 7 — Footer siempre al fondo del scroll-area
 footer {
   flex-shrink: 0;
   width: 100%;

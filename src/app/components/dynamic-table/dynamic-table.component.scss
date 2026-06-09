@@ -1,257 +1,275 @@
+// ─────────────────────────────────────────────────────────────
+// Dynamic Table Component — Improved
+// ─────────────────────────────────────────────────────────────
+
+// Tokens locales (sobreescriben los globales si existen)
+$primary:        #4f46e5;
+$primary-light:  #ede9fe;
+$primary-dark:   #3730a3;
+$row-hover:      #f5f3ff;
+$border:         #f0f0f5;
+$text-main:      #1f2937;
+$text-muted:     #6b7280;
+$text-mono:      #9ca3af;
+
+// ── Host: flex column para que el scroll container crezca ─────
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+
+// ── Mat-table overrides ───────────────────────────────────────
 ::ng-deep {
   .mat-mdc-table {
     width: 100%;
     border-collapse: collapse;
     background: transparent;
 
+    // ── Header ───────────────────────────────────────────────
     .mat-mdc-header-row,
     .mat-mdc-header-cell {
-      background-color: var(--primary-color, #3f51b5) !important;
+      background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 2 !important;
     }
 
     .mdc-data-table__header-cell {
       font-weight: 700;
-      font-size: 0.875rem;
-      color: #ffffff;
-      background-color: var(--primary-color, #3f51b5) !important;
-      border-bottom: 2px solid var(--border-color);
-      padding: 1.25rem 1rem;
-      text-transform: capitalize;
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+      border-bottom: none !important;
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
 
+    // ── Cells ─────────────────────────────────────────────────
     .mdc-data-table__cell {
-      padding: 1rem;
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      border-bottom: 1px solid var(--border-color);
+      padding: 0 16px;
+      font-size: 13px;
+      color: $text-main;
+      border-bottom: 1px solid $border !important;
+      height: 52px;
+      vertical-align: middle;
     }
 
+    // ── Rows ──────────────────────────────────────────────────
     tbody tr {
-      transition: background-color 0.2s ease;
+      transition: background-color .15s ease;
 
-      &:hover {
-        background-color: rgba(var(--primary-rgb, 63, 81, 181), 0.08);
-      }
+      &:hover { background-color: $row-hover !important; }
+      &:last-child .mdc-data-table__cell { border-bottom: none !important; }
     }
   }
 }
 
-.table-header {
-  font-weight: 700;
-  color: #ffffff;
-  background-color: var(--primary-color, #3f51b5) !important;
+// ── Column helpers ────────────────────────────────────────────
+// ID / uuid: fuente mono, texto atenuado, truncado
+.col-id {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px !important;
+  color: $text-mono !important;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
-.table-cell {
-  padding: 1rem;
-  font-size: 0.875rem;
+// Nombre con avatar de iniciales
+.cell-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $primary 0%, lighten($primary, 15%) 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: .02em;
+  }
+
+  .name-text {
+    font-weight: 500;
+    color: $text-main;
+    line-height: 1.3;
+  }
+}
+
+// Email: enlace visual sutil
+.cell-email {
+  color: $text-muted;
+  font-size: 12.5px;
+}
+
+// ── Actions cell ──────────────────────────────────────────────
+// Fuerza fila horizontal con gap entre botones
+.actions-cell {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2px !important;
+  flex-wrap: nowrap !important;
+  padding: 0 8px !important;
 }
 
 .action-button {
-  margin-left: 0.5rem;
-  transition: all 0.2s ease;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  border-radius: 8px !important;
+  transition: background-color .15s, transform .12s !important;
 
-  &:hover {
-    transform: scale(1.1);
+  mat-icon {
+    font-size: 17px !important;
+    width: 17px !important;
+    height: 17px !important;
   }
+
+  &:hover { transform: translateY(-1px); }
 }
 
+// Colores semánticos de acciones
 .btn-view {
-  color: #00bcd4 !important;
-
-  &:hover {
-    background-color: rgba(0, 188, 212, 0.08);
-  }
+  color: #0ea5e9 !important;
+  &:hover { background-color: #e0f2fe !important; }
 }
-
 .btn-edit {
-  color: #2196f3 !important;
-
-  &:hover {
-    background-color: rgba(33, 150, 243, 0.08);
-  }
+  color: $primary !important;
+  &:hover { background-color: $primary-light !important; }
 }
-
 .btn-delete {
-  color: #f44336 !important;
-
-  &:hover {
-    background-color: rgba(244, 67, 54, 0.08);
-  }
+  color: #ef4444 !important;
+  &:hover { background-color: #fee2e2 !important; }
 }
-
 .btn-manage-roles {
-  color: #4caf50 !important;
-
-  &:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
+  color: #10b981 !important;
+  &:hover { background-color: #d1fae5 !important; }
 }
 
-.relative {
-  position: relative;
-}
-
-.overflow-auto {
-  overflow-x: auto;
-  overflow-y: visible;
-}
-
-.mt-7\.5 {
-  margin-top: 1.875rem;
-}
-
-.min-w-full {
-  min-width: 100%;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.gap-1 {
-  gap: 0.25rem;
-}
-
-.mr-2 {
-  margin-right: 0.5rem;
-}
-
-.ml-1 {
-  margin-left: 0.25rem;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.flex {
+// ── Empty state ───────────────────────────────────────────────
+.empty-state {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  gap: 10px;
+  color: $text-muted;
+  font-size: 13px;
 }
 
-.d-sm-block {
-  @media (max-width: 640px) {
-    display: block;
-  }
-}
-
-.text-center {
-  text-align: center;
-}
-
-.pl-0 {
-  padding-left: 0;
-}
-
-.py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.whitespace-nowrap {
-  white-space: nowrap;
-}
-
-.font-semibold {
-  font-weight: 600;
-}
-/* ── Móvil: lista colapsable ── */
+// ────────────────────────────────────────────────────────────────
+// MÓVIL
+// ────────────────────────────────────────────────────────────────
 .mobile-list {
   width: 100%;
+  flex: 1 1 auto;   // ocupa el espacio disponible en el host flex
+  min-height: 0;
+  overflow-y: auto; // scroll interno en móvil
+  overflow-x: hidden;
 }
 
 .mobile-header {
-  background-color: var(--primary-color, #3f51b5);
-  color: #ffffff;
+  background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%);
+  color: #fff;
   font-weight: 700;
-  font-size: 0.875rem;
-  padding: 1rem;
-  text-transform: capitalize;
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .mobile-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  padding: 14px 16px;
+  border-bottom: 1px solid $border;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  background-color: var(--surface-color, #ffffff);
+  transition: background-color .15s ease;
+  background: #fff;
 
-  &:hover {
-    background-color: rgba(var(--primary-rgb, 63, 81, 181), 0.06);
-  }
+  &:hover { background-color: $row-hover; }
 }
 
 .mobile-row-value {
-  font-size: 0.875rem;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary, #212121);
+  color: $text-main;
 }
 
 .mobile-chevron {
-  color: var(--text-secondary, #757575);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: $text-muted;
+  transition: transform .25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  font-size: 20px;
 
-  &.rotated {
-    transform: rotate(180deg);
-  }
+  &.rotated { transform: rotate(180deg); }
 }
 
 .mobile-detail {
-  background-color: var(--background-color, #fafafa);
-  border-bottom: 2px solid var(--primary-color, #3f51b5);
-  padding: 0.5rem 1rem 0.75rem;
-  animation: expandDetail 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fafafa;
+  border-bottom: 2px solid $primary;
+  padding: 8px 16px 12px;
+  animation: expandDetail .2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes expandDetail {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .mobile-detail-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0.4rem 0;
-  border-bottom: 1px dashed var(--border-color, #e0e0e0);
+  padding: 6px 0;
+  border-bottom: 1px dashed $border;
   gap: 1rem;
 
-  &:last-of-type {
-    border-bottom: none;
-  }
+  &:last-of-type { border-bottom: none; }
 }
 
 .mobile-detail-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary, #757575);
+  font-size: 10px;
+  font-weight: 700;
+  color: $text-muted;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .05em;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .mobile-detail-value {
-  font-size: 0.875rem;
-  color: var(--text-primary, #212121);
+  font-size: 13px;
+  color: $text-main;
   text-align: right;
   word-break: break-word;
 }
@@ -259,6 +277,6 @@
 .mobile-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.25rem;
-  padding-top: 0.5rem;
+  gap: 4px;
+  padding-top: 8px;
 }
