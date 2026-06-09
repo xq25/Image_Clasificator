@@ -163,3 +163,102 @@
 .font-semibold {
   font-weight: 600;
 }
+/* ── Móvil: lista colapsable ── */
+.mobile-list {
+  width: 100%;
+}
+
+.mobile-header {
+  background-color: var(--primary-color, #3f51b5);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 1rem;
+  text-transform: capitalize;
+}
+
+.mobile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background-color: var(--surface-color, #ffffff);
+
+  &:hover {
+    background-color: rgba(var(--primary-rgb, 63, 81, 181), 0.06);
+  }
+}
+
+.mobile-row-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #212121);
+}
+
+.mobile-chevron {
+  color: var(--text-secondary, #757575);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+.mobile-detail {
+  background-color: var(--background-color, #fafafa);
+  border-bottom: 2px solid var(--primary-color, #3f51b5);
+  padding: 0.5rem 1rem 0.75rem;
+  animation: expandDetail 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes expandDetail {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed var(--border-color, #e0e0e0);
+  gap: 1rem;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.mobile-detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #757575);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mobile-detail-value {
+  font-size: 0.875rem;
+  color: var(--text-primary, #212121);
+  text-align: right;
+  word-break: break-word;
+}
+
+.mobile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding-top: 0.5rem;
+}

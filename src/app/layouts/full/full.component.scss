@@ -1,0 +1,67 @@
+// ============================================================
+// Full Layout Shell — modelo YouTube
+// Header estático arriba, solo .scroll-area se desplaza
+// ============================================================
+
+// 1 — Contenedor raíz ocupa toda la pantalla
+.mainWrapper {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+// 2 — Sidebar: Material lo gestiona; ng-scrollbar maneja su scroll interno
+.sidebarNav {
+  overflow: hidden !important;
+}
+
+// 3 — Área derecha completa (mat-sidenav-content)
+//     Flex column: header arriba (tamaño fijo) + scroll-area abajo (crece)
+.contentWrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;   // ← NO scrollea aquí; lo hace .scroll-area
+}
+
+// 4 — Header: bloque estático, nunca se mueve ni desaparece
+//     El elemento host app-header recibe esta clase en el HTML
+.layout-header {
+  flex-shrink: 0;                // nunca se comprime
+  width: 100%;
+  display: block;
+  z-index: 100;
+}
+
+// El mat-toolbar dentro del header también debe ser bloque fijo
+.layout-header .topbar {
+  width: 100%;
+  display: flex !important;
+}
+
+// 5 — Zona scrolleable: ocupa todo el espacio restante
+.scroll-area {
+  flex: 1 1 auto;               // crece para llenar lo que el header no ocupa
+  overflow-y: auto;             // ← ÚNICO scroll del layout
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+// 6 — Área de páginas: crece para empujar el footer al fondo
+.pageWrapper {
+  flex: 1 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+
+  &.maxWidth {
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+}
+
+// 7 — Footer siempre al fondo del scroll-area
+footer {
+  flex-shrink: 0;
+  width: 100%;
+}
