@@ -5,7 +5,7 @@ export interface MedicalImg {
   provider: string;
   contentType?: string;
   fileSize?: number;
-  evaluationAreaId: number;
-  patientId?: number;
+  medicalImageTypeId: number;
+  clinicalRecordId?: number;
   createdAt?: Date | string;
 }

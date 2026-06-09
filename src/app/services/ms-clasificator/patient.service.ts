@@ -15,9 +15,9 @@ export class PatientService {
   /**
    * Obtener todos los pacientes
    */
-  findAll(): Observable<Patient[]> {
-    return this.http.get<Patient[]>(`${apiUrl}`);
-  }
+  findAll(): Observable<ApiResponse<Patient[]>> {
+  return this.http.get<ApiResponse<Patient[]>>(`${apiUrl}`);
+}
 
   /**
    * Obtener un paciente por ID
