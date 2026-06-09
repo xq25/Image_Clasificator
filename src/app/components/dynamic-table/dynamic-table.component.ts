@@ -97,4 +97,15 @@ export class DynamicTableComponent {
       key.charAt(0).toUpperCase() + key.slice(1)
     );
   }
+
+  /** Devuelve hasta 2 iniciales de un nombre para el avatar */
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(w => w[0].toUpperCase())
+      .join('');
+  }
 }

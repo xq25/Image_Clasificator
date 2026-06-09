@@ -1,12 +1,11 @@
-<div class="p-6">
+<div class="list-root">
 
-  <!-- Split layout container -->
   <div class="split-layout" [class.panel-open]="panelOpen()">
 
     <!-- Columna izquierda: header sticky + tabla -->
     <div class="table-column">
 
-      <!-- Header sticky -->
+      <!-- Header card: sticky, no scrollea -->
       <div class="sticky-header">
         <mat-card class="cardWithShadow">
           <div class="flex items-center justify-between px-4 py-2">
@@ -22,8 +21,8 @@
         </mat-card>
       </div>
 
-      <!-- Tabla -->
-      <mat-card class="cardWithShadow">
+      <!-- Tabla: overflow hidden para respetar bordes del card -->
+      <mat-card class="cardWithShadow table-card">
         @if (loading()) {
           <div class="p-8 text-center">
             <mat-icon class="animate-spin text-2xl">cached</mat-icon>
