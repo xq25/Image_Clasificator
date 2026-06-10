@@ -223,7 +223,7 @@ export class ManageRolesComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['../list'], { relativeTo: this.route });
+    this.router.navigate(['users/list']);
   }
 
   private showToast(message: string, type: 'success' | 'error'): void {

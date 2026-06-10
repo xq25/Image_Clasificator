@@ -1,35 +1,81 @@
-<div class="p-6">
-  <mat-card class="cardWithShadow mb-6">
-    <div class="flex items-center justify-between p-4">
-      <div>
-        <h2 class="text-2xl font-bold">Gestión de Usuarios</h2>
-        <p class="text-gray-600 text-sm">Administra los usuarios del sistema</p>
-      </div>
-      <button mat-flat-button color="primary" (click)="create()" class="flex items-center gap-2">
-        <mat-icon>add</mat-icon>
-        Nuevo Usuario
-      </button>
-    </div>
-  </mat-card>
+<div class="list-root">
 
-  <mat-card class="cardWithShadow">
-    @if (loading()) {
-      <div class="p-8 text-center">
-        <mat-icon class="animate-spin text-2xl">cached</mat-icon>
-        <p class="text-gray-600 mt-2">Cargando usuarios...</p>
+  <div class="split-layout" [class.panel-open]="panelOpen()">
+
+    <!-- Columna izquierda: header sticky + tabla -->
+    <div class="table-column">
+
+      <!-- Header card: sticky, no scrollea -->
+      <div class="sticky-header">
+        <mat-card class="cardWithShadow">
+          <div class="flex items-center justify-between px-4 py-2">
+            <div>
+              <h2 class="text-base font-semibold">Gestión de Usuarios</h2>
+              <p class="text-gray-500 text-xs">Administra los usuarios del sistema</p>
+            </div>
+            <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new flex items-center gap-2">
+              <mat-icon>add</mat-icon>
+              Nuevo Usuario
+            </button>
+          </div>
+        </mat-card>
       </div>
-    } @else if (users().length === 0) {
-      <div class="p-8 text-center">
-        <mat-icon class="text-4xl text-gray-400">people_outline</mat-icon>
-        <p class="text-gray-600 mt-2">No hay usuarios registrados</p>
-      </div>
-    } @else {
-      <app-dynamic-table
-        [data]="users()"
-        [columns]="columns"
-        [actionButtons]="actionButtons"
-        (actionClicked)="handleAction($event)"
-      />
+
+      <!-- Tabla: overflow hidden para respetar bordes del card -->
+      <mat-card class="cardWithShadow table-card">
+        @if (loading()) {
+          <div class="p-8 text-center">
+            <mat-icon class="animate-spin text-2xl">cached</mat-icon>
+            <p class="text-gray-600 mt-2">Cargando usuarios...</p>
+          </div>
+        } @else if (users().length === 0) {
+          <div class="p-8 text-center">
+            <mat-icon class="text-4xl text-gray-400">people_outline</mat-icon>
+            <p class="text-gray-600 mt-2">No hay usuarios registrados</p>
+          </div>
+        } @else {
+          <app-dynamic-table
+            [data]="users()"
+            [columns]="columns"
+            [actionButtons]="actionButtons"
+            (actionClicked)="handleAction($event)"
+          />
+        }
+      </mat-card>
+
+    </div>
+
+    <!-- Panel lateral (derecha) -->
+    @if (panelOpen()) {
+      <mat-card class="cardWithShadow form-panel">
+
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold">
+            @if (formConfig()?.mode === 0) { Detalle de Usuario }
+            @else if (formConfig()?.mode === 1) { Nuevo Usuario }
+            @else if (formConfig()?.mode === 2) { Editar Usuario }
+          </h3>
+          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="p-4">
+          @if (panelLoading()) {
+            <div class="flex items-center justify-center py-16">
+              <mat-spinner diameter="48"></mat-spinner>
+            </div>
+          } @else if (formConfig()) {
+            <app-dynamic-form
+              [config]="formConfig()!"
+              (formSubmit)="handleFormSubmit($event)"
+              (formCancel)="handleFormCancel()"
+            />
+          }
+        </div>
+
+      </mat-card>
     }
-  </mat-card>
+
+  </div>
 </div>
