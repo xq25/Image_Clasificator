@@ -1,4 +1,4 @@
-import { Component, input, output, signal, effect } from '@angular/core';
+import { Component, input, output, signal, effect, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,11 +28,33 @@ export class DynamicTableComponent {
   columns = input<TableColumn[]>([]);
   actionButtons = input<TableAction[]>([]);
 
+  /**
+   * Key de la columna que se muestra en móvil como título colapsable.
+   * Si no se provee, se usa la primera columna.
+   */
+  mobileKey = input<string>('');
+
   displayedColumns = signal<string[]>([]);
+  isMobile = signal<boolean>(false);
+  expandedRows = signal<Set<any>>(new Set());
 
   actionClicked = output<{ action: string; row: any }>();
 
+  /** Columna efectiva para móvil */
+  effectiveMobileKey = computed(() => {
+    const key = this.mobileKey();
+    if (key) return key;
+    return this.columns()[0]?.key ?? '';
+  });
+
+  /** Columnas que se muestran colapsadas en móvil (todas excepto la mobileKey) */
+  collapsedColumns = computed(() =>
+    this.columns().filter(c => c.key !== this.effectiveMobileKey())
+  );
+
   constructor() {
+    this.checkMobile();
+
     effect(() => {
       const cols = this.columns().map((col) => col.key);
       if (this.actionButtons().length > 0) {
@@ -40,6 +62,29 @@ export class DynamicTableComponent {
       }
       this.displayedColumns.set(cols);
     });
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkMobile();
+  }
+
+  private checkMobile(): void {
+    this.isMobile.set(window.innerWidth <= 640);
+  }
+
+  toggleRow(row: any): void {
+    const current = new Set(this.expandedRows());
+    if (current.has(row)) {
+      current.delete(row);
+    } else {
+      current.add(row);
+    }
+    this.expandedRows.set(current);
+  }
+
+  isExpanded(row: any): boolean {
+    return this.expandedRows().has(row);
   }
 
   handleAction(action: string, row: any) {
@@ -51,5 +96,16 @@ export class DynamicTableComponent {
       this.columns().find((col) => col.key === key)?.label ||
       key.charAt(0).toUpperCase() + key.slice(1)
     );
+  }
+
+  /** Devuelve hasta 2 iniciales de un nombre para el avatar */
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(w => w[0].toUpperCase())
+      .join('');
   }
 }

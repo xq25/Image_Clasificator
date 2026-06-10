@@ -1,1 +1,97 @@
-/* Estilos específicos para el list component */
+// ─────────────────────────────────────────────────────────────
+// Permissions List — misma paleta y sistema de altura que users/roles
+// ─────────────────────────────────────────────────────────────
+
+// 1 — Host: ocupa el espacio que le da pageWrapper
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// 2 — Root wrapper (sin padding extra — pageWrapper ya lo tiene)
+.list-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+// 3 — Header sticky
+.sticky-header {
+  flex-shrink: 0;
+  padding-bottom: 1rem;
+}
+
+// ── Header card ────────────────────────────────────────────────
+.header-card {
+  border-radius: 14px !important;
+  border: 1px solid #e8eaf0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e1b4b;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 2px 0 0;
+  }
+}
+
+// ── Table card ─────────────────────────────────────────────────
+.table-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 14px !important;
+  border: 1px solid #e8eaf0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+
+  .mat-mdc-card-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 !important;
+  }
+}
+
+// ── Botón Nuevo Permiso ────────────────────────────────────────
+// El botón usa color="primary" de Material; solo ajustamos forma
+::ng-deep .btn-new {
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  height: 38px !important;
+  padding: 0 20px !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35) !important;
+  transition: box-shadow .2s, transform .15s !important;
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45) !important;
+    transform: translateY(-1px);
+  }
+
+  mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 4px;
+  }
+}

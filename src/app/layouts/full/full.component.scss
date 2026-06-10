@@ -1,0 +1,70 @@
+// ─────────────────────────────────────────────────────────────
+// Full Layout Shell
+// El layout NO impone modelo de altura a las páginas hijas.
+// Cada página decide si ocupa espacio fijo o genera scroll.
+// ─────────────────────────────────────────────────────────────
+
+.mainWrapper {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.sidebarNav {
+  overflow: hidden !important;
+}
+
+.contentWrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.layout-header {
+  flex-shrink: 0;
+  width: 100%;
+  display: block;
+  z-index: 100;
+}
+
+.layout-header .topbar {
+  width: 100%;
+  display: flex !important;
+}
+
+// scroll-area: el único scroll del layout para páginas normales
+// Las páginas que quieran scroll exterior simplemente dejan
+// que su contenido crezca aquí.
+// Las páginas que quieran su propio scroll interno neutralizan
+// este overflow con height:100% en su :host.
+.scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+// pageWrapper: contenedor neutro, no fuerza altura ni scroll
+// Solo aplica el padding estándar de la página
+.pageWrapper {
+  // 1 1 auto: puede crecer Y encogerse → el hijo (list :host) recibe altura real
+  flex: 1 1 auto;
+  min-height: 0;
+  // height: 100% permite que el list :host pueda usar height:100%
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+
+  &.maxWidth {
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+}
+
+footer {
+  flex-shrink: 0;
+  width: 100%;
+}
