@@ -1,18 +1,22 @@
 // ─────────────────────────────────────────────────────────────
-// Dynamic Table Component — Improved
+// Dynamic Table Component — Dark-theme aware
+//
+// Regla: solo los elementos sobre fondo de color fijo (header
+// degradado, avatar) usan #fff hardcodeado. Todo lo demás usa
+// variables CSS de Material que cambian automáticamente entre
+// light y dark theme.
+//
+// Variables clave que usa Angular Material:
+//   --mat-app-on-surface          → texto principal
+//   --mat-app-on-surface-variant  → texto secundario / atenuado
+//   --mat-app-outline-variant     → bordes sutiles
+//   --mat-app-surface-variant     → fondos de detalle
 // ─────────────────────────────────────────────────────────────
 
-// Tokens locales (sobreescriben los globales si existen)
-$primary:        #4f46e5;
-$primary-light:  #ede9fe;
-$primary-dark:   #3730a3;
-$row-hover:      #f5f3ff;
-$border:         #f0f0f5;
-$text-main:      #1f2937;
-$text-muted:     #6b7280;
-$text-mono:      #9ca3af;
+// Único token fijo: el color de marca
+$primary: #4f46e5;
 
-// ── Host: flex column para que el scroll container crezca ─────
+// ── Host ──────────────────────────────────────────────────────
 :host {
   display: flex;
   flex-direction: column;
@@ -20,6 +24,7 @@ $text-mono:      #9ca3af;
   min-height: 0;
 }
 
+// ── Scroll container ──────────────────────────────────────────
 .table-scroll-container {
   overflow-x: auto;
   overflow-y: auto;
@@ -33,12 +38,12 @@ $text-mono:      #9ca3af;
   .mat-mdc-table {
     width: 100%;
     border-collapse: collapse;
-    background: transparent;
+    background: transparent; // hereda el fondo del card
 
-    // ── Header ───────────────────────────────────────────────
+    // Header: fondo de color fijo → texto blanco siempre
     .mat-mdc-header-row,
     .mat-mdc-header-cell {
-      background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+      background: linear-gradient(90deg, $primary 0%, #6366f1 100%) !important;
       position: sticky !important;
       top: 0 !important;
       z-index: 2 !important;
@@ -50,7 +55,7 @@ $text-mono:      #9ca3af;
       letter-spacing: .06em;
       text-transform: uppercase;
       color: #fff;
-      background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+      background: linear-gradient(90deg, $primary 0%, #6366f1 100%) !important;
       border-bottom: none !important;
       padding: 14px 16px;
       position: sticky;
@@ -58,32 +63,35 @@ $text-mono:      #9ca3af;
       z-index: 2;
     }
 
-    // ── Cells ─────────────────────────────────────────────────
+    // Cells: color del tema activo
     .mdc-data-table__cell {
       padding: 0 16px;
       font-size: 13px;
-      color: $text-main;
-      border-bottom: 1px solid $border !important;
+      color: var(--mat-app-on-surface);
+      border-bottom: 1px solid var(--mat-app-outline-variant) !important;
       height: 52px;
       vertical-align: middle;
     }
 
-    // ── Rows ──────────────────────────────────────────────────
+    // Rows
     tbody tr {
       transition: background-color .15s ease;
 
-      &:hover { background-color: $row-hover !important; }
-      &:last-child .mdc-data-table__cell { border-bottom: none !important; }
+      &:hover {
+        background-color: rgba($primary, .08) !important;
+      }
+      &:last-child .mdc-data-table__cell {
+        border-bottom: none !important;
+      }
     }
   }
 }
 
-// ── Column helpers ────────────────────────────────────────────
-// ID / uuid: fuente mono, texto atenuado, truncado
+// ── ID / uuid ─────────────────────────────────────────────────
 .col-id {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px !important;
-  color: $text-mono !important;
+  color: var(--mat-app-on-surface-variant) !important;
   max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,17 +99,18 @@ $text-mono:      #9ca3af;
   display: block;
 }
 
-// Nombre con avatar de iniciales
+// ── Nombre con avatar ─────────────────────────────────────────
 .cell-name {
   display: flex;
   align-items: center;
   gap: 10px;
 
+  // Avatar sobre fondo de color → texto blanco siempre
   .avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, $primary 0%, lighten($primary, 15%) 100%);
+    background: linear-gradient(135deg, $primary 0%, #7c73f1 100%);
     color: #fff;
     font-size: 11px;
     font-weight: 700;
@@ -114,19 +123,18 @@ $text-mono:      #9ca3af;
 
   .name-text {
     font-weight: 500;
-    color: $text-main;
+    color: var(--mat-app-on-surface);
     line-height: 1.3;
   }
 }
 
-// Email: enlace visual sutil
+// ── Email ─────────────────────────────────────────────────────
 .cell-email {
-  color: $text-muted;
+  color: var(--mat-app-on-surface-variant);
   font-size: 12.5px;
 }
 
 // ── Actions cell ──────────────────────────────────────────────
-// Fuerza fila horizontal con gap entre botones
 .actions-cell {
   display: flex !important;
   flex-direction: row !important;
@@ -152,23 +160,13 @@ $text-mono:      #9ca3af;
   &:hover { transform: translateY(-1px); }
 }
 
-// Colores semánticos de acciones
-.btn-view {
-  color: #0ea5e9 !important;
-  &:hover { background-color: #e0f2fe !important; }
-}
-.btn-edit {
-  color: $primary !important;
-  &:hover { background-color: $primary-light !important; }
-}
-.btn-delete {
-  color: #ef4444 !important;
-  &:hover { background-color: #fee2e2 !important; }
-}
-.btn-manage-roles {
-  color: #10b981 !important;
-  &:hover { background-color: #d1fae5 !important; }
-}
+// Colores de íconos: saturados, legibles en ambos temas
+// Los hover usan rgba para ser semitransparentes sobre cualquier fondo
+.btn-view   { color: #0ea5e9 !important; &:hover { background: rgba(14,  165, 233, .15) !important; } }
+.btn-edit   { color: $primary !important; &:hover { background: rgba(79,  70,  229, .15) !important; } }
+.btn-delete { color: #ef4444 !important; &:hover { background: rgba(239, 68,  68,  .15) !important; } }
+.btn-manage-roles       { color: #10b981 !important; &:hover { background: rgba(16, 185, 129, .15) !important; } }
+.btn-manage-permissions { color: #10b981 !important; &:hover { background: rgba(16, 185, 129, .15) !important; } }
 
 // ── Empty state ───────────────────────────────────────────────
 .empty-state {
@@ -178,7 +176,7 @@ $text-mono:      #9ca3af;
   justify-content: center;
   padding: 56px 24px;
   gap: 10px;
-  color: $text-muted;
+  color: var(--mat-app-on-surface-variant);
   font-size: 13px;
 }
 
@@ -187,14 +185,15 @@ $text-mono:      #9ca3af;
 // ────────────────────────────────────────────────────────────────
 .mobile-list {
   width: 100%;
-  flex: 1 1 auto;   // ocupa el espacio disponible en el host flex
+  flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto; // scroll interno en móvil
+  overflow-y: auto;
   overflow-x: hidden;
 }
 
+// Header móvil: mismo degradado que desktop → texto blanco fijo
 .mobile-header {
-  background: linear-gradient(90deg, $primary 0%, lighten($primary, 8%) 100%);
+  background: linear-gradient(90deg, $primary 0%, #6366f1 100%);
   color: #fff;
   font-weight: 700;
   font-size: 11px;
@@ -211,22 +210,21 @@ $text-mono:      #9ca3af;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid var(--mat-app-outline-variant);
   cursor: pointer;
   transition: background-color .15s ease;
-  background: #fff;
-
-  &:hover { background-color: $row-hover; }
+  // Sin fondo fijo — hereda el card (claro u oscuro)
+  &:hover { background-color: rgba($primary, .08); }
 }
 
 .mobile-row-value {
   font-size: 13px;
   font-weight: 500;
-  color: $text-main;
+  color: var(--mat-app-on-surface);
 }
 
 .mobile-chevron {
-  color: $text-muted;
+  color: var(--mat-app-on-surface-variant);
   transition: transform .25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   font-size: 20px;
@@ -235,7 +233,7 @@ $text-mono:      #9ca3af;
 }
 
 .mobile-detail {
-  background: #fafafa;
+  background: var(--mat-app-surface-variant);
   border-bottom: 2px solid $primary;
   padding: 8px 16px 12px;
   animation: expandDetail .2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -251,7 +249,7 @@ $text-mono:      #9ca3af;
   justify-content: space-between;
   align-items: flex-start;
   padding: 6px 0;
-  border-bottom: 1px dashed $border;
+  border-bottom: 1px dashed var(--mat-app-outline-variant);
   gap: 1rem;
 
   &:last-of-type { border-bottom: none; }
@@ -260,7 +258,7 @@ $text-mono:      #9ca3af;
 .mobile-detail-label {
   font-size: 10px;
   font-weight: 700;
-  color: $text-muted;
+  color: var(--mat-app-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: .05em;
   white-space: nowrap;
@@ -269,7 +267,7 @@ $text-mono:      #9ca3af;
 
 .mobile-detail-value {
   font-size: 13px;
-  color: $text-main;
+  color: var(--mat-app-on-surface);
   text-align: right;
   word-break: break-word;
 }
