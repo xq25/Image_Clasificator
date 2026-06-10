@@ -1,18 +1,23 @@
-<div class="p-6">
-  <mat-card class="cardWithShadow mb-6">
-    <div class="flex items-center justify-between p-4">
-      <div>
-        <h2 class="text-2xl font-bold">Gestión de Permisos</h2>
-        <p class="text-gray-600 text-sm">Administra los permisos del sistema</p>
-      </div>
-      <button mat-flat-button color="primary" (click)="create()" class="flex items-center gap-2">
-        <mat-icon>add</mat-icon>
-        Nuevo Permiso
-      </button>
-    </div>
-  </mat-card>
+<div class="list-root">
 
-  <mat-card class="cardWithShadow">
+  <!-- Header sticky -->
+  <div class="sticky-header">
+    <mat-card class="cardWithShadow header-card">
+      <div class="header-inner">
+        <div>
+          <h2 class="header-title">Gestión de Permisos</h2>
+          <p class="header-subtitle">Administra los permisos del sistema</p>
+        </div>
+        <button mat-flat-button color="primary" (click)="create()" class="btn-new flex items-center gap-2">
+          <mat-icon>add</mat-icon>
+          Nuevo Permiso
+        </button>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Tabla -->
+  <mat-card class="cardWithShadow table-card">
     @if (loading()) {
       <div class="p-8 text-center">
         <mat-icon class="animate-spin text-2xl">cached</mat-icon>
@@ -29,7 +34,8 @@
         [columns]="columns"
         [actionButtons]="actionButtons"
         (actionClicked)="handleAction($event)"
-      ></app-dynamic-table>
+      />
     }
   </mat-card>
+
 </div>
