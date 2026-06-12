@@ -1,106 +1,130 @@
 .manage-areas-page {
-  .page-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
-    .doctor-identity {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-left: auto;
+// ─── HEADER ──────────────────────────────────────────────────────────────────
 
-      .doctor-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 18px;
-      }
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-      .doctor-info {
-        .doctor-code {
-          font-weight: 600;
-          margin: 0;
-          font-size: 16px;
-        }
+.back-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-        .doctor-user {
-          font-size: 14px;
-          color: #666;
-        }
-      }
-    }
+.doctor-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-left: auto;
+}
+
+.doctor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  flex-shrink: 0;
+
+  &--skeleton {
+    background: #e0e0e0;
+    animation: pulse 1.4s ease infinite;
+  }
+}
+
+.doctor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doctor-name {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.doctor-meta {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  color: #757575;
+
+  &__icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+// ─── SKELETONS ────────────────────────────────────────────────────────────────
+
+.skeleton {
+  border-radius: 4px;
+  background: #e0e0e0;
+  animation: pulse 1.4s ease infinite;
+
+  &--name {
+    width: 140px;
+    height: 14px;
   }
 
-  .area-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+  &--code {
+    width: 80px;
+    height: 12px;
+    margin-top: 4px;
   }
+}
 
-  .area-content {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-    flex: 1;
-  }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
 
-  .area-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 14px;
+// ─── TÍTULO DE SECCIÓN ────────────────────────────────────────────────────────
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &__icon {
+    font-size: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    color: #667eea;
+    margin-top: 2px;
     flex-shrink: 0;
-
-    &.area-avatar--muted {
-      background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
-    }
   }
 
-  .area-title {
+  &__title {
+    margin: 0;
+    font-size: 18px;
     font-weight: 600;
+    line-height: 1.2;
   }
 
-  .area-description {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .action-btn {
-    flex-shrink: 0;
-  }
-
-  .toast {
-    padding: 1rem;
-    border-radius: 8px;
-    position: relative;
-
-    &.toast-success {
-      background-color: #d1fae5;
-      color: #065f46;
-      border: 1px solid #a7f3d0;
-    }
-
-    &.toast-error {
-      background-color: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
+  &__sub {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #757575;
   }
 }

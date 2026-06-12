@@ -44,7 +44,7 @@ export class ListComponent {
     this.loading.set(true);
     this.evaluationAreaService.findAll().subscribe({
       next: (response) => {
-        this.evaluationAreas.set(response);
+        this.evaluationAreas.set(response.data || []);
         this.loading.set(false);
       },
       error: (error) => {
