@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -9,8 +9,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
+import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
 import { Role } from '@app/models/Role';
 import { RoleService } from '@app/services/ms-security/role-service';
+
+interface Toast {
+  message: string;
+  type: 'success' | 'error';
+}
 
 @Component({
   selector: 'app-list',
@@ -19,6 +25,7 @@ import { RoleService } from '@app/services/ms-security/role-service';
     CommonModule,
     DynamicTableComponent,
     DynamicFormComponent,
+    EntityDetailComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -27,37 +34,49 @@ import { RoleService } from '@app/services/ms-security/role-service';
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })
-export class ListComponent {
+export class ListComponent implements OnInit {
 
   private initialPath = '/roles';
-  roles = signal<Role[]>([]);
+  private cdr = inject(ChangeDetectorRef);
+  private toastTimer: any;
+
+  // ─── TABLE STATE ─────────────────────────────────────────────────────────────
+  roles   = signal<Role[]>([]);
   loading = signal(true);
 
-  // Panel lateral
-  panelOpen = signal(false);
-  panelLoading = signal(false);
-  formConfig = signal<DynamicFormConfig | null>(null);
+  // ─── PANEL STATE ─────────────────────────────────────────────────────────────
+  panelOpen     = signal(false);
+  panelLoading  = signal(false);
+  isViewMode    = signal(false);
+  formConfig    = signal<DynamicFormConfig | null>(null);
+  detailConfig  = signal<EntityDetailConfig | null>(null);
+  currentRoleId = signal<string | null>(null);
+  toast         = signal<Toast | null>(null);
 
-  private cdr = inject(ChangeDetectorRef);
-
+  // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Nombre' },
-    { key: 'description', label: 'Descripción' }
+    { key: 'id',          label: 'ID'          },
+    { key: 'name',        label: 'Nombre'      },
+    { key: 'description', label: 'Descripción' },
   ];
 
   actionButtons: TableAction[] = [
-    { action: 'view', icon: 'visibility', class: 'btn-view' },
-    { action: 'edit', icon: 'edit', class: 'btn-edit' },
-    { action: 'delete', icon: 'delete', class: 'btn-delete' },
-    { action: 'managePermissions', icon: 'security', class: 'btn-manage-permissions' },
+    { action: 'view',              icon: 'visibility', class: 'btn-view'               },
+    { action: 'edit',              icon: 'edit',       class: 'btn-edit'               },
+    { action: 'delete',            icon: 'delete',     class: 'btn-delete'             },
+    { action: 'managePermissions', icon: 'security',   class: 'btn-manage-permissions' },
   ];
 
-  constructor(private router: Router, private roleService: RoleService) {}
+  constructor(
+    private router: Router,
+    private roleService: RoleService,
+  ) {}
 
   ngOnInit(): void {
     this.loadRoles();
   }
+
+  // ─── CARGA DE TABLA ───────────────────────────────────────────────────────────
 
   loadRoles(): void {
     this.loading.set(true);
@@ -69,128 +88,150 @@ export class ListComponent {
       error: (error) => {
         console.error('Error al cargar roles:', error);
         this.loading.set(false);
-      }
+      },
     });
   }
+
+  // ─── ACCIONES DE TABLA ────────────────────────────────────────────────────────
 
   handleAction(event: any): void {
     const { action, row } = event;
     switch (action) {
-      case 'view':
-        this.openView(row.id);
-        break;
-      case 'edit':
-        this.openEdit(row.id);
-        break;
-      case 'delete':
-        this.delete(row.id);
-        break;
-      case 'managePermissions':
-        this.router.navigate([`${this.initialPath}/role-permissions/${row.id}`]);
-        break;
+      case 'view':              this.openView(row.id); break;
+      case 'edit':              this.openEdit(row.id); break;
+      case 'delete':            this.delete(row.id);   break;
+      case 'managePermissions': this.router.navigate([`${this.initialPath}/role-permissions/${row.id}`]); break;
     }
   }
 
+  // ─── APERTURA DEL PANEL ───────────────────────────────────────────────────────
+
   openCreate(): void {
-    this.buildConfig(1, null);
     this.panelOpen.set(true);
+    this.isViewMode.set(false);
+    this.buildConfig(1, null);
   }
 
-  openView(role_id: string): void {
+  openView(roleId: string): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
-    this.roleService.getRoleById(role_id).subscribe({
+    this.isViewMode.set(true);
+    this.currentRoleId.set(roleId);
+
+    this.roleService.getRoleById(roleId).subscribe({
       next: (response) => {
-        this.buildConfig(0, response.data ?? null);
+        const role = response.data ?? null;
+        if (!role) { this.closePanel(); return; }
+
+        this.detailConfig.set({
+          title:    'Detalle del Rol',
+          subtitle: role.name,
+          icon:     'security',
+          data:     role,
+          fields: [
+            { key: 'id',          label: 'ID',          icon: 'tag'         },
+            { key: 'name',        label: 'Nombre',      icon: 'badge'       },
+            { key: 'description', label: 'Descripción', icon: 'description' },
+          ],
+          primaryActionLabel: 'Editar',
+          primaryActionIcon:  'edit',
+          sections: this.buildDetailSections(role),
+        });
+
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('Error: No se pudo cargar el rol');
+        this.showToast('Error al cargar el rol', 'error');
         this.closePanel();
-      }
+      },
     });
   }
 
-  openEdit(role_id: string): void {
+  openEdit(roleId: string): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
-    this.roleService.getRoleById(role_id).subscribe({
+    this.isViewMode.set(false);
+
+    this.roleService.getRoleById(roleId).subscribe({
       next: (response) => {
         this.buildConfig(2, response.data ?? null);
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
       error: () => {
-        alert('Error: No se pudo cargar el rol');
+        this.showToast('Error al cargar el rol', 'error');
         this.closePanel();
-      }
+      },
     });
   }
 
   closePanel(): void {
     this.panelOpen.set(false);
+    this.isViewMode.set(false);
     this.formConfig.set(null);
+    this.detailConfig.set(null);
+    this.currentRoleId.set(null);
     this.panelLoading.set(false);
   }
 
-  buildConfig(mode: 0 | 1 | 2, model: Role | null): void {
+  // ─── FORM BUILDER ─────────────────────────────────────────────────────────────
+
+  buildConfig(mode: 1 | 2, model: Role | null): void {
     this.formConfig.set({
       mode,
       model,
       fields: [
         {
-          name: 'id',
-          label: 'ID',
-          type: 'text',
-          hidden: mode !== 0
+          name:   'id',
+          label:  'ID',
+          type:   'text',
+          hidden: mode === 1,
         },
         {
-          name: 'name',
-          label: 'Nombre del rol',
-          type: 'text',
+          name:        'name',
+          label:       'Nombre del rol',
+          type:        'text',
           placeholder: 'Ej: ADMIN, USER, EDITOR...',
-          validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)]
+          validators:  [Validators.required, Validators.minLength(2), Validators.maxLength(50)],
         },
         {
-          name: 'description',
-          label: 'Descripción',
-          type: 'textarea',
+          name:        'description',
+          label:       'Descripción',
+          type:        'textarea',
           placeholder: 'Describe las responsabilidades de este rol',
-          validators: [Validators.required, Validators.maxLength(200)]
-        }
-      ]
+          validators:  [Validators.required, Validators.maxLength(200)],
+        },
+      ],
     });
   }
 
+  private buildDetailSections(role: Role): DetailSectionConfig[] {
+    return [];
+  }
+
+  // ─── SUBMIT / CANCEL ──────────────────────────────────────────────────────────
+
   handleFormSubmit(data: any): void {
-    const config = this.formConfig();
-    if (!config) return;
-    const mode = config.mode;
+    const mode = this.formConfig()?.mode;
 
     if (mode === 1) {
       this.roleService.createRole(data).subscribe({
         next: (response) => {
-          alert(response.message || 'Rol creado exitosamente');
+          this.showToast(response.message || 'Rol creado exitosamente', 'success');
           this.closePanel();
           this.loadRoles();
         },
-        error: (error) => {
-          console.error('Error al crear rol:', error);
-          alert('Error al crear rol');
-        }
+        error: () => this.showToast('Error al crear rol', 'error'),
       });
     } else if (mode === 2) {
       this.roleService.updateRole(data.id, data).subscribe({
         next: (response) => {
-          alert(response.message || 'Rol actualizado exitosamente');
+          this.showToast(response.message || 'Rol actualizado exitosamente', 'success');
           this.closePanel();
           this.loadRoles();
         },
-        error: (error) => {
-          console.error('Error al actualizar rol:', error);
-          alert('Error al actualizar rol');
-        }
+        error: () => this.showToast('Error al actualizar rol', 'error'),
       });
     }
   }
@@ -199,16 +240,23 @@ export class ListComponent {
     this.closePanel();
   }
 
-  delete(role_id: string): void {
-    if (confirm('¿Estás seguro de que quieres eliminar este rol?')) {
-      this.roleService.deleteRole(role_id).subscribe({
-        next: () => {
-          this.loadRoles();
-        },
-        error: (error) => {
-          console.error('Error al eliminar rol:', error);
-        }
-      });
-    }
+  // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
+
+  delete(roleId: string): void {
+    this.roleService.deleteRole(roleId).subscribe({
+      next: () => {
+        this.showToast('Rol eliminado exitosamente', 'success');
+        this.loadRoles();
+      },
+      error: () => this.showToast('Error al eliminar rol', 'error'),
+    });
+  }
+
+  // ─── TOAST ────────────────────────────────────────────────────────────────────
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    this.toast.set({ message, type });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 3000);
   }
 }

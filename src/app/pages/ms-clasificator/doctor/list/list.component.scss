@@ -43,10 +43,8 @@
 
   &.panel-open {
     grid-template-columns: 1fr 420px;
-  }
 
-  @media (max-width: 900px) {
-    &.panel-open {
+    @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
   }
@@ -83,8 +81,7 @@
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
 
-  // En móvil: flota sobre la tabla como un bottom sheet
-  @media (max-width: 900px) {
+  @media (max-width: 768px) {
     position: fixed;
     inset: 0;
     top: auto;
@@ -99,11 +96,10 @@
   }
 }
 
-// Backdrop oscuro en móvil, detrás del sheet
 .mobile-backdrop {
   display: none;
 
-  @media (max-width: 900px) {
+  @media (max-width: 768px) {
     display: block;
     position: fixed;
     inset: 0;

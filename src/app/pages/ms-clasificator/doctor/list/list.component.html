@@ -69,7 +69,7 @@
       <mat-card class="cardWithShadow form-panel">
 
         <!-- Panel header (solo para create/edit; view maneja su propio header) -->
-        @if (formConfig()?.mode !== 0) {
+        @if (!isViewMode()) {
           <div class="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold">
               @if (formConfig()?.mode === 1) { Nuevo Doctor }
@@ -82,12 +82,12 @@
         }
 
         <!-- Panel body -->
-        <div [class.p-4]="formConfig()?.mode !== 0">
+        <div [class.p-4]="!isViewMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
-          } @else if (formConfig()?.mode === 0 && detailConfig()) {
+          } @else if (isViewMode() && detailConfig()) {
             <app-entity-detail
               [config]="detailConfig()!"
               (back)="handleFormCancel()"

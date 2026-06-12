@@ -9,7 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
-import { EntityDetailComponent, EntityDetailConfig } from '@app/components/entity-detail/entity-detail.component';
+import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
 import { UserService } from '@app/services/ms-security/user-service';
 import { Doctor, DoctorExtended } from '@app/models/ms-clasificator/Doctor/Doctor';
@@ -47,12 +47,13 @@ export class ListComponent implements OnInit {
   loading = signal(true);
 
   // ─── PANEL STATE ─────────────────────────────────────────────────────────────
-  panelOpen = signal(false);
-  panelLoading = signal(false);
-  formConfig = signal<DynamicFormConfig | null>(null);
-  detailConfig = signal<EntityDetailConfig | null>(null);
+  panelOpen       = signal(false);
+  panelLoading    = signal(false);
+  isViewMode      = signal(false);
+  formConfig      = signal<DynamicFormConfig | null>(null);
+  detailConfig    = signal<EntityDetailConfig | null>(null);
   currentDoctorId = signal<number | null>(null);
-  toast = signal<Toast | null>(null);
+  toast           = signal<Toast | null>(null);
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
@@ -99,9 +100,9 @@ export class ListComponent implements OnInit {
   handleAction(event: any): void {
     const { action, row } = event;
     switch (action) {
-      case 'view':        this.openView(row.id);   break;
-      case 'edit':        this.openEdit(row.id);   break;
-      case 'delete':      this.delete(row.id);     break;
+      case 'view':        this.openView(row.id);    break;
+      case 'edit':        this.openEdit(row.id);    break;
+      case 'delete':      this.delete(row.id);      break;
       case 'manageAreas': this.manageAreas(row.id); break;
     }
   }
@@ -111,6 +112,7 @@ export class ListComponent implements OnInit {
   openCreate(): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(false);
 
     this.userService.getUsers().subscribe({
       next: (response) => {
@@ -129,6 +131,7 @@ export class ListComponent implements OnInit {
   openView(doctorId: number): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(true);
     this.currentDoctorId.set(doctorId);
 
     this.doctorService.findById(doctorId).subscribe({
@@ -136,18 +139,15 @@ export class ListComponent implements OnInit {
         const doctor = response.data ?? null;
         if (!doctor) { this.closePanel(); return; }
 
-        // Señal de modo para que el template sepa que es view
-        this.formConfig.set({ mode: 0, fields: [], model: doctor });
-
         this.detailConfig.set({
           title:    'Detalle del Doctor',
           subtitle: `ID ${doctor.id}`,
           icon:     'medical_services',
           data:     doctor,
           fields: [
-            { key: 'id',     label: 'ID',       icon: 'tag' },
-            { key: 'code',   label: 'Código',   icon: 'badge' },
-            { key: 'userId', label: 'Usuario',  icon: 'person' },
+            { key: 'id',     label: 'ID',      icon: 'tag' },
+            { key: 'code',   label: 'Código',  icon: 'badge' },
+            { key: 'userId', label: 'Usuario', icon: 'person' },
           ],
           primaryActionLabel: 'Editar',
           primaryActionIcon:  'edit',
@@ -167,6 +167,7 @@ export class ListComponent implements OnInit {
   openEdit(doctorId: number): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(false);
 
     this.doctorService.findById(doctorId).subscribe({
       next: (response) => {
@@ -195,6 +196,7 @@ export class ListComponent implements OnInit {
 
   closePanel(): void {
     this.panelOpen.set(false);
+    this.isViewMode.set(false);
     this.formConfig.set(null);
     this.detailConfig.set(null);
     this.currentDoctorId.set(null);
@@ -240,8 +242,8 @@ export class ListComponent implements OnInit {
     });
   }
 
-  private buildDetailSections(model: DoctorExtended): import('@app/components/entity-detail/entity-detail.component').DetailSectionConfig[] {
-    const sections: import('@app/components/entity-detail/entity-detail.component').DetailSectionConfig[] = [];
+  private buildDetailSections(model: DoctorExtended): DetailSectionConfig[] {
+    const sections: DetailSectionConfig[] = [];
 
     if (model.userInfo) {
       sections.push({
@@ -292,8 +294,6 @@ export class ListComponent implements OnInit {
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
 
   delete(doctorId: number): void {
-    if (!confirm('¿Estás seguro de que quieres eliminar este doctor?')) return;
-
     this.doctorService.delete(doctorId).subscribe({
       next: () => {
         this.showToast('Doctor eliminado exitosamente', 'success');

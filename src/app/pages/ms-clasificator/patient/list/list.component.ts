@@ -8,13 +8,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
-import { DynamicFormComponent, DynamicFormConfig, RelatedEntityConfig } from '@app/components/dynamic-form/dynamic-form.component';
+import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
+import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
 import { PatientService } from '@app/services/ms-clasificator/patient.service';
 import { UserService } from '@app/services/ms-security/user-service';
 import { Patient, PatientExtended, Sex } from '@app/models/ms-clasificator/Patient/Patient';
 import { User } from '@app/models/User';
-
-type FormMode = 0 | 1 | 2;
 
 interface Toast {
   message: string;
@@ -28,6 +27,7 @@ interface Toast {
     CommonModule,
     DynamicTableComponent,
     DynamicFormComponent,
+    EntityDetailComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -45,29 +45,31 @@ export class ListComponent implements OnInit {
 
   // ─── TABLE STATE ──────────────────────────────────────────────────────────────
   patients = signal<Patient[]>([]);
-  loading = signal(true);
+  loading  = signal(true);
 
   // ─── PANEL STATE ──────────────────────────────────────────────────────────────
-  panelOpen = signal(false);
-  panelLoading = signal(false);
-  formConfig = signal<DynamicFormConfig | null>(null);
-  toast = signal<Toast | null>(null);
+  panelOpen       = signal(false);
+  panelLoading    = signal(false);
+  isViewMode      = signal(false);
+  formConfig      = signal<DynamicFormConfig | null>(null);
+  detailConfig    = signal<EntityDetailConfig | null>(null);
+  currentPatientId = signal<number | null>(null);
+  toast           = signal<Toast | null>(null);
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
-    { key: 'id',       label: 'ID' },
-    { key: 'document', label: 'Documento' },
-    { key: 'dob',    label: 'Fecha de Nacimiento' },
-    { key: 'sex',    label: 'Sexo' },
-    { key: 'userId',   label: 'ID Usuario' },
+    { key: 'id',       label: 'ID'                  },
+    { key: 'document', label: 'Documento'            },
+    { key: 'dob',      label: 'Fecha de Nacimiento' },
+    { key: 'sex',      label: 'Sexo'                },
+    { key: 'userId',   label: 'ID Usuario'          },
   ];
 
   actionButtons: TableAction[] = [
-    { action: 'view',   icon: 'visibility', class: 'btn-view' },
-    { action: 'edit',   icon: 'edit',       class: 'btn-edit' },
-    { action: 'delete', icon: 'delete',     class: 'btn-delete' },
+    { action: 'view',         icon: 'visibility',  class: 'btn-view'     },
+    { action: 'edit',         icon: 'edit',        class: 'btn-edit'     },
+    { action: 'delete',       icon: 'delete',      class: 'btn-delete'   },
     { action: 'view-records', icon: 'description', class: 'btn-clinical' },
-
   ];
 
   constructor(
@@ -101,9 +103,9 @@ export class ListComponent implements OnInit {
   handleAction(event: any): void {
     const { action, row } = event;
     switch (action) {
-      case 'view':   this.openView(row.id);   break;
-      case 'edit':   this.openEdit(row.id);   break;
-      case 'delete': this.delete(row.id);     break;
+      case 'view':         this.openView(row.id);   break;
+      case 'edit':         this.openEdit(row.id);   break;
+      case 'delete':       this.delete(row.id);     break;
       case 'view-records': this.router.navigate([`/clinical-records/patient/${row.document}/records`]); break;
     }
   }
@@ -113,11 +115,12 @@ export class ListComponent implements OnInit {
   openCreate(): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(false);
 
     this.userService.getUsers().subscribe({
       next: (response) => {
         const users: User[] = response.data ?? [];
-        this.buildConfig(1, null, users);
+        this.buildFormConfig(1, null, users);
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
@@ -131,12 +134,31 @@ export class ListComponent implements OnInit {
   openView(patientId: number): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(true);
+    this.currentPatientId.set(patientId);
 
     this.patientService.findById(patientId).subscribe({
       next: (response) => {
         const patient = response.data ?? null;
         if (!patient) { this.closePanel(); return; }
-        this.buildConfig(0, patient, []);
+
+        this.detailConfig.set({
+          title:    'Detalle del Paciente',
+          subtitle: patient.document,
+          icon:     'person',
+          data:     patient,
+          fields: [
+            { key: 'id',       label: 'ID',                   icon: 'tag'        },
+            { key: 'document', label: 'Documento',            icon: 'badge'      },
+            { key: 'dob',      label: 'Fecha de Nacimiento',  icon: 'cake'       },
+            { key: 'sex',      label: 'Sexo',                 icon: 'wc'         },
+            { key: 'userId',   label: 'ID de Usuario',        icon: 'manage_accounts' },
+          ],
+          primaryActionLabel: 'Editar',
+          primaryActionIcon:  'edit',
+          sections: this.buildDetailSections(patient),
+        });
+
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
@@ -150,16 +172,17 @@ export class ListComponent implements OnInit {
   openEdit(patientId: number): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.isViewMode.set(false);
 
     this.patientService.findById(patientId).subscribe({
-      next: (response) => {
-        const patient = response.data ?? null;
+      next: (patientResponse) => {
+        const patient = patientResponse.data ?? null;
         if (!patient) { this.closePanel(); return; }
 
         this.userService.getUsers().subscribe({
           next: (userResponse) => {
             const users: User[] = userResponse.data ?? [];
-            this.buildConfig(2, patient, users);
+            this.buildFormConfig(2, patient, users);
             this.panelLoading.set(false);
             this.cdr.detectChanges();
           },
@@ -178,91 +201,83 @@ export class ListComponent implements OnInit {
 
   closePanel(): void {
     this.panelOpen.set(false);
+    this.isViewMode.set(false);
     this.formConfig.set(null);
+    this.detailConfig.set(null);
+    this.currentPatientId.set(null);
     this.panelLoading.set(false);
   }
 
   // ─── FORM BUILDER ─────────────────────────────────────────────────────────────
 
-  buildConfig(mode: FormMode, model: PatientExtended | null, users: User[]): void {
+  buildFormConfig(mode: 1 | 2, model: PatientExtended | null, users: User[]): void {
     const userOptions = users
       .filter(u => u.id)
       .map(u => ({ value: u.id, label: u.email || u.id || 'Sin correo' }));
 
-    const userDisplayValue = mode === 0 && model?.userInfo
-      ? (model.userInfo.email ?? model.userId ?? 'Sin información')
-      : undefined;
-
-    const userIdValue = mode === 2 && model?.userInfo
-      ? model.userInfo.id
-      : (model?.userId ?? null);
+    const userIdValue = mode === 2 && model?.userInfo ? model.userInfo.id : (model?.userId ?? null);
 
     this.formConfig.set({
       mode,
       model: model ? { ...model, userId: userIdValue } : null,
-      relatedEntities: this.buildRelatedEntities(mode, model),
       fields: [
         {
-          name: 'id',
-          label: 'ID',
-          type: 'text',
+          name:   'id',
+          label:  'ID',
+          type:   'text',
+          hidden: mode === 1,
         },
         {
-          name: 'document',
-          label: 'Documento',
-          type: 'text',
+          name:        'document',
+          label:       'Documento',
+          type:        'text',
           placeholder: 'Ingresa el documento del paciente',
-          validators: [Validators.required, Validators.minLength(4)],
+          validators:  [Validators.required, Validators.minLength(4)],
         },
         {
-          name: 'dob',
-          label: 'Fecha de Nacimiento',
-          type: 'date',
+          name:        'dob',
+          label:       'Fecha de Nacimiento',
+          type:        'date',
           placeholder: 'Selecciona la fecha de nacimiento',
-          validators: [Validators.required],
+          validators:  [Validators.required],
         },
         {
-          name: 'sex',
-          label: 'Sexo',
-          type: 'select',
+          name:       'sex',
+          label:      'Sexo',
+          type:       'select',
           placeholder: 'Selecciona el sexo',
           validators: [Validators.required],
-          options: this.sexOptions
+          options:    this.sexOptions,
         },
         {
-          name: 'userId',
-          label: mode === 0 ? 'Usuario asociado' : 'ID de usuario',
-          type: mode !== 0 ? 'select' : 'text',
-          placeholder: mode === 1
-            ? 'Selecciona un usuario'
-            : mode === 2 ? 'Selecciona un usuario' : userDisplayValue,
-          validators: mode !== 0 ? [Validators.required] : [],
-          options: mode !== 0 ? userOptions : [],
-          ...(mode === 0 && { value: userDisplayValue }),
+          name:        'userId',
+          label:       'Usuario asociado',
+          type:        'select',
+          placeholder: 'Selecciona un usuario',
+          validators:  [Validators.required],
+          options:     userOptions,
         },
       ],
     });
   }
 
-  private buildRelatedEntities(mode: FormMode, model: PatientExtended | null): RelatedEntityConfig[] {
-    if (mode !== 0 || !model) return [];
+  private buildDetailSections(patient: PatientExtended): DetailSectionConfig[] {
+    const sections: DetailSectionConfig[] = [];
 
-    const entities: RelatedEntityConfig[] = [];
-
-    if (model.userInfo) {
-      entities.push({
+    if (patient.userInfo) {
+      sections.push({
         title: 'Información del usuario',
-        icon: 'manage_accounts',
-        data: { ...model.userInfo, id: model.userId },
+        icon:  'manage_accounts',
+        data:  { ...patient.userInfo, id: patient.userId },
         fields: [
-          { key: 'id',    label: 'ID',     icon: 'badge' },
+          { key: 'id',    label: 'ID',     icon: 'badge'  },
           { key: 'name',  label: 'Nombre', icon: 'person' },
-          { key: 'email', label: 'Email',  icon: 'email' },
+          { key: 'email', label: 'Email',  icon: 'email'  },
         ],
       });
     }
 
-    return entities;
+    return sections;
   }
 
   // ─── SUBMIT / CANCEL ──────────────────────────────────────────────────────────
@@ -298,8 +313,6 @@ export class ListComponent implements OnInit {
   // ─── DELETE ───────────────────────────────────────────────────────────────────
 
   delete(patientId: number): void {
-    if (!confirm('¿Estás seguro de que quieres eliminar este paciente?')) return;
-
     this.patientService.delete(patientId).subscribe({
       next: () => {
         this.showToast('Paciente eliminado exitosamente', 'success');

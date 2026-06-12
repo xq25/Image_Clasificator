@@ -1,5 +1,12 @@
 <div class="list-root">
 
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">
+      {{ toast()!.message }}
+    </div>
+  }
+
   <div class="split-layout" [class.panel-open]="panelOpen()">
 
     <!-- ── Columna izquierda: header sticky + tabla ── -->
@@ -58,24 +65,33 @@
 
     <!-- ── Panel lateral ── -->
     @if (panelOpen()) {
+      <div class="mobile-backdrop" (click)="closePanel()"></div>
+
       <mat-card class="cardWithShadow form-panel">
 
-        <div class="panel-header">
-          <h3>
-            @if (formConfig()?.mode === 0) { Detalle de Permiso }
-            @else if (formConfig()?.mode === 1) { Nuevo Permiso }
-            @else if (formConfig()?.mode === 2) { Editar Permiso }
-          </h3>
-          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
+        @if (!isViewMode()) {
+          <div class="panel-header">
+            <h3>
+              @if (formConfig()?.mode === 1) { Nuevo Permiso }
+              @else if (formConfig()?.mode === 2) { Editar Permiso }
+            </h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        }
 
-        <div class="panel-body">
+        <div [class.panel-body]="!isViewMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (isViewMode() && detailConfig()) {
+            <app-entity-detail
+              [config]="detailConfig()!"
+              (back)="handleFormCancel()"
+              (primaryAction)="openEdit(currentPermissionId()!)"
+            />
           } @else if (formConfig()) {
             <app-dynamic-form
               [config]="formConfig()!"
