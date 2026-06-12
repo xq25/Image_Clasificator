@@ -112,7 +112,7 @@ export class ManageComponent implements OnInit {
         { name: 'id', label: 'ID', type: 'text' },
         { name: 'diagnosticCode', label: 'Código', type: 'text', placeholder: 'Código del diagnóstico', validators: [Validators.required, Validators.minLength(2)] },
         { name: 'diagnosticName', label: 'Nombre', type: 'text', placeholder: 'Nombre del diagnóstico', validators: [Validators.required, Validators.minLength(2)] },
-        { name: 'parentDiagnosticId', label: 'Diagnóstico padre', type: 'select', placeholder: 'Selecciona el diagnóstico padre', options: [{ value: '', label: 'Sin diagnóstico padre' }, ...parentOptions] }
+        { name: 'parentDiagnostic', label: 'Diagnóstico padre', type: 'select', placeholder: 'Selecciona el diagnóstico padre', options: [{ value: '', label: 'Sin diagnóstico padre' }, ...parentOptions] }
       ]
     };
   }

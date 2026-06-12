@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DoctorArea, ApiResponse } from '@models/ms-clasificator';
+import { ApiResponse } from '@models/ms-clasificator';
+import { DoctorArea, DoctorAreaExtended } from '@app/models/ms-clasificator/DoctorArea/DoctorArea';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/doctor-areas`;
 
@@ -10,53 +11,39 @@ const apiUrl = `${environment.url_backend_clasificator}/api/doctor-areas`;
   providedIn: 'root'
 })
 export class DoctorAreaService {
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  /**
-   * Obtener todas las relaciones DoctorArea
-   */
-  findAll(): Observable<DoctorArea[]> {
-    return this.http.get<DoctorArea[]>(`${apiUrl}`);
+  /** Obtener todas las relaciones DoctorArea → List<DoctorAreaSummaryDTO> */
+  findAll(): Observable<ApiResponse<DoctorArea[]>> {
+    return this.http.get<ApiResponse<DoctorArea[]>>(`${apiUrl}`);
   }
 
-  /**
-   * Obtener una relación DoctorArea por ID
-   */
-  findById(id: number): Observable<ApiResponse<DoctorArea>> {
-    return this.http.get<ApiResponse<DoctorArea>>(`${apiUrl}/${id}`);
+  /** Obtener una relación DoctorArea por ID → DoctorAreaResponseDTO */
+  findById(id: number): Observable<ApiResponse<DoctorAreaExtended>> {
+    return this.http.get<ApiResponse<DoctorAreaExtended>>(`${apiUrl}/${id}`);
   }
 
-  /**
-   * Obtener las áreas de evaluación de un doctor específico
-   */
+  /** Obtener las áreas de un doctor → List<DoctorAreaSummaryDTO> */
   findByDoctorId(doctorId: number): Observable<ApiResponse<DoctorArea[]>> {
     return this.http.get<ApiResponse<DoctorArea[]>>(`${apiUrl}/doctor/${doctorId}`);
   }
 
-  /**
-   * Obtener los doctores de un área de evaluación específica
-   */
+  /** Obtener los doctores de un área → List<DoctorAreaSummaryDTO> */
   findByEvaluationAreaId(evaluationAreaId: number): Observable<ApiResponse<DoctorArea[]>> {
     return this.http.get<ApiResponse<DoctorArea[]>>(`${apiUrl}/area/${evaluationAreaId}`);
   }
 
-  /**
-   * Crear una nueva relación DoctorArea
-   */
-  create(doctorArea: { doctorId: number; evaluationAreaId: number }): Observable<ApiResponse<DoctorArea>> {
-    return this.http.post<ApiResponse<DoctorArea>>(`${apiUrl}`, doctorArea);
+  /** Crear una nueva relación DoctorArea → DoctorAreaResponseDTO */
+  create(doctorArea: { doctorId: number; evaluationAreaId: number }): Observable<ApiResponse<DoctorAreaExtended>> {
+    return this.http.post<ApiResponse<DoctorAreaExtended>>(`${apiUrl}`, doctorArea);
   }
 
-  /**
-   * Eliminar una relación DoctorArea por ID
-   */
+  /** Eliminar una relación DoctorArea por ID */
   delete(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);
   }
 
-  /**
-   * Eliminar la relación entre un doctor y un área de evaluación
-   */
+  /** Eliminar relación por doctor y área */
   deleteByDoctorAndArea(doctorId: number, evaluationAreaId: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${apiUrl}/doctor/${doctorId}/area/${evaluationAreaId}`);
   }

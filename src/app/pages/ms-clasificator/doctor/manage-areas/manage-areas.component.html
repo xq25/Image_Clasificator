@@ -1,159 +1,56 @@
-<div class="manage-areas-page p-6">
+<div class="manage-areas-page">
 
-  <div class="page-header mb-6">
-    <button mat-stroked-button (click)="goBack()" class="flex items-center gap-2">
+  <!-- HEADER -->
+  <div class="page-header">
+
+    <button mat-stroked-button (click)="goBack()" class="back-btn">
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
-    <div class="doctor-identity" *ngIf="doctor()">
-      <div class="doctor-avatar">{{ getDoctorInitials() }}</div>
-      <div class="doctor-info">
-        <h2 class="doctor-code">{{ doctor()?.code ?? 'Cargando...' }}</h2>
-        <span class="doctor-user">{{ doctor()?.userId ?? '' }}</span>
+
+    @if (loadingDoctor()) {
+      <div class="doctor-identity">
+        <div class="doctor-avatar doctor-avatar--skeleton"></div>
+        <div class="doctor-info">
+          <div class="skeleton skeleton--name"></div>
+          <div class="skeleton skeleton--code"></div>
+        </div>
       </div>
+    } @else if (doctor()) {
+      <div class="doctor-identity">
+        <div class="doctor-avatar">{{ getDoctorInitials() }}</div>
+        <div class="doctor-info">
+          <span class="doctor-name">{{ doctor()?.userInfo?.name ?? 'Doctor' }}</span>
+          <span class="doctor-meta">
+            <mat-icon class="doctor-meta__icon">badge</mat-icon>
+            Cód. {{ doctor()?.code }}
+          </span>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- TÍTULO DE SECCIÓN -->
+  <div class="section-heading">
+    <mat-icon class="section-heading__icon">manage_accounts</mat-icon>
+    <div>
+      <h2 class="section-heading__title">Gestión de áreas</h2>
+      <p class="section-heading__sub">
+        Asocia o desvincula las áreas de evaluación que este doctor puede atender.
+      </p>
     </div>
   </div>
 
-  @if (toast()) {
-    <div [ngClass]="'toast toast-' + toast()!.type + ' mb-4'">
-      {{ toast()!.message }}
-    </div>
-  }
-
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <mat-card class="cardWithShadow">
-      <mat-card-header class="mb-4 pb-4 border-b">
-        <mat-card-title>
-          <div class="flex items-center gap-2">
-            <mat-icon class="text-2xl">medical_services</mat-icon>
-            <span>Áreas asignadas</span>
-          </div>
-        </mat-card-title>
-        <mat-card-subtitle>
-          @if (doctorAreas().length > 0) {
-            {{ doctorAreas().length }} área{{ doctorAreas().length !== 1 ? 's' : '' }} activa{{ doctorAreas().length !== 1 ? 's' : '' }}
-          } @else {
-            Sin áreas asignadas
-          }
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        @if (loadingDoctorAreas()) {
-          <div class="flex items-center justify-center py-8">
-            <mat-spinner diameter="30"></mat-spinner>
-          </div>
-        } @else if (doctorAreas().length === 0) {
-          <div class="text-center py-8">
-            <mat-icon class="text-4xl text-gray-300">link_off</mat-icon>
-            <p class="text-gray-600 mt-2">Este doctor no tiene áreas asignadas.</p>
-          </div>
-        } @else {
-          <div class="space-y-2">
-            @for (area of doctorAreas(); track area.id) {
-              <div class="area-row border rounded p-3 mb-2">
-                <div class="area-content">
-                  <div class="area-avatar">{{ getAreaInitials(area) }}</div>
-                  <div>
-                    <div class="area-title">{{ area.name }}</div>
-                    <div class="area-description text-xs text-gray-600">{{ area.codeArea }}</div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  mat-icon-button
-                  color="warn"
-                  (click)="onRemoveArea($event, area)"
-                  [disabled]="removingAreaId() === area.id?.toString()"
-                  class="ml-2 action-btn"
-                >
-                  @if (removingAreaId() === area.id?.toString()) {
-                    <mat-spinner diameter="20"></mat-spinner>
-                  } @else {
-                    <mat-icon>delete</mat-icon>
-                  }
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="cardWithShadow">
-      <mat-card-header class="mb-4 pb-4 border-b">
-        <mat-card-title>
-          <div class="flex items-center gap-2">
-            <mat-icon class="text-2xl">add_circle</mat-icon>
-            <span>Áreas disponibles</span>
-          </div>
-        </mat-card-title>
-        <mat-card-subtitle>
-          {{ getAvailableAreas().length }} área{{ getAvailableAreas().length !== 1 ? 's' : '' }} disponible{{ getAvailableAreas().length !== 1 ? 's' : '' }}
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <mat-form-field appearance="outline" class="w-full mb-4">
-          <mat-label>Buscar área...</mat-label>
-          <input
-            matInput
-            [value]="searchQuery()"
-            (input)="searchQuery.set($event.target.value)"
-            placeholder="Filtra por nombre o código"
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-
-        @if (loadingAvailableAreas()) {
-          <div class="flex items-center justify-center py-8">
-            <mat-spinner diameter="30"></mat-spinner>
-          </div>
-        } @else if (getAvailableAreas().length === 0) {
-          <div class="text-center py-8">
-            <mat-icon class="text-4xl text-gray-300">check_circle</mat-icon>
-            <p class="text-gray-600 mt-2">
-              @if (doctorAreas().length === allAreas().length) {
-                El doctor tiene todas las áreas disponibles.
-              } @else {
-                No hay áreas disponibles que coincidan con la búsqueda.
-              }
-            </p>
-          </div>
-        } @else {
-          <div class="space-y-2">
-            @for (area of getAvailableAreas(); track area.id) {
-              <div class="area-row border rounded p-3 mb-2">
-                <div class="area-content">
-                  <div class="area-avatar area-avatar--muted">{{ getAreaInitials(area) }}</div>
-                  <div>
-                    <div class="area-title">{{ area.name }}</div>
-                    <div class="area-description text-xs text-gray-600">{{ area.codeArea }}</div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  mat-raised-button
-                  color="accent"
-                  (click)="onAssignArea($event, area)"
-                  [disabled]="addingAreaId() === area.id?.toString()"
-                  class="ml-2 action-btn"
-                >
-                  @if (addingAreaId() === area.id?.toString()) {
-                    <mat-spinner diameter="16"></mat-spinner>
-                  } @else {
-                    <mat-icon>add</mat-icon>
-                  }
-                  Asignar
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
-
-  </div>
+  <!-- COMPONENTE GENÉRICO DE ASOCIACIÓN -->
+  <app-entity-association
+    [allItems]="allAreas()"
+    [associatedItems]="associatedAreas()"
+    [config]="config"
+    [loadingAssociated]="loadingAssociated()"
+    [loadingAll]="loadingAll()"
+    [onAssociate]="onAssociate"
+    [onDisassociate]="onDisassociate"
+  />
 
 </div>

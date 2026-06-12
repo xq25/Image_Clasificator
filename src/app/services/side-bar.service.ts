@@ -98,7 +98,7 @@ export class SideBarService {
   ): SidebarSection[] {
     const allowedEvaluationAreaIds = new Set(
       doctorAreas
-        .map((item) => item?.evaluationArea?.id)
+        .map((item) => item?.evaluationAreaId)
         .filter((evaluationAreaId): evaluationAreaId is number => evaluationAreaId != null)
     );
 

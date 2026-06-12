@@ -2,34 +2,44 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Doctor, Patient } from '@app/models/ms-clasificator';
+import { Doctor, Patient } from '@models/ms-clasificator';
+
+const apiUrl = `${environment.url_backend_clasificator}/api/public/internal`;
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class InternalServicesService {
-  private apiUrl = `${environment.url_backend_clasificator}/api/public/internal`;
-
   constructor(private http: HttpClient) {}
 
+  /** Verificar si un userId tiene relación con doctor o paciente */
   existRelation(userId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/exist-relation/${userId}`);
+    return this.http.get<boolean>(`${apiUrl}/exist-relation/${userId}`);
   }
 
+  /** Verificar si un userId tiene relación con un doctor */
   existRelationWithDoctor(userId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/exist-relation-doctor/${userId}`);
+    return this.http.get<boolean>(`${apiUrl}/exist-relation-doctor/${userId}`);
   }
 
+  /** Verificar si un userId tiene relación con un paciente */
   existRelationWithPatient(userId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/exist-relation-patient/${userId}`);
+    return this.http.get<boolean>(`${apiUrl}/exist-relation-patient/${userId}`);
   }
 
-// Estos metodos permiten la generacion de doctor y patient sin necesidad de pasar por el proceso de registro, esto es necesario para la generacion de datos de prueba
-  registerDoctor(doctor:Doctor): Observable<boolean> {
-    return this.http.post<boolean>(`${this.apiUrl}/register/doctor`, doctor);
+  /**
+   * Registrar un doctor sin pasar por el flujo de registro estándar.
+   * Útil para generación de datos de prueba.
+   */
+  registerDoctor(doctor: Partial<Doctor>): Observable<boolean> {
+    return this.http.post<boolean>(`${apiUrl}/register/doctor`, doctor);
   }
 
-  registerPatient(patient: Patient): Observable<boolean> {
-    return this.http.post<boolean>(`${this.apiUrl}/register/patient`, patient);
+  /**
+   * Registrar un paciente sin pasar por el flujo de registro estándar.
+   * Útil para generación de datos de prueba.
+   */
+  registerPatient(patient: Partial<Patient>): Observable<boolean> {
+    return this.http.post<boolean>(`${apiUrl}/register/patient`, patient);
   }
 }

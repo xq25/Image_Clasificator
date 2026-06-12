@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { ListComponent } from './list/list.component';
 import { ManageComponent } from './manage/manage.component';
-import { ManageDoctorInAreaComponent } from './manage-doctor-in-area/manage-doctor-in-area.component';
 
 export const EvaluationAreasRoutes: Routes = [
   {
@@ -20,8 +19,8 @@ export const EvaluationAreasRoutes: Routes = [
     path: 'edit/:id',
     component: ManageComponent
   },
-  {
-    path: 'manage-doctor-in-area/:id',
-    component: ManageDoctorInAreaComponent
-  }
+  // {
+  //   path: 'manage-doctor-in-area/:id',
+  //   component: ManageDoctorInAreaComponent
+  // }
 ];

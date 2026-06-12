@@ -214,4 +214,59 @@
         }
       </div>
     </form>
+
+    <!-- ENTIDADES RELACIONADAS (solo modo VIEW) -->
+    @if (isViewMode() && getRelatedEntities().length > 0) {
+      <div class="related-entities-wrapper px-6 pb-6">
+
+        <div class="related-entities-divider">
+          <span class="related-entities-divider-label">
+            <mat-icon>account_tree</mat-icon>
+            Información relacionada
+          </span>
+        </div>
+
+        <div class="related-entities-grid">
+          @for (entity of getRelatedEntities(); track entity.title) {
+            <div class="related-entity-card" [class.is-collapsed]="isEntityCollapsed(entity.title)">
+
+              <!-- Card header (clickeable) -->
+              <button type="button"
+                class="related-entity-header"
+                (click)="toggleEntity(entity.title)"
+                [attr.aria-expanded]="!isEntityCollapsed(entity.title)"
+              >
+                <mat-icon class="related-entity-icon">{{ entity.icon ?? 'info' }}</mat-icon>
+                <span class="related-entity-title">{{ entity.title }}</span>
+                <mat-icon class="related-entity-chevron"
+                  [class.is-rotated]="isEntityCollapsed(entity.title)">
+                  expand_less
+                </mat-icon>
+              </button>
+
+              <!-- Card fields (colapsable) -->
+              <div class="related-entity-body" [class.is-collapsed]="isEntityCollapsed(entity.title)">
+                <ul class="related-entity-fields">
+                  @for (field of entity.fields; track field.key) {
+                    <li class="related-entity-field">
+                      <span class="related-field-meta">
+                        @if (field.icon) {
+                          <mat-icon class="related-field-icon">{{ field.icon }}</mat-icon>
+                        }
+                        <span class="related-field-label">{{ field.label }}</span>
+                      </span>
+                      <span class="related-field-value">
+                        {{ getRelatedFieldValue(entity, field) }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+            </div>
+          }
+        </div>
+
+      </div>
+    }
 </div>

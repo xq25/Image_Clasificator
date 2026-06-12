@@ -1,0 +1,177 @@
+<div class="association-wrap">
+
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">
+      <mat-icon class="toast__icon">
+        {{ toast()!.type === 'success' ? 'check_circle' : 'error' }}
+      </mat-icon>
+      <span>{{ toast()!.message }}</span>
+    </div>
+  }
+
+  <!-- GRID DE PANELES -->
+  <div class="panels-grid">
+
+    <!-- ══════════════════════════════════════════
+         PANEL IZQUIERDO — ÍTEMS ASOCIADOS
+    ══════════════════════════════════════════ -->
+    <mat-card class="panel">
+      <mat-card-header class="panel__header">
+        <div class="panel__title-row">
+          <div class="panel__icon panel__icon--associated">
+            <mat-icon>{{ associatedIcon }}</mat-icon>
+          </div>
+          <div>
+            <mat-card-title class="panel__title">{{ associatedPanelTitle }}</mat-card-title>
+            <mat-card-subtitle class="panel__subtitle">
+              @if (loadingAssociated) {
+                Cargando...
+              } @else {
+                {{ _associated().length }}
+                {{ _associated().length === 1 ? 'ítem' : 'ítems' }} activo{{ _associated().length === 1 ? '' : 's' }}
+              }
+            </mat-card-subtitle>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content class="panel__body">
+        @if (loadingAssociated) {
+          <div class="panel__loading">
+            <mat-spinner diameter="32"></mat-spinner>
+          </div>
+        } @else if (_associated().length === 0) {
+          <div class="panel__empty">
+            <mat-icon class="panel__empty-icon">link_off</mat-icon>
+            <p>No hay ítems asociados aún.</p>
+          </div>
+        } @else {
+          <ul class="item-list">
+            @for (item of _associated(); track getId(item)) {
+              <li class="item-row item-row--associated">
+                <div class="item-row__info">
+                  <mat-icon class="item-row__icon item-row__icon--associated">
+                    {{ associatedIcon }}
+                  </mat-icon>
+                  <div class="item-row__text">
+                    <span class="item-row__label">{{ getLabel(item) }}</span>
+                    @if (getDescription(item)) {
+                      <span class="item-row__desc">{{ getDescription(item) }}</span>
+                    }
+                  </div>
+                </div>
+
+                <button
+                  mat-icon-button
+                  color="warn"
+                  class="item-row__action"
+                  [disabled]="processingId() === getId(item)"
+                  [matTooltip]="'Desasociar ' + getLabel(item)"
+                  (click)="disassociate(item)"
+                >
+                  @if (processingId() === getId(item)) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    <mat-icon>link_off</mat-icon>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ══════════════════════════════════════════
+         PANEL DERECHO — ÍTEMS DISPONIBLES
+    ══════════════════════════════════════════ -->
+    <mat-card class="panel">
+      <mat-card-header class="panel__header">
+        <div class="panel__title-row">
+          <div class="panel__icon panel__icon--available">
+            <mat-icon>{{ availableIcon }}</mat-icon>
+          </div>
+          <div>
+            <mat-card-title class="panel__title">{{ availablePanelTitle }}</mat-card-title>
+            <mat-card-subtitle class="panel__subtitle">
+              @if (loadingAll) {
+                Cargando...
+              } @else {
+                {{ availableItems().length }}
+                {{ availableItems().length === 1 ? 'ítem disponible' : 'ítems disponibles' }}
+              }
+            </mat-card-subtitle>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content class="panel__body">
+
+        <!-- BUSCADOR -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>{{ searchPlaceholder }}</mat-label>
+          <input
+            matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value)"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (loadingAll) {
+          <div class="panel__loading">
+            <mat-spinner diameter="32"></mat-spinner>
+          </div>
+        } @else if (availableItems().length === 0) {
+          <div class="panel__empty">
+            <mat-icon class="panel__empty-icon">
+              {{ searchQuery() ? 'search_off' : 'check_circle' }}
+            </mat-icon>
+            <p>
+              @if (searchQuery()) {
+                Sin resultados para "<strong>{{ searchQuery() }}</strong>".
+              } @else {
+                Todos los ítems ya están asociados.
+              }
+            </p>
+          </div>
+        } @else {
+          <ul class="item-list">
+            @for (item of availableItems(); track getId(item)) {
+              <li class="item-row item-row--available">
+                <div class="item-row__info">
+                  <mat-icon class="item-row__icon item-row__icon--available">
+                    {{ availableIcon }}
+                  </mat-icon>
+                  <div class="item-row__text">
+                    <span class="item-row__label">{{ getLabel(item) }}</span>
+                    @if (getDescription(item)) {
+                      <span class="item-row__desc">{{ getDescription(item) }}</span>
+                    }
+                  </div>
+                </div>
+
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  class="item-row__action item-row__action--add"
+                  [disabled]="processingId() === getId(item)"
+                  (click)="associate(item)"
+                >
+                  @if (processingId() === getId(item)) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>add</mat-icon>
+                  }
+                  Asociar
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+</div>

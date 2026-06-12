@@ -57,16 +57,6 @@ export const FullLayoutRoutes: Routes = [
           import('../../pages/ms-clasificator/medicalDiagnostic/medical-diagnostic.routes').then((m) => m.MedicalDiagnosticsRoutes),
       },
       {
-        path: 'medical-images',
-        loadChildren: () =>
-          import('../../pages/ms-clasificator/medicalImage/medical-image.routes').then((m) => m.MedicalImagesRoutes),
-      },
-      {
-        path: 'ui-configs',
-        loadChildren: () =>
-          import('../../pages/ms-clasificator/uiConfig/ui-config.routes').then((m) => m.UIConfigRoutes),
-      },
-      {
         path: 'roles',
         loadChildren: () =>
           import('../../pages/ms-security/roles/roles.routes').then((m) => m.rolesRoutes),
