@@ -172,7 +172,8 @@ export class ListComponent implements OnInit {
 
         this.medicalDiagnosticService.findAll().subscribe({
           next: (allDiagnostics) => {
-            this.buildFormConfig(2, diagnostic, allDiagnostics);
+            const modelForForm = { ...diagnostic, parentDiagnosticId: diagnostic.parentDiagnostic?.id ?? null };
+            this.buildFormConfig(2, modelForForm as any, allDiagnostics);
             this.panelLoading.set(false);
             this.cdr.detectChanges();
           },
@@ -231,7 +232,7 @@ export class ListComponent implements OnInit {
           validators:  [Validators.required, Validators.minLength(2)],
         },
         {
-          name:        'parentDiagnostic',
+          name:        'parentDiagnosticId',
           label:       'Diagnóstico padre',
           type:        'select',
           placeholder: 'Selecciona el diagnóstico padre',
@@ -263,10 +264,15 @@ export class ListComponent implements OnInit {
   // ─── SUBMIT / CANCEL ──────────────────────────────────────────────────────────
 
   handleFormSubmit(data: any): void {
+    console.log('[MedicalDiagnostic] form data:', data);
     const mode = this.formConfig()?.mode;
+    const payload = {
+      ...data,
+      parentDiagnosticId: data.parentDiagnosticId === '' ? null : (data.parentDiagnosticId ?? null),
+    };
 
     if (mode === 1) {
-      this.medicalDiagnosticService.create(data).subscribe({
+      this.medicalDiagnosticService.create(payload).subscribe({
         next: (response) => {
           this.showToast(response.message || 'Diagnóstico creado exitosamente', 'success');
           this.closePanel();
@@ -275,7 +281,7 @@ export class ListComponent implements OnInit {
         error: () => this.showToast('Error al crear diagnóstico', 'error'),
       });
     } else if (mode === 2) {
-      this.medicalDiagnosticService.update(Number(data.id), data).subscribe({
+      this.medicalDiagnosticService.update(Number(data.id), payload).subscribe({
         next: (response) => {
           this.showToast(response.message || 'Diagnóstico actualizado exitosamente', 'success');
           this.closePanel();

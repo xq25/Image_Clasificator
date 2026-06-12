@@ -98,7 +98,9 @@ export class DynamicFormComponent implements OnInit {
   // ── Submit / Cancel ───────────────────────────────────────────
   onSubmit(): void {
     if (this.form.invalid) return;
-    this.formSubmit.emit(this.form.getRawValue());
+    const raw = this.form.getRawValue();
+    console.log('[DynamicForm] getRawValue:', raw);
+    this.formSubmit.emit(raw);
   }
 
   onCancel(): void {
