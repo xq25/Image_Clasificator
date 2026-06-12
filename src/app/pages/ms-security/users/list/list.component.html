@@ -37,6 +37,9 @@
           <app-dynamic-table
             [data]="users()"
             [columns]="columns"
+            [pageSize]="4"
+            [searchKey]="'name'"
+            [mobileKey]="'email'"
             [actionButtons]="actionButtons"
             (actionClicked)="handleAction($event)"
           />

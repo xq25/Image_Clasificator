@@ -20,6 +20,7 @@ export enum PermissionModel {
   ROLE_PERMISSION = 'RolePermission',
   USER_ROLE   = 'UserRole',
   PHOTOS = 'Photo',
+
   DOCTOR = 'Doctor',
   PATIENT = 'Patient',
   MEDICAL_DIAGNOSTIC = 'MedicalDiagnostic',
@@ -27,7 +28,14 @@ export enum PermissionModel {
   EVALUATION_AREA = 'EvaluationArea',
   DOCTOR_AREA = 'DoctorArea',
   IMAGE_DIAGNOSTIC = 'ImageDiagnostic',
-  UI_CONFIG = 'UIConfig',
-  UI_STATE = 'UIState',
+  DATASET = 'DataSet',
+  DATASET_CATEGORY = 'DataSetCategory',
+  DIAGNOSTIC_CATEGORY_DATASET = 'DiagnosticCategoryDataSet',
+  DIAGNOSIS = 'Diagnosis',
+  IMAGE_DOCTOR_DIAGNOSTICS = 'ImageDoctorDiagnostics',
+  CLINICAL_RECORD = 'ClinicalRecord',
+  MEDICAL_IMAGE_TYPE = 'MedicalImageType',
+  PATIENT_DATUM = 'PatientDatum',
+  PRIMITIVE_DATUM = 'PrimitiveDatum',
 
 }

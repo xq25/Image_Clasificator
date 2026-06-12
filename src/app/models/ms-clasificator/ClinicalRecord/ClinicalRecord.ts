@@ -2,7 +2,8 @@ import { Patient } from "@models/ms-clasificator/Patient/Patient";
 
 export interface ClinicalRecord {
   id?: number;
-  dateVisited: Date;
+  chiefComplaint: string;
+  visitDate: Date;
 }
 
 export interface ClinicalRecordExtended extends ClinicalRecord {
