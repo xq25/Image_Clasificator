@@ -38,9 +38,8 @@ $primary: #4f46e5;
   .mat-mdc-table {
     width: 100%;
     border-collapse: collapse;
-    background: transparent; // hereda el fondo del card
+    background: transparent;
 
-    // Header: fondo de color fijo → texto blanco siempre
     .mat-mdc-header-row,
     .mat-mdc-header-cell {
       background: linear-gradient(90deg, $primary 0%, #6366f1 100%) !important;
@@ -63,7 +62,6 @@ $primary: #4f46e5;
       z-index: 2;
     }
 
-    // Cells: color del tema activo
     .mdc-data-table__cell {
       padding: 0 16px;
       font-size: 13px;
@@ -73,7 +71,6 @@ $primary: #4f46e5;
       vertical-align: middle;
     }
 
-    // Rows
     tbody tr {
       transition: background-color .15s ease;
 
@@ -105,7 +102,6 @@ $primary: #4f46e5;
   align-items: center;
   gap: 10px;
 
-  // Avatar sobre fondo de color → texto blanco siempre
   .avatar {
     width: 32px;
     height: 32px;
@@ -160,8 +156,6 @@ $primary: #4f46e5;
   &:hover { transform: translateY(-1px); }
 }
 
-// Colores de íconos: saturados, legibles en ambos temas
-// Los hover usan rgba para ser semitransparentes sobre cualquier fondo
 .btn-view   { color: #0ea5e9 !important; &:hover { background: rgba(14,  165, 233, .15) !important; } }
 .btn-edit   { color: $primary !important; &:hover { background: rgba(79,  70,  229, .15) !important; } }
 .btn-delete { color: #ef4444 !important; &:hover { background: rgba(239, 68,  68,  .15) !important; } }
@@ -178,6 +172,13 @@ $primary: #4f46e5;
   gap: 10px;
   color: var(--mat-app-on-surface-variant);
   font-size: 13px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    opacity: .45;
+  }
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -191,7 +192,6 @@ $primary: #4f46e5;
   overflow-x: hidden;
 }
 
-// Header móvil: mismo degradado que desktop → texto blanco fijo
 .mobile-header {
   background: linear-gradient(90deg, $primary 0%, #6366f1 100%);
   color: #fff;
@@ -213,7 +213,6 @@ $primary: #4f46e5;
   border-bottom: 1px solid var(--mat-app-outline-variant);
   cursor: pointer;
   transition: background-color .15s ease;
-  // Sin fondo fijo — hereda el card (claro u oscuro)
   &:hover { background-color: rgba($primary, .08); }
 }
 
@@ -277,4 +276,115 @@ $primary: #4f46e5;
   justify-content: flex-end;
   gap: 4px;
   padding-top: 8px;
+}
+
+// ────────────────────────────────────────────────────────────────
+// BARRA DE BÚSQUEDA
+// ────────────────────────────────────────────────────────────────
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 4px;
+  flex-shrink: 0;
+}
+
+.search-field {
+  flex: 1;
+  max-width: 400px;
+
+  // Reducir la altura del campo al tamaño compacto
+  ::ng-deep {
+    .mat-mdc-form-field-subscript-wrapper { display: none; }
+    .mat-mdc-text-field-wrapper { padding-bottom: 0; }
+  }
+}
+
+.search-icon {
+  color: var(--mat-app-on-surface-variant);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.clear-btn {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+.search-count {
+  font-size: 12px;
+  color: var(--mat-app-on-surface-variant);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ────────────────────────────────────────────────────────────────
+// PAGINADOR
+// ────────────────────────────────────────────────────────────────
+.paginator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--mat-app-outline-variant);
+  flex-wrap: wrap;
+}
+
+.page-arrow {
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  color: var(--mat-app-on-surface-variant) !important;
+
+  &[disabled] {
+    opacity: .35;
+    pointer-events: none;
+  }
+
+  &:hover:not([disabled]) {
+    background: rgba($primary, .1) !important;
+    color: $primary !important;
+  }
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mat-app-on-surface-variant);
+  transition: background-color .15s, color .15s;
+
+  &:hover:not(.active) {
+    background: rgba($primary, .08);
+    color: $primary;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $primary 0%, #6366f1 100%);
+    color: #fff;
+    font-weight: 700;
+  }
+}
+
+.page-info {
+  font-size: 12px;
+  color: var(--mat-app-on-surface-variant);
+  margin-left: 8px;
+  white-space: nowrap;
 }

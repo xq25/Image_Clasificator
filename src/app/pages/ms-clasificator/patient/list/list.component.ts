@@ -11,7 +11,7 @@ import { DynamicTableComponent, TableColumn, TableAction } from '@app/components
 import { DynamicFormComponent, DynamicFormConfig, RelatedEntityConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { PatientService } from '@app/services/ms-clasificator/patient.service';
 import { UserService } from '@app/services/ms-security/user-service';
-import { Patient, PatientExtended } from '@app/models/ms-clasificator/Patient/Patient';
+import { Patient, PatientExtended, Sex } from '@app/models/ms-clasificator/Patient/Patient';
 import { User } from '@app/models/User';
 
 type FormMode = 0 | 1 | 2;
@@ -41,6 +41,7 @@ export class ListComponent implements OnInit {
   private initialPath = '/patients';
   private cdr = inject(ChangeDetectorRef);
   private toastTimer: any;
+  private readonly sexOptions = Object.values(Sex).map(v => ({ value: v, label: v }));
 
   // ─── TABLE STATE ──────────────────────────────────────────────────────────────
   patients = signal<Patient[]>([]);
@@ -56,7 +57,8 @@ export class ListComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'id',       label: 'ID' },
     { key: 'document', label: 'Documento' },
-    { key: 'years',    label: 'Años' },
+    { key: 'dob',    label: 'Fecha de Nacimiento' },
+    { key: 'sex',    label: 'Sexo' },
     { key: 'userId',   label: 'ID Usuario' },
   ];
 
@@ -64,6 +66,8 @@ export class ListComponent implements OnInit {
     { action: 'view',   icon: 'visibility', class: 'btn-view' },
     { action: 'edit',   icon: 'edit',       class: 'btn-edit' },
     { action: 'delete', icon: 'delete',     class: 'btn-delete' },
+    { action: 'view-records', icon: 'description', class: 'btn-clinical' },
+
   ];
 
   constructor(
@@ -100,6 +104,7 @@ export class ListComponent implements OnInit {
       case 'view':   this.openView(row.id);   break;
       case 'edit':   this.openEdit(row.id);   break;
       case 'delete': this.delete(row.id);     break;
+      case 'view-records': this.router.navigate([`/clinical-records/patient/${row.document}/records`]); break;
     }
   }
 
@@ -210,11 +215,19 @@ export class ListComponent implements OnInit {
           validators: [Validators.required, Validators.minLength(4)],
         },
         {
-          name: 'years',
-          label: 'Años',
-          type: 'number',
-          placeholder: 'Ingresa la edad en años',
-          validators: [Validators.required, Validators.min(0)],
+          name: 'dob',
+          label: 'Fecha de Nacimiento',
+          type: 'date',
+          placeholder: 'Selecciona la fecha de nacimiento',
+          validators: [Validators.required],
+        },
+        {
+          name: 'sex',
+          label: 'Sexo',
+          type: 'select',
+          placeholder: 'Selecciona el sexo',
+          validators: [Validators.required],
+          options: this.sexOptions
         },
         {
           name: 'userId',

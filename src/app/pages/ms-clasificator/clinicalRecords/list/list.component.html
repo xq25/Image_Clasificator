@@ -1,0 +1,224 @@
+<div class="list-root">
+
+  <div class="split-layout" [class.panel-open]="panelOpen()">
+
+    <!-- ── Columna izquierda ── -->
+    <div class="table-column">
+
+      <!-- ══ HEADER CARD ════════════════════════════════════════ -->
+      <div class="sticky-header">
+        <mat-card class="cardWithShadow header-card">
+          <div class="header-inner">
+
+            <div class="header-left">
+              <button mat-icon-button class="back-btn" (click)="goBack()" title="Volver a pacientes">
+                <mat-icon>arrow_back</mat-icon>
+              </button>
+
+              <!-- Avatar del paciente -->
+              @if (patient()) {
+                <div class="patient-avatar">{{ patientInitials() }}</div>
+              } @else {
+                <div class="header-icon-wrap">
+                  <mat-icon>assignment</mat-icon>
+                </div>
+              }
+
+              <!-- Info del paciente -->
+              <div class="header-text">
+                <h2 class="header-title">
+                  {{ patientName() }}
+                  <span class="header-badge">{{ records().length }} registros</span>
+                </h2>
+
+                @if (patient()) {
+                  <div class="patient-meta">
+                    <span class="meta-chip">
+                      <mat-icon>badge</mat-icon>
+                      {{ patient()?.document }}
+                    </span>
+                    <span class="meta-chip">
+                      <mat-icon>cake</mat-icon>
+                      {{ patientAge() }}
+                    </span>
+                    @if (patient()?.userInfo?.email) {
+                      <span class="meta-chip">
+                        <mat-icon>email</mat-icon>
+                        {{ patient()!.userInfo.email }}
+                      </span>
+                    }
+                  </div>
+                } @else if (!loading()) {
+                  <p class="header-subtitle">Paciente no encontrado</p>
+                }
+              </div>
+            </div>
+
+            @if (patient()) {
+              <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new flex items-center gap-2">
+                <mat-icon>add</mat-icon>
+                Nuevo Registro
+              </button>
+            }
+
+          </div>
+        </mat-card>
+      </div>
+
+      <!-- ══ TABLA ══════════════════════════════════════════════ -->
+      <mat-card class="cardWithShadow table-card">
+
+        @if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando registros clínicos...</p>
+          </div>
+
+        } @else if (loadError()) {
+          <div class="empty-state">
+            <div class="empty-icon error-icon">
+              <mat-icon>person_off</mat-icon>
+            </div>
+            <p class="empty-title">Paciente no encontrado</p>
+            <p class="empty-subtitle">El documento ingresado no corresponde a ningún paciente registrado</p>
+            <button mat-stroked-button color="primary" (click)="goBack()" class="mt-4">
+              <mat-icon>arrow_back</mat-icon>
+              Volver
+            </button>
+          </div>
+
+        } @else if (records().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <mat-icon>assignment</mat-icon>
+            </div>
+            <p class="empty-title">Sin registros clínicos</p>
+            <p class="empty-subtitle">Este paciente aún no tiene registros. Crea el primero.</p>
+          </div>
+
+        } @else {
+          <app-dynamic-table
+            [data]="records()"
+            [columns]="columns"
+            [actionButtons]="actionButtons"
+            [pageSize]="pageSize"
+            searchKey="dateVisited"
+            (actionClicked)="handleAction($event)"
+          />
+        }
+
+      </mat-card>
+    </div>
+
+    <!-- ══ PANEL LATERAL ══════════════════════════════════════════ -->
+    @if (panelOpen()) {
+      <mat-card class="cardWithShadow form-panel">
+
+        <!-- Cabecera del panel -->
+        <div class="panel-header">
+          <h3>
+            @if (formConfig()?.mode === 0) { Detalle del Registro }
+            @else if (formConfig()?.mode === 1) { Nuevo Registro Clínico }
+            @else if (formConfig()?.mode === 2) { Editar Registro Clínico }
+          </h3>
+          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- ── Resumen de consulta (solo en VIEW) ── -->
+        @if (formConfig()?.mode === 0 && viewRecord()) {
+          <div class="consult-summary">
+
+            <!-- ID del registro -->
+            <div class="consult-summary__row">
+              <div class="consult-summary__icon-wrap">
+                <mat-icon>tag</mat-icon>
+              </div>
+              <div>
+                <span class="consult-summary__label">ID del registro</span>
+                <span class="consult-summary__value"># {{ viewRecord()!.id }}</span>
+              </div>
+            </div>
+
+            <!-- Fecha de visita -->
+            <div class="consult-summary__row">
+              <div class="consult-summary__icon-wrap">
+                <mat-icon>event_available</mat-icon>
+              </div>
+              <div>
+                <span class="consult-summary__label">Fecha de consulta</span>
+                <span class="consult-summary__value">{{ viewDateFormatted() }}</span>
+              </div>
+            </div>
+
+            <!-- Paciente -->
+            <div class="consult-summary__row">
+              <div class="consult-summary__icon-wrap">
+                <mat-icon>person</mat-icon>
+              </div>
+              <div>
+                <span class="consult-summary__label">Paciente</span>
+                <span class="consult-summary__value">{{ patientName() }}</span>
+              </div>
+            </div>
+
+            @if (patient()?.document) {
+              <div class="consult-summary__row">
+                <div class="consult-summary__icon-wrap">
+                  <mat-icon>badge</mat-icon>
+                </div>
+                <div>
+                  <span class="consult-summary__label">Documento</span>
+                  <span class="consult-summary__value">{{ patient()!.document }}</span>
+                </div>
+              </div>
+            }
+
+            @if (patient()?.dob != null) {
+              <div class="consult-summary__row">
+                <div class="consult-summary__icon-wrap">
+                  <mat-icon>cake</mat-icon>
+                </div>
+                <div>
+                  <span class="consult-summary__label">Edad</span>
+                  <span class="consult-summary__value">{{ patientAge() }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="consult-summary__divider"></div>
+
+            <!-- Botón ver detalle completo -->
+            <button
+              mat-flat-button
+              class="btn-full-record"
+              (click)="goToRecord(viewRecordId()!)"
+            >
+              <mat-icon>open_in_new</mat-icon>
+              Ver toda la información de la consulta
+            </button>
+
+          </div>
+        }
+
+        <!-- Cuerpo del panel -->
+        <div class="panel-body">
+          @if (panelLoading()) {
+            <div class="flex items-center justify-center py-16">
+              <mat-spinner diameter="48"></mat-spinner>
+            </div>
+          } @else if (formConfig()) {
+            <app-dynamic-form
+              [config]="formConfig()!"
+              (formSubmit)="handleFormSubmit($event)"
+              (formCancel)="handleFormCancel()"
+            />
+          }
+        </div>
+
+      </mat-card>
+    }
+
+  </div>
+</div>

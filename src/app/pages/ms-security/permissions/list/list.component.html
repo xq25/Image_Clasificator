@@ -1,41 +1,92 @@
 <div class="list-root">
 
-  <!-- Header sticky -->
-  <div class="sticky-header">
-    <mat-card class="cardWithShadow header-card">
-      <div class="header-inner">
-        <div>
-          <h2 class="header-title">Gestión de Permisos</h2>
-          <p class="header-subtitle">Administra los permisos del sistema</p>
+  <div class="split-layout" [class.panel-open]="panelOpen()">
+
+    <!-- ── Columna izquierda: header sticky + tabla ── -->
+    <div class="table-column">
+
+      <div class="sticky-header">
+        <mat-card class="cardWithShadow header-card">
+          <div class="header-inner">
+            <div class="header-left">
+              <div class="header-icon-wrap">
+                <mat-icon>verified_user</mat-icon>
+              </div>
+              <div>
+                <h2 class="header-title">
+                  Gestión de Permisos
+                  <span class="header-badge">{{ permissions().length }}</span>
+                </h2>
+                <p class="header-subtitle">Administra los permisos del sistema</p>
+              </div>
+            </div>
+            <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new flex items-center gap-2">
+              <mat-icon>add</mat-icon>
+              Nuevo Permiso
+            </button>
+          </div>
+        </mat-card>
+      </div>
+
+      <mat-card class="cardWithShadow table-card">
+        @if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando permisos...</p>
+          </div>
+        } @else if (permissions().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <mat-icon>verified_user</mat-icon>
+            </div>
+            <p class="empty-title">Sin permisos registrados</p>
+            <p class="empty-subtitle">Crea el primer permiso con el botón superior</p>
+          </div>
+        } @else {
+          <app-dynamic-table
+            [data]="permissions()"
+            [columns]="columns"
+            [actionButtons]="actionButtons"
+            [pageSize]="pageSize"
+            searchKey="url"
+            (actionClicked)="handleAction($event)"
+          />
+        }
+      </mat-card>
+
+    </div>
+
+    <!-- ── Panel lateral ── -->
+    @if (panelOpen()) {
+      <mat-card class="cardWithShadow form-panel">
+
+        <div class="panel-header">
+          <h3>
+            @if (formConfig()?.mode === 0) { Detalle de Permiso }
+            @else if (formConfig()?.mode === 1) { Nuevo Permiso }
+            @else if (formConfig()?.mode === 2) { Editar Permiso }
+          </h3>
+          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
-        <button mat-flat-button color="primary" (click)="create()" class="btn-new flex items-center gap-2">
-          <mat-icon>add</mat-icon>
-          Nuevo Permiso
-        </button>
-      </div>
-    </mat-card>
-  </div>
 
-  <!-- Tabla -->
-  <mat-card class="cardWithShadow table-card">
-    @if (loading()) {
-      <div class="p-8 text-center">
-        <mat-icon class="animate-spin text-2xl">cached</mat-icon>
-        <p class="text-gray-600 mt-2">Cargando permisos...</p>
-      </div>
-    } @else if (permissions().length === 0) {
-      <div class="p-8 text-center">
-        <mat-icon class="text-4xl text-gray-400">verified_user</mat-icon>
-        <p class="text-gray-600 mt-2">No hay permisos registrados</p>
-      </div>
-    } @else {
-      <app-dynamic-table
-        [data]="permissions()"
-        [columns]="columns"
-        [actionButtons]="actionButtons"
-        (actionClicked)="handleAction($event)"
-      />
+        <div class="panel-body">
+          @if (panelLoading()) {
+            <div class="flex items-center justify-center py-16">
+              <mat-spinner diameter="48"></mat-spinner>
+            </div>
+          } @else if (formConfig()) {
+            <app-dynamic-form
+              [config]="formConfig()!"
+              (formSubmit)="handleFormSubmit($event)"
+              (formCancel)="handleFormCancel()"
+            />
+          }
+        </div>
+
+      </mat-card>
     }
-  </mat-card>
 
+  </div>
 </div>

@@ -47,6 +47,11 @@ export const FullLayoutRoutes: Routes = [
           import('../../pages/ms-clasificator/patient/patient.routes').then((m) => m.PatientsRoutes),
       },
       {
+        path: 'clinical-records',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/clinicalRecords/clinicalRecord.routes').then((m) => m.ClinicalRecordRoutes),
+      },
+      {
         path: 'evaluation-areas',
         loadChildren: () =>
           import('../../pages/ms-clasificator/evaluationArea/evaluation-area.routes').then((m) => m.EvaluationAreasRoutes),
