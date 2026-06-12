@@ -68,24 +68,31 @@
 
       <mat-card class="cardWithShadow form-panel">
 
-        <!-- Panel header -->
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold">
-            @if (formConfig()?.mode === 0) { Detalle del Doctor }
-            @else if (formConfig()?.mode === 1) { Nuevo Doctor }
-            @else if (formConfig()?.mode === 2) { Editar Doctor }
-          </h3>
-          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
+        <!-- Panel header (solo para create/edit; view maneja su propio header) -->
+        @if (formConfig()?.mode !== 0) {
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">
+              @if (formConfig()?.mode === 1) { Nuevo Doctor }
+              @else if (formConfig()?.mode === 2) { Editar Doctor }
+            </h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        }
 
         <!-- Panel body -->
-        <div class="p-4">
+        <div [class.p-4]="formConfig()?.mode !== 0">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (formConfig()?.mode === 0 && detailConfig()) {
+            <app-entity-detail
+              [config]="detailConfig()!"
+              (back)="handleFormCancel()"
+              (primaryAction)="openEdit(currentDoctorId()!)"
+            />
           } @else if (formConfig()) {
             <app-dynamic-form
               [config]="formConfig()!"

@@ -1,0 +1,169 @@
+<div class="detail-root">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="detail-header">
+    <div class="detail-header-left">
+      @if (config.icon) {
+        <span class="detail-header-icon">
+          <mat-icon>{{ config.icon }}</mat-icon>
+        </span>
+      }
+      <div class="detail-header-text">
+        <h2 class="detail-title">{{ config.title }}</h2>
+        @if (config.subtitle) {
+          <p class="detail-subtitle">{{ config.subtitle }}</p>
+        }
+      </div>
+    </div>
+    @if (config.statusBadge) {
+      <span [class]="'status-badge status-badge-' + (config.statusBadge.color ?? 'neutral')">
+        {{ config.statusBadge.label }}
+      </span>
+    }
+  </div>
+
+  <!-- ══════════ CAMPOS PRINCIPALES ══════════ -->
+  <div class="detail-body">
+    <div class="fields-grid">
+      @for (field of getVisibleFields(); track field.key) {
+        <div [class.field-full]="field.fullWidth" class="field-item">
+          <span class="field-label">
+            @if (field.icon) {
+              <mat-icon class="field-label-icon">{{ field.icon }}</mat-icon>
+            }
+            {{ field.label }}
+          </span>
+
+          @if (field.type === 'image') {
+            @if (getImageUrl(config.data, field); as imgUrl) {
+              <div class="field-image-wrapper">
+                <img [src]="imgUrl" class="field-image" [alt]="field.label">
+              </div>
+            } @else {
+              <span class="field-value field-empty">—</span>
+            }
+          } @else if (field.type === 'badge') {
+            @if (getBadge(config.data, field); as badge) {
+              <span [class]="'inline-badge inline-badge-' + (badge.color ?? 'neutral')">
+                {{ badge.label }}
+              </span>
+            } @else {
+              <span class="field-value field-empty">—</span>
+            }
+          } @else {
+            <span class="field-value">{{ getFieldValue(config.data, field) }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════ SECCIONES RELACIONADAS ══════════ -->
+  @if (getVisibleSections().length > 0) {
+    <div class="sections-wrapper">
+
+      <div class="sections-divider">
+        <span class="sections-divider-label">
+          <mat-icon>account_tree</mat-icon>
+          Información relacionada
+        </span>
+      </div>
+
+      <div class="sections-grid">
+        @for (section of getVisibleSections(); track section.title) {
+          <div class="section-card" [class.is-collapsed]="isSectionCollapsed(section.title)">
+
+            <!-- Header colapsable -->
+            <button type="button"
+              class="section-header"
+              [style.--accent]="section.accentColor ?? null"
+              (click)="toggleSection(section.title)"
+              [attr.aria-expanded]="!isSectionCollapsed(section.title)"
+            >
+              <mat-icon class="section-icon">{{ section.icon ?? 'info' }}</mat-icon>
+              <span class="section-title">{{ section.title }}</span>
+              <mat-icon class="section-chevron"
+                [class.is-rotated]="isSectionCollapsed(section.title)">
+                expand_less
+              </mat-icon>
+            </button>
+
+            <!-- Cuerpo colapsable -->
+            <div class="section-body" [class.is-collapsed]="isSectionCollapsed(section.title)">
+              <ul class="section-fields">
+                @for (field of getSectionFields(section); track field.key) {
+                  <li class="section-field">
+                    <span class="section-field-meta">
+                      @if (field.icon) {
+                        <mat-icon class="section-field-icon">{{ field.icon }}</mat-icon>
+                      }
+                      <span class="section-field-label">{{ field.label }}</span>
+                    </span>
+
+                    @if (field.type === 'badge') {
+                      @if (getBadge(section.data!, field); as badge) {
+                        <span [class]="'inline-badge inline-badge-' + (badge.color ?? 'neutral')">
+                          {{ badge.label }}
+                        </span>
+                      } @else {
+                        <span class="section-field-value section-field-empty">—</span>
+                      }
+                    } @else if (field.type === 'image') {
+                      @if (getImageUrl(section.data!, field); as imgUrl) {
+                        <img [src]="imgUrl" class="section-field-image" [alt]="field.label">
+                      } @else {
+                        <span class="section-field-value section-field-empty">—</span>
+                      }
+                    } @else {
+                      <span class="section-field-value">{{ getFieldValue(section.data!, field) }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ══════════ ACCIONES ══════════ -->
+  <div class="detail-actions">
+    <button type="button"
+      mat-stroked-button
+      (click)="onBack()"
+      class="btn-back">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+
+    <div class="detail-actions-right">
+      @if (config.secondaryActionLabel) {
+        <button type="button"
+          mat-stroked-button
+          (click)="onSecondaryAction()"
+          class="btn-secondary">
+          @if (config.secondaryActionIcon) {
+            <mat-icon>{{ config.secondaryActionIcon }}</mat-icon>
+          }
+          {{ config.secondaryActionLabel }}
+        </button>
+      }
+
+      @if (config.primaryActionLabel) {
+        <button type="button"
+          mat-flat-button
+          color="primary"
+          (click)="onPrimaryAction()"
+          class="btn-primary">
+          @if (config.primaryActionIcon) {
+            <mat-icon>{{ config.primaryActionIcon }}</mat-icon>
+          }
+          {{ config.primaryActionLabel }}
+        </button>
+      }
+    </div>
+  </div>
+
+</div>

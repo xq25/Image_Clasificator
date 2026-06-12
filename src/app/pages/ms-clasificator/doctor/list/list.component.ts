@@ -8,13 +8,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
-import { DynamicFormComponent, DynamicFormConfig, RelatedEntityConfig } from '@app/components/dynamic-form/dynamic-form.component';
+import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
+import { EntityDetailComponent, EntityDetailConfig } from '@app/components/entity-detail/entity-detail.component';
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
 import { UserService } from '@app/services/ms-security/user-service';
 import { Doctor, DoctorExtended } from '@app/models/ms-clasificator/Doctor/Doctor';
 import { User } from '@app/models/User';
-
-type FormMode = 0 | 1 | 2;
 
 interface Toast {
   message: string;
@@ -28,6 +27,7 @@ interface Toast {
     CommonModule,
     DynamicTableComponent,
     DynamicFormComponent,
+    EntityDetailComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -50,6 +50,8 @@ export class ListComponent implements OnInit {
   panelOpen = signal(false);
   panelLoading = signal(false);
   formConfig = signal<DynamicFormConfig | null>(null);
+  detailConfig = signal<EntityDetailConfig | null>(null);
+  currentDoctorId = signal<number | null>(null);
   toast = signal<Toast | null>(null);
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
@@ -127,12 +129,31 @@ export class ListComponent implements OnInit {
   openView(doctorId: number): void {
     this.panelLoading.set(true);
     this.panelOpen.set(true);
+    this.currentDoctorId.set(doctorId);
 
     this.doctorService.findById(doctorId).subscribe({
       next: (response) => {
         const doctor = response.data ?? null;
         if (!doctor) { this.closePanel(); return; }
-        this.buildConfig(0, doctor, []);
+
+        // Señal de modo para que el template sepa que es view
+        this.formConfig.set({ mode: 0, fields: [], model: doctor });
+
+        this.detailConfig.set({
+          title:    'Detalle del Doctor',
+          subtitle: `ID ${doctor.id}`,
+          icon:     'medical_services',
+          data:     doctor,
+          fields: [
+            { key: 'id',     label: 'ID',       icon: 'tag' },
+            { key: 'code',   label: 'Código',   icon: 'badge' },
+            { key: 'userId', label: 'Usuario',  icon: 'person' },
+          ],
+          primaryActionLabel: 'Editar',
+          primaryActionIcon:  'edit',
+          sections: this.buildDetailSections(doctor),
+        });
+
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
@@ -175,19 +196,17 @@ export class ListComponent implements OnInit {
   closePanel(): void {
     this.panelOpen.set(false);
     this.formConfig.set(null);
+    this.detailConfig.set(null);
+    this.currentDoctorId.set(null);
     this.panelLoading.set(false);
   }
 
   // ─── FORM BUILDER ─────────────────────────────────────────────────────────────
 
-  buildConfig(mode: FormMode, model: DoctorExtended | null, users: User[]): void {
+  buildConfig(mode: 1 | 2, model: DoctorExtended | null, users: User[]): void {
     const userOptions = users
       .filter(u => u.id)
       .map(u => ({ value: u.id, label: u.email || u.id || 'Sin correo' }));
-
-    const userDisplayValue = mode === 0 && model?.userInfo
-      ? (model.userInfo.email ?? model.userInfo.id ?? 'Sin información')
-      : undefined;
 
     const userIdValue = mode === 2 && model?.userInfo
       ? model.userInfo.id
@@ -196,7 +215,6 @@ export class ListComponent implements OnInit {
     this.formConfig.set({
       mode,
       model: model ? { ...model, userId: userIdValue } : null,
-      relatedEntities: this.buildRelatedEntities(mode, model),
       fields: [
         {
           name: 'id',
@@ -212,29 +230,24 @@ export class ListComponent implements OnInit {
         },
         {
           name: 'userId',
-          label: mode === 0 ? 'Usuario asociado' : 'ID de usuario',
-          type: mode !== 0 ? 'select' : 'text',
-          placeholder: mode === 1
-            ? 'Selecciona un usuario'
-            : mode === 2 ? 'Selecciona un usuario' : userDisplayValue,
-          validators: mode !== 0 ? [Validators.required] : [],
-          options: mode !== 0 ? userOptions : [],
-          ...(mode === 0 && { value: userDisplayValue }),
+          label: 'ID de usuario',
+          type: 'select',
+          placeholder: 'Selecciona un usuario',
+          validators: [Validators.required],
+          options: userOptions,
         },
       ],
     });
   }
 
-  private buildRelatedEntities(mode: FormMode, model: DoctorExtended | null): RelatedEntityConfig[] {
-    if (mode !== 0 || !model) return [];
-
-    const entities: RelatedEntityConfig[] = [];
+  private buildDetailSections(model: DoctorExtended): import('@app/components/entity-detail/entity-detail.component').DetailSectionConfig[] {
+    const sections: import('@app/components/entity-detail/entity-detail.component').DetailSectionConfig[] = [];
 
     if (model.userInfo) {
-      entities.push({
+      sections.push({
         title: 'Información del usuario',
-        icon: 'manage_accounts',
-        data: { ...model.userInfo, id: model.userId },
+        icon:  'manage_accounts',
+        data:  { ...model.userInfo, id: model.userId },
         fields: [
           { key: 'id',    label: 'ID',     icon: 'badge' },
           { key: 'name',  label: 'Nombre', icon: 'person' },
@@ -243,7 +256,7 @@ export class ListComponent implements OnInit {
       });
     }
 
-    return entities;
+    return sections;
   }
 
   // ─── SUBMIT / CANCEL ──────────────────────────────────────────────────────────
