@@ -1,0 +1,494 @@
+// ─────────────────────────────────────────────────────────────────────────
+// Entity Detail Component — misma paleta que dynamic-form / dynamic-table
+// ─────────────────────────────────────────────────────────────────────────
+
+// Tokens (idénticos al ecosistema)
+$primary:       #4f46e5;
+$primary-light: #ede9fe;
+$primary-dark:  #3730a3;
+$border:        #e8eaf0;
+$text-main:     #1f2937;
+$text-muted:    #6b7280;
+$surface:       #ffffff;
+$bg-subtle:     #f9fafb;
+
+// Badge color map
+$badge-colors: (
+  primary: ($primary,       #fff,               #c7d2fe),
+  success: (#16a34a,        #fff,               #dcfce7),
+  warning: (#d97706,        #fff,               #fef3c7),
+  danger:  (#dc2626,        #fff,               #fee2e2),
+  info:    (#0891b2,        #fff,               #cffafe),
+  neutral: ($text-muted,    #fff,               #f3f4f6),
+);
+
+// ── Root ──────────────────────────────────────────────────────────────────
+.detail-root {
+  display: flex;
+  flex-direction: column;
+  background: $surface;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px 16px;
+  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%);
+  color: #fff;
+  border-radius: 14px 14px 0 0;
+  flex-wrap: wrap;
+}
+
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.detail-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .18);
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
+    color: #fff;
+  }
+}
+
+.detail-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.detail-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: .01em;
+  margin: 0;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, .75);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 13px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+
+  // Colores semánticos cuando está fuera del header (uso general)
+  @each $name, $colors in $badge-colors {
+    &.status-badge-#{$name} {
+      // Sobre el header degradado mantiene look glass; fuera se puede sobreescribir
+      background: rgba(255, 255, 255, .18);
+      color: #fff;
+      border-color: rgba(255, 255, 255, .28);
+    }
+  }
+}
+
+// ── Body — grilla de campos principales ──────────────────────────────────
+.detail-body {
+  padding: 20px 24px 8px;
+}
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0;
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid $border;
+
+  // Separa verticalmente filas con una línea solo a la derecha del grid
+  &:not(.field-full) {
+    border-right: 1px solid $border;
+    padding-right: 16px;
+    padding-left: 16px;
+
+    &:first-child {
+      padding-left: 0;
+    }
+  }
+
+  &.field-full {
+    grid-column: 1 / -1;
+    padding-left: 0;
+    border-right: none;
+  }
+
+  // Último elemento de cada fila (sin borde inferior si es el último)
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: $text-muted;
+}
+
+.field-label-icon {
+  font-size: 13px !important;
+  width: 13px !important;
+  height: 13px !important;
+  color: $primary;
+}
+
+.field-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $text-main;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.field-empty {
+  color: $text-muted;
+  font-weight: 400;
+}
+
+// Imagen en campo principal
+.field-image-wrapper {
+  margin-top: 4px;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 160px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.field-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+// ── Inline badge (campos tipo badge en grilla y secciones) ────────────────
+.inline-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  width: fit-content;
+  margin-top: 2px;
+
+  @each $name, $colors in $badge-colors {
+    &.inline-badge-#{$name} {
+      background: nth($colors, 3);
+      color: nth($colors, 1);
+      border: 1px solid rgba(nth($colors, 1), .2);
+    }
+  }
+}
+
+// ── Secciones relacionadas ────────────────────────────────────────────────
+.sections-wrapper {
+  padding: 4px 24px 8px;
+}
+
+.sections-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 16px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
+  }
+}
+
+.sections-divider-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: $text-muted;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: $primary;
+  }
+}
+
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+// Tarjeta de sección
+.section-card {
+  border: 1px solid $border;
+  border-radius: 12px;
+  overflow: hidden;
+  background: $surface;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+  transition: box-shadow .18s;
+
+  &:hover {
+    box-shadow: 0 3px 10px rgba(79, 70, 229, .1);
+  }
+}
+
+// Header de sección (botón colapsable)
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--accent, #{$primary-light});
+  border-bottom: 1px solid lighten($border, 2%);
+  width: 100%;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s, filter .15s;
+
+  &:hover {
+    filter: brightness(.96);
+  }
+}
+
+.section-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: $primary;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: $primary-dark;
+  letter-spacing: .02em;
+  flex: 1;
+}
+
+.section-chevron {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: $primary;
+  flex-shrink: 0;
+  transition: transform .25s ease;
+
+  &.is-rotated {
+    transform: rotate(180deg);
+  }
+}
+
+// Cuerpo colapsable
+.section-body {
+  overflow: hidden;
+  max-height: 800px;
+  transition: max-height .3s ease, opacity .22s ease;
+  opacity: 1;
+
+  &.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+// Tarjeta colapsada
+.section-card.is-collapsed {
+  .section-header {
+    border-bottom-color: transparent;
+    border-radius: 0 0 12px 12px;
+  }
+}
+
+// Lista de campos de sección
+.section-fields {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.section-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+
+  &:not(:last-child) {
+    border-bottom: 1px dashed lighten($border, 1%);
+  }
+}
+
+.section-field-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.section-field-icon {
+  font-size: 13px !important;
+  width: 13px !important;
+  height: 13px !important;
+  color: $text-muted;
+}
+
+.section-field-label {
+  color: $text-muted;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.section-field-value {
+  color: $text-main;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.section-field-empty {
+  color: $text-muted;
+  font-weight: 400;
+}
+
+.section-field-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid $border;
+}
+
+// ── Acciones ──────────────────────────────────────────────────────────────
+.detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $border;
+  flex-wrap: wrap;
+}
+
+.detail-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// Botón volver
+.btn-back {
+  color: $text-muted !important;
+  border-color: $border !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
+
+  &:hover {
+    background: #f5f3ff !important;
+    color: $primary !important;
+    border-color: lighten($primary, 20%) !important;
+  }
+}
+
+// Botón secundario (ej. Editar)
+.btn-secondary {
+  color: $primary !important;
+  border-color: lighten($primary, 20%) !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  background: $primary-light !important;
+
+  mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
+
+  &:hover {
+    background: darken($primary-light, 5%) !important;
+  }
+}
+
+// Botón primario (ej. Confirmar, Enviar)
+.btn-primary {
+  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, .3) !important;
+  transition: box-shadow .2s, transform .15s !important;
+
+  mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(79, 70, 229, .44) !important;
+    transform: translateY(-1px);
+  }
+}
