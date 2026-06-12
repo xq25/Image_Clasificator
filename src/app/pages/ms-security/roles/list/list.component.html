@@ -1,11 +1,17 @@
 <div class="list-root">
 
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">
+      {{ toast()!.message }}
+    </div>
+  }
+
   <div class="split-layout" [class.panel-open]="panelOpen()">
 
     <!-- Columna izquierda: header sticky + tabla -->
     <div class="table-column">
 
-      <!-- Header card: sticky, no scrollea -->
       <div class="sticky-header">
         <mat-card class="cardWithShadow">
           <div class="flex items-center justify-between px-4 py-2">
@@ -21,7 +27,6 @@
         </mat-card>
       </div>
 
-      <!-- Tabla -->
       <mat-card class="cardWithShadow table-panel">
         @if (loading()) {
           <div class="p-8 text-center">
@@ -48,24 +53,33 @@
 
     <!-- Panel lateral (derecha) -->
     @if (panelOpen()) {
+      <div class="mobile-backdrop" (click)="closePanel()"></div>
+
       <mat-card class="cardWithShadow form-panel">
 
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold">
-            @if (formConfig()?.mode === 0) { Detalle del Rol }
-            @else if (formConfig()?.mode === 1) { Nuevo Rol }
-            @else if (formConfig()?.mode === 2) { Editar Rol }
-          </h3>
-          <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
+        @if (!isViewMode()) {
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">
+              @if (formConfig()?.mode === 1) { Nuevo Rol }
+              @else if (formConfig()?.mode === 2) { Editar Rol }
+            </h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        }
 
-        <div class="p-4">
+        <div [class.p-4]="!isViewMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (isViewMode() && detailConfig()) {
+            <app-entity-detail
+              [config]="detailConfig()!"
+              (back)="handleFormCancel()"
+              (primaryAction)="openEdit(currentRoleId()!)"
+            />
           } @else if (formConfig()) {
             <app-dynamic-form
               [config]="formConfig()!"

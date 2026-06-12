@@ -1,272 +1,174 @@
 <div class="dynamic-form-root">
-    <!-- HEADER -->
-    <div class="form-header mb-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-white">{{ getModeTitle() }}</h2>
-        <span [class]="'mode-badge mode-badge-' + config.mode">
-          @if (isViewMode()) { 
-            <mat-icon>visibility</mat-icon>
-            Vista
+
+  <!-- HEADER -->
+  <div class="form-header mb-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-white">{{ getModeTitle() }}</h2>
+      <span [class]="'mode-badge mode-badge-' + config.mode">
+        @if (isCreateMode()) {
+          <mat-icon>add_circle</mat-icon>
+          Nuevo
+        } @else if (isUpdateMode()) {
+          <mat-icon>edit</mat-icon>
+          Editar
+        } @else if (isModeSend()) {
+          <mat-icon>send</mat-icon>
+          Enviar
+        }
+      </span>
+    </div>
+  </div>
+
+  <!-- FORMULARIO -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 px-6 pb-6 pt-0">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      @for (field of getVisibleFields(); track field.name) {
+        <div [class.md:col-span-2]="field.type === 'textarea'">
+
+          @switch (field.type) {
+
+            <!-- TEXTAREA -->
+            @case ('textarea') {
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>{{ getLabel(field) }}
+                  @if (field.validators?.length) {
+                    <span class="text-red-500 ml-1">*</span>
+                  }
+                </mat-label>
+                <textarea matInput
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  rows="4"
+                ></textarea>
+                @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                  <mat-error>
+                    @if (form.get(field.name)?.errors?.['required']) { Este campo es obligatorio }
+                    @if (form.get(field.name)?.errors?.['minlength']) {
+                      Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
+                    }
+                    @if (form.get(field.name)?.errors?.['maxlength']) {
+                      Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
+                    }
+                  </mat-error>
+                }
+              </mat-form-field>
+            }
+
+            <!-- SELECT -->
+            @case ('select') {
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>{{ getLabel(field) }}
+                  @if (field.validators?.length) {
+                    <span class="text-red-500 ml-1">*</span>
+                  }
+                </mat-label>
+                <mat-select [formControlName]="field.name">
+                  <mat-option value="">Seleccione...</mat-option>
+                  @for (opt of field.options ?? []; track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                  <mat-error>
+                    @if (form.get(field.name)?.errors?.['required']) { Este campo es obligatorio }
+                  </mat-error>
+                }
+              </mat-form-field>
+            }
+
+            <!-- FILE -->
+            @case ('file') {
+              <div>
+                <label class="block text-sm font-semibold mb-3 text-gray-700">
+                  {{ getLabel(field) }}
+                  @if (field.validators?.length) {
+                    <span class="text-red-500 ml-1">*</span>
+                  }
+                </label>
+                <input
+                  type="file"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  (change)="onFileSelected($event, field.name)"
+                >
+                @if (previewUrls[field.name]) {
+                  <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
+                    <img [src]="previewUrls[field.name]" class="w-full h-auto object-cover" alt="Vista previa">
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- TEXT / EMAIL / NUMBER / PASSWORD / DATE -->
+            @default {
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>{{ getLabel(field) }}
+                  @if (field.validators?.length) {
+                    <span class="text-red-500 ml-1">*</span>
+                  }
+                </mat-label>
+                <input matInput
+                  [type]="field.type || 'text'"
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                >
+                @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+                  <mat-error>
+                    @if (form.get(field.name)?.errors?.['required'])  { Este campo es obligatorio }
+                    @if (form.get(field.name)?.errors?.['email'])     { Formato de email inválido }
+                    @if (form.get(field.name)?.errors?.['minlength']) {
+                      Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
+                    }
+                    @if (form.get(field.name)?.errors?.['maxlength']) {
+                      Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
+                    }
+                    @if (form.get(field.name)?.errors?.['min']) {
+                      Valor mínimo: {{ form.get(field.name)?.errors?.['min'].min }}
+                    }
+                    @if (form.get(field.name)?.errors?.['max']) {
+                      Valor máximo: {{ form.get(field.name)?.errors?.['max'].max }}
+                    }
+                    @if (form.get(field.name)?.errors?.['pattern']) { Formato inválido }
+                  </mat-error>
+                }
+              </mat-form-field>
+            }
+
           }
-          @else if (isCreateMode()) { 
-            <mat-icon>add_circle</mat-icon>
-            Nuevo
-          }
-          @else if (isUpdateMode()) { 
-            <mat-icon>edit</mat-icon>
-            Editar
-          }
-          @else if (isModeSend()) {
-            <mat-icon>send</mat-icon>
-            Enviar
-          }
-        </span>
-      </div>
+        </div>
+      }
     </div>
 
-    <!-- FORMULARIO -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 px-6 pb-6 pt-0">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        @for (field of getVisibleFields(); track field.name) {
-          <div [class.md:col-span-2]="field.type === 'textarea'">
-            <!-- TEXT AREA -->
-            @switch (field.type) {
-              @case ('textarea') {
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>{{ getLabel(field) }}
-                    @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500 ml-1">*</span>
-                    }
-                  </mat-label>
-                  <textarea matInput 
-                    [formControlName]="field.name" 
-                    [placeholder]="field.placeholder || ''"
-                    rows="4"
-                  ></textarea>
-                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
-                    <mat-error>
-                      @if (form.get(field.name)?.errors?.['required']) {
-                        Este campo es obligatorio
-                      }
-                      @if (form.get(field.name)?.errors?.['minlength']) {
-                        Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
-                      }
-                      @if (form.get(field.name)?.errors?.['maxlength']) {
-                        Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
-                      }
-                    </mat-error>
-                  }
-                </mat-form-field>
-              }
+    <!-- ACCIONES -->
+    <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+      <button type="button" mat-stroked-button (click)="onCancel()" class="btn-cancel">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
 
-              <!-- SELECT -->
-              @case ('select') {
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>{{ getLabel(field) }}
-                    @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500 ml-1">*</span>
-                    }
-                  </mat-label>
-                  <mat-select 
-                    [formControlName]="field.name"
-                  >
-                    <mat-option value="">Seleccione...</mat-option>
-                    @for (opt of field.options ?? []; track opt.value) {
-                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                    }
-                  </mat-select>
-                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
-                    <mat-error>
-                      @if (form.get(field.name)?.errors?.['required']) {
-                        Este campo es obligatorio
-                      }
-                    </mat-error>
-                  }
-                </mat-form-field>
-              }
-
-              <!-- FILE -->
-              @case ('file') {
-                <div>
-                  <label class="block text-sm font-semibold mb-3 text-gray-700">{{ getLabel(field) }}
-                    @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500 ml-1">*</span>
-                    }
-                  </label>
-                  <input
-                    type="file"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    (change)="onFileSelected($event, field.name)"
-                  >
-                  @if (previewUrls[field.name]) {
-                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
-                      <img [src]="previewUrls[field.name]" class="w-full h-auto object-cover" alt="Vista previa">
-                    </div>
-                  } @else if (form.get(field.name)?.value && isViewMode()) {
-                    <div class="mt-4 rounded-lg overflow-hidden border border-gray-300 max-w-xs shadow-sm">
-                      <img [src]="form.get(field.name)?.value" class="w-full h-auto object-cover" alt="Imagen">
-                    </div>
-                  }
-                </div>
-              }
-
-              <!-- TEXT / EMAIL / NUMBER / PASSWORD / DATE (default) -->
-              @default {
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>{{ getLabel(field) }}
-                    @if (field.validators?.length && !isViewMode()) {
-                      <span class="text-red-500 ml-1">*</span>
-                    }
-                  </mat-label>
-                  <input matInput
-                    [type]="field.type || 'text'"
-                    [formControlName]="field.name"
-                    [placeholder]="field.placeholder || ''"
-                  >
-                  @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
-                    <mat-error>
-                      @if (form.get(field.name)?.errors?.['required']) {
-                        Este campo es obligatorio
-                      }
-                      @if (form.get(field.name)?.errors?.['email']) {
-                        Formato de email inválido
-                      }
-                      @if (form.get(field.name)?.errors?.['minlength']) {
-                        Mínimo {{ form.get(field.name)?.errors?.['minlength'].requiredLength }} caracteres
-                      }
-                      @if (form.get(field.name)?.errors?.['maxlength']) {
-                        Máximo {{ form.get(field.name)?.errors?.['maxlength'].requiredLength }} caracteres
-                      }
-                      @if (form.get(field.name)?.errors?.['min']) {
-                        Valor mínimo: {{ form.get(field.name)?.errors?.['min'].min }}
-                      }
-                      @if (form.get(field.name)?.errors?.['max']) {
-                        Valor máximo: {{ form.get(field.name)?.errors?.['max'].max }}
-                      }
-                      @if (form.get(field.name)?.errors?.['pattern']) {
-                        Formato inválido
-                      }
-                    </mat-error>
-                  }
-                </mat-form-field>
-              }
-            }
-          </div>
-        }
-      </div>
-
-      <!-- ACCIONES -->
-      <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-        <button type="button" 
-          mat-stroked-button
-          (click)="onCancel()"
-          class="btn-cancel">
-          @if (isViewMode()) {
-            <ng-container>
-              <mat-icon>arrow_back</mat-icon>
-              Volver
-            </ng-container>
-          } @else {
-            <ng-container>
-              <mat-icon>close</mat-icon>
-              Cancelar
-            </ng-container>
-          }
+      @if (isCreateMode()) {
+        <button type="submit" mat-flat-button color="primary"
+          [disabled]="form.invalid" class="btn-create">
+          <mat-icon>add_circle</mat-icon>
+          Crear
         </button>
+      }
 
-        @if (isCreateMode()) {
-          <button type="submit" 
-            mat-flat-button 
-            color="primary"
-            [disabled]="form.invalid"
-            class="btn-create">
-            <ng-container>
-              <mat-icon>add_circle</mat-icon>
-              Crear
-            </ng-container>
-          </button>
-        }
+      @if (isUpdateMode()) {
+        <button type="submit" mat-flat-button color="primary"
+          [disabled]="form.invalid" class="btn-update">
+          <mat-icon>save</mat-icon>
+          Actualizar
+        </button>
+      }
 
-        @if (isUpdateMode()) {
-          <button type="submit" 
-            mat-flat-button 
-            color="primary"
-            [disabled]="form.invalid"
-            class="btn-update">
-            <ng-container>
-              <mat-icon>save</mat-icon>
-              Actualizar
-            </ng-container>
-          </button>
-        }
+      @if (isModeSend()) {
+        <button type="submit" mat-flat-button color="primary"
+          [disabled]="form.invalid" class="btn-send">
+          <mat-icon>send</mat-icon>
+          Enviar
+        </button>
+      }
+    </div>
+  </form>
 
-        @if (isModeSend()) {
-          <button type="submit" 
-            mat-flat-button 
-            color="primary"
-            [disabled]="form.invalid"
-            class="btn-send">
-            <ng-container>
-              <mat-icon>send</mat-icon>
-              Enviar
-            </ng-container>
-          </button>
-        }
-      </div>
-    </form>
-
-    <!-- ENTIDADES RELACIONADAS (solo modo VIEW) -->
-    @if (isViewMode() && getRelatedEntities().length > 0) {
-      <div class="related-entities-wrapper px-6 pb-6">
-
-        <div class="related-entities-divider">
-          <span class="related-entities-divider-label">
-            <mat-icon>account_tree</mat-icon>
-            Información relacionada
-          </span>
-        </div>
-
-        <div class="related-entities-grid">
-          @for (entity of getRelatedEntities(); track entity.title) {
-            <div class="related-entity-card" [class.is-collapsed]="isEntityCollapsed(entity.title)">
-
-              <!-- Card header (clickeable) -->
-              <button type="button"
-                class="related-entity-header"
-                (click)="toggleEntity(entity.title)"
-                [attr.aria-expanded]="!isEntityCollapsed(entity.title)"
-              >
-                <mat-icon class="related-entity-icon">{{ entity.icon ?? 'info' }}</mat-icon>
-                <span class="related-entity-title">{{ entity.title }}</span>
-                <mat-icon class="related-entity-chevron"
-                  [class.is-rotated]="isEntityCollapsed(entity.title)">
-                  expand_less
-                </mat-icon>
-              </button>
-
-              <!-- Card fields (colapsable) -->
-              <div class="related-entity-body" [class.is-collapsed]="isEntityCollapsed(entity.title)">
-                <ul class="related-entity-fields">
-                  @for (field of entity.fields; track field.key) {
-                    <li class="related-entity-field">
-                      <span class="related-field-meta">
-                        @if (field.icon) {
-                          <mat-icon class="related-field-icon">{{ field.icon }}</mat-icon>
-                        }
-                        <span class="related-field-label">{{ field.label }}</span>
-                      </span>
-                      <span class="related-field-value">
-                        {{ getRelatedFieldValue(entity, field) }}
-                      </span>
-                    </li>
-                  }
-                </ul>
-              </div>
-
-            </div>
-          }
-        </div>
-
-      </div>
-    }
 </div>

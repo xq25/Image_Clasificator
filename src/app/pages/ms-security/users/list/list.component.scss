@@ -164,7 +164,7 @@
   &.panel-open {
     grid-template-columns: 1fr 400px;
 
-    @media (max-width: 1024px) {
+    @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
   }
@@ -367,7 +367,7 @@
     padding: 20px;
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     position: fixed;
     top: 0;
     right: 0;
@@ -393,7 +393,9 @@
 }
 
 // ── Mobile backdrop ────────────────────────────────────────────
-@media (max-width: 1024px) {
+.mobile-backdrop { display: none; }
+
+@media (max-width: 768px) {
   :host {
     &:has(.form-panel)::before {
       content: '';

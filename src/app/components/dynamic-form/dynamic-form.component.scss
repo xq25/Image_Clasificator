@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────────────────────
-// Dynamic Form Component — misma paleta que dynamic-table/list
+// Dynamic Form Component
 // ─────────────────────────────────────────────────────────────
 
-// Tokens (idénticos a dynamic-table.component.scss)
 $primary:       #4f46e5;
 $primary-light: #ede9fe;
 $primary-dark:  #3730a3;
@@ -11,7 +10,7 @@ $text-main:     #1f2937;
 $text-muted:    #6b7280;
 $error:         #ef4444;
 
-// ── Root wrapper (sin padding extra — el panel ya lo tiene) ──
+// ── Root ──────────────────────────────────────────────────────
 .dynamic-form-root {
   display: flex;
   flex-direction: column;
@@ -44,9 +43,9 @@ $error:         #ef4444;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .05em;
-  background: rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, .18);
   color: #fff;
-  border: 1px solid rgba(255,255,255,.28);
+  border: 1px solid rgba(255, 255, 255, .28);
 
   mat-icon {
     font-size: 15px !important;
@@ -55,19 +54,16 @@ $error:         #ef4444;
   }
 }
 
-// Los tres modos comparten el mismo look sobre el header degradado
-.mode-badge-0,
 .mode-badge-1,
 .mode-badge-2,
 .mode-badge-3 {
-  background: rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, .18);
   color: #fff;
-  border: 1px solid rgba(255,255,255,.28);
+  border: 1px solid rgba(255, 255, 255, .28);
 }
 
 // ── Form fields ───────────────────────────────────────────────
 ::ng-deep {
-  // Outline color → usa el mismo $primary
   .mat-mdc-form-field-appearance-outline {
     .mdc-notched-outline__leading,
     .mdc-notched-outline__notch,
@@ -85,12 +81,10 @@ $error:         #ef4444;
     }
   }
 
-  // Label activo en el mismo violeta
   .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
     color: $primary !important;
   }
 
-  // Texto de error
   .mat-mdc-form-field-error {
     font-size: 11px;
     color: $error !important;
@@ -105,7 +99,7 @@ $error:         #ef4444;
   }
 }
 
-// ── Divider inferior de acciones ──────────────────────────────
+// ── Divider de acciones ───────────────────────────────────────
 form .border-t {
   border-color: $border !important;
 }
@@ -120,7 +114,11 @@ form .border-t {
 
   mat-icon { margin-right: 4px; font-size: 17px; width: 17px; height: 17px; }
 
-  &:hover { background: #f5f3ff !important; color: $primary !important; border-color: lighten($primary, 20%) !important; }
+  &:hover {
+    background: #f5f3ff !important;
+    color: $primary !important;
+    border-color: lighten($primary, 20%) !important;
+  }
 }
 
 // ── Botones de submit ─────────────────────────────────────────
@@ -142,187 +140,8 @@ form .border-t {
     transform: translateY(-1px);
   }
 
-  &:disabled { opacity: .55; box-shadow: none !important; }
-}
-
-// ── Entidades relacionadas (solo VIEW) ────────────────────────
-
-.related-entities-wrapper {
-  margin-top: 4px;
-}
-
-// Divisor con etiqueta central
-.related-entities-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: $border;
+  &:disabled {
+    opacity: .55;
+    box-shadow: none !important;
   }
-}
-
-.related-entities-divider-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: $text-muted;
-  white-space: nowrap;
-
-  mat-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-    color: $primary;
-  }
-}
-
-// Grid responsivo: 1 col en móvil, hasta 2 en pantallas medianas
-.related-entities-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-}
-
-// Tarjeta individual
-.related-entity-card {
-  border: 1px solid $border;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  transition: box-shadow .18s;
-
-  &:hover {
-    box-shadow: 0 3px 10px rgba(79, 70, 229, .1);
-  }
-}
-
-// Header de la tarjeta (ahora es un botón)
-.related-entity-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: $primary-light;
-  border-bottom: 1px solid lighten($border, 2%);
-
-  // Reset de estilos de botón
-  width: 100%;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background .15s;
-
-  &:hover {
-    background: darken($primary-light, 3%);
-  }
-}
-
-.related-entity-icon {
-  font-size: 18px !important;
-  width: 18px !important;
-  height: 18px !important;
-  color: $primary;
-  flex-shrink: 0;
-}
-
-.related-entity-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: $primary-dark;
-  letter-spacing: .02em;
-  flex: 1; // empuja el chevron al extremo derecho
-}
-
-// Chevron: apunta arriba cuando expandido, abajo cuando colapsado
-.related-entity-chevron {
-  font-size: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
-  color: $primary;
-  flex-shrink: 0;
-  transition: transform .25s ease;
-
-  &.is-rotated {
-    transform: rotate(180deg);
-  }
-}
-
-// Cuerpo colapsable con animación de max-height
-.related-entity-body {
-  overflow: hidden;
-  max-height: 600px; // valor suficientemente grande para cualquier contenido
-  transition: max-height .28s ease, opacity .22s ease;
-  opacity: 1;
-
-  &.is-collapsed {
-    max-height: 0;
-    opacity: 0;
-  }
-}
-
-// Tarjeta colapsada: elimina la sombra inferior para verse compacta
-.related-entity-card.is-collapsed {
-  .related-entity-header {
-    border-bottom-color: transparent;
-    border-radius: 0 0 12px 12px; // mantiene bordes redondeados al colapsar
-  }
-}
-
-// Lista de campos dentro de la tarjeta
-.related-entity-fields {
-  list-style: none;
-  margin: 0;
-  padding: 6px 0;
-}
-
-.related-entity-field {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 14px;
-  font-size: 12.5px;
-
-  // Línea separadora entre items (no en el último)
-  &:not(:last-child) {
-    border-bottom: 1px dashed lighten($border, 1%);
-  }
-}
-
-.related-field-meta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.related-field-icon {
-  font-size: 13px !important;
-  width: 13px !important;
-  height: 13px !important;
-  color: $text-muted;
-}
-
-.related-field-label {
-  color: $text-muted;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.related-field-value {
-  color: $text-main;
-  font-weight: 600;
-  text-align: right;
-  word-break: break-word;
 }

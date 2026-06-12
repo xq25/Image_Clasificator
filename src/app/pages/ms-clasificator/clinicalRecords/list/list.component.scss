@@ -259,7 +259,7 @@ $primary: #4f46e5;
   &.panel-open {
     grid-template-columns: 1fr 400px;
 
-    @media (max-width: 1024px) {
+    @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
   }
@@ -411,7 +411,9 @@ $primary: #4f46e5;
 }
 
 // ── Mobile backdrop ────────────────────────────────────────────
-@media (max-width: 1024px) {
+.mobile-backdrop { display: none; }
+
+@media (max-width: 768px) {
   :host {
     &:has(.form-panel)::before {
       content: '';
