@@ -146,6 +146,12 @@
               (back)="handleFormCancel()"
               (primaryAction)="openEdit(currentRecordId()!)"
             />
+            <div class="px-4 pb-4">
+              <button mat-flat-button color="accent" class="w-full" style="border-radius:10px" (click)="goToRecord()">
+                <mat-icon>open_in_full</mat-icon>
+                Ver detalles de la consulta
+              </button>
+            </div>
           } @else if (formConfig()) {
             <app-dynamic-form
               [config]="formConfig()!"
