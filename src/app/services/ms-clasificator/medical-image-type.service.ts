@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { MedicalImageType, MedicalImageTypeExtended, ApiResponse } from '@models/ms-clasificator';
+import { ApiResponse } from '@models/ms-clasificator';
+import { MedicalImageType, MedicalImageTypeExtended } from '@models/ms-clasificator/MedicalImageType/MedicalImageType';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/medical-image-types`;
 
