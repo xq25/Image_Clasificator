@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // Dynamic Form Component
 // ─────────────────────────────────────────────────────────────
+@use 'sass:color';
 
 $primary:       #4f46e5;
 $primary-light: #ede9fe;
@@ -18,7 +19,7 @@ $error:         #ef4444;
 
 // ── Header ────────────────────────────────────────────────────
 .form-header {
-  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%);
+  background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: 8%) 100%);
   color: #fff;
   padding: 18px 20px 16px;
   border-radius: 13px 13px 0 0;
@@ -117,7 +118,7 @@ form .border-t {
   &:hover {
     background: #f5f3ff !important;
     color: $primary !important;
-    border-color: lighten($primary, 20%) !important;
+    border-color: color.adjust($primary, $lightness: 20%) !important;
   }
 }
 
@@ -125,7 +126,7 @@ form .border-t {
 .btn-create,
 .btn-update,
 .btn-send {
-  background: linear-gradient(135deg, $primary 0%, lighten($primary, 8%) 100%) !important;
+  background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: 8%) 100%) !important;
   color: #fff !important;
   border-radius: 9px !important;
   font-size: 13px !important;

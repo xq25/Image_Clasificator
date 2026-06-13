@@ -6,7 +6,7 @@ export const ClinicalRecordRoutes: Routes = [
     component: ListComponent,
   },
   {
-    path: ':id/info',
+    path: ':id/info/:patientId',
     loadComponent: () => import('./info/info.component').then(m => m.InfoComponent),
   },
 ];
