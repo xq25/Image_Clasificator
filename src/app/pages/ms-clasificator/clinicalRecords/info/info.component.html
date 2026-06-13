@@ -50,15 +50,15 @@
         <div class="patient-meta-grid">
           <div class="meta-item">
             <span class="meta-label">Documento</span>
-            <strong class="meta-value">{{ record()?.patientInfo?.document ?? '—' }}</strong>
+            <strong class="meta-value">{{ patient()?.document ?? '—' }}</strong>
           </div>
           <div class="meta-item">
             <span class="meta-label">Sexo</span>
-            <strong class="meta-value">{{ formatSex(record()?.patientInfo?.sex) }}</strong>
+            <strong class="meta-value">{{ formatSex(patient()?.sex) }}</strong>
           </div>
           <div class="meta-item">
             <span class="meta-label">Fecha de nacimiento</span>
-            <strong class="meta-value">{{ formatDob(record()?.patientInfo?.dob) }}</strong>
+            <strong class="meta-value">{{ formatDob(patient()?.dob) }}</strong>
           </div>
         </div>
 
@@ -83,7 +83,7 @@
               <mat-card class="section-card cardWithShadow">
                 <div class="section-header">
                   <div class="section-icon"><mat-icon>biotech</mat-icon></div>
-                  <h3>Datos primitivos</h3>
+                  <h3>Datos del paciente</h3>
                 </div>
 
                 @if (datums().length === 0) {
@@ -128,7 +128,7 @@
                 <div class="section-header">
                   <div class="section-icon"><mat-icon>image_search</mat-icon></div>
                   <h3>Imágenes médicas</h3>
-                  @if (images().length > 3) {
+                  @if (images().length > 2) {
                     <button mat-button color="primary" class="see-all-btn">Ver todas</button>
                   }
                 </div>
@@ -170,8 +170,8 @@
                     @if (mainDiagnosis()) {
                       <p class="diag-section-label">Diagnóstico principal</p>
                       <div class="diag-main-row">
-                        <span class="diag-name">{{ mainDiagnosis()!.medicalDiagnostic?.diagnosticName ?? '—' }}</span>
-                        <span class="diag-code-badge">{{ mainDiagnosis()!.medicalDiagnostic?.diagnosticCode }}</span>
+                        <span class="diag-name">{{ mainDiagnosis()!.medicalDiagnostic.diagnosticName }}</span>
+                        <span class="diag-code-badge">{{ mainDiagnosis()!.medicalDiagnostic.diagnosticCode }}</span>
                       </div>
                     }
                     @if (secondaryDiagnoses().length > 0) {
@@ -179,35 +179,14 @@
                       <div class="diag-chips-row">
                         @for (d of secondaryDiagnoses(); track d.id) {
                           <span class="diag-chip">
-                            {{ d.medicalDiagnostic?.diagnosticName }}
-                            <span class="diag-chip__code">{{ d.medicalDiagnostic?.diagnosticCode }}</span>
+                            {{ d.medicalDiagnostic.diagnosticName }}
+                            <span class="diag-chip__code">{{ d.medicalDiagnostic.diagnosticCode }}</span>
                           </span>
                         }
                       </div>
                     }
                   </div>
                 }
-              </mat-card>
-
-              <!-- Observaciones -->
-              <mat-card class="section-card cardWithShadow">
-                <div class="section-header">
-                  <div class="section-icon"><mat-icon>notes</mat-icon></div>
-                  <h3>Observaciones</h3>
-                </div>
-                <p class="observations-text">{{ record()?.chiefComplaint ?? '—' }}</p>
-
-                <mat-divider class="section-divider"></mat-divider>
-
-                <div class="record-footer-row">
-                  <div class="footer-item">
-                    <mat-icon>event</mat-icon>
-                    <div>
-                      <p class="footer-label">Fecha de diagnóstico</p>
-                      <p class="footer-value">{{ formatVisitDate(record()?.visitDate) }}</p>
-                    </div>
-                  </div>
-                </div>
               </mat-card>
 
             </div>
@@ -266,8 +245,8 @@
                   <div class="diagnosis-row">
                     <div class="diag-index">{{ i + 1 }}</div>
                     <div class="diag-row__content">
-                      <p class="diag-row__name">{{ d.medicalDiagnostic?.diagnosticName ?? '—' }}</p>
-                      <p class="diag-row__code">Código: {{ d.medicalDiagnostic?.diagnosticCode ?? '—' }}</p>
+                      <p class="diag-row__name">{{ d.medicalDiagnostic.diagnosticName }}</p>
+                      <p class="diag-row__code">Código: {{ d.medicalDiagnostic.diagnosticCode }}</p>
                     </div>
                     <span [class]="i === 0 ? 'type-badge type-badge--main' : 'type-badge type-badge--secondary'">
                       {{ i === 0 ? 'Principal' : 'Secundario' }}
@@ -276,22 +255,6 @@
                 }
               </div>
             }
-          </mat-card>
-        </div>
-      </mat-tab>
-
-      <!-- ── Tab 4: Historial ──────────────────────────────────── -->
-      <mat-tab label="Historial de modificaciones">
-        <div class="tab-body">
-          <mat-card class="section-card cardWithShadow">
-            <div class="section-header">
-              <div class="section-icon"><mat-icon>history</mat-icon></div>
-              <h3>Historial de modificaciones</h3>
-            </div>
-            <div class="empty-section">
-              <mat-icon>history</mat-icon>
-              <p>Funcionalidad en desarrollo</p>
-            </div>
           </mat-card>
         </div>
       </mat-tab>

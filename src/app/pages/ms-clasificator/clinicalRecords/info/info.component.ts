@@ -54,13 +54,13 @@ export class InfoComponent implements OnInit {
   });
 
   patientDisplayId = computed(() => {
-    const id = this.record()?.patientInfo?.id;
+    const id = this.patient()?.id;
     return id ? `PAC-${String(id).padStart(6, '0')}` : '—';
   });
 
   mainDiagnosis      = computed(() => this.diagnoses()[0] ?? null);
   secondaryDiagnoses = computed(() => this.diagnoses().slice(1));
-  previewImages      = computed(() => this.images().slice(0, 3));
+  previewImages      = computed(() => this.images().slice(0, 2));
 
   datumColumns = ['tipo', 'valor', 'tipoDato'];
 
@@ -75,35 +75,29 @@ export class InfoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.error.set(true); this.loading.set(false); return; }
-    this.loadAll(id);
+    const id        = Number(this.route.snapshot.paramMap.get('id'));
+    const patientId = Number(this.route.snapshot.paramMap.get('patientId'));
+    if (!id || !patientId) { this.error.set(true); this.loading.set(false); return; }
+    this.loadAll(id, patientId);
   }
 
-  private loadAll(recordId: number): void {
-    this.clinicalRecordService.findById(recordId).subscribe({
-      next: (res) => {
-        const record = res.data ?? null;
+  private loadAll(recordId: number, patientId: number): void {
+    forkJoin([
+      this.clinicalRecordService.findById(recordId),
+      this.patientService.findById(patientId),
+      this.patientDatumService.findByClinicalRecordId(recordId),
+      this.medicalImageService.findByClinicalRecord(recordId),
+      this.diagnosisService.findByClinicalRecordId(recordId),
+    ]).subscribe({
+      next: ([recRes, patRes, datRes, imgRes, diagRes]) => {
+        const record = recRes.data ?? null;
         if (!record) { this.error.set(true); this.loading.set(false); return; }
         this.record.set(record);
-
-        const patientId = record.patientInfo?.id!;
-
-        forkJoin([
-          this.patientService.findById(patientId),
-          this.patientDatumService.findByClinicalRecordId(recordId),
-          this.medicalImageService.findByClinicalRecord(recordId),
-          this.diagnosisService.findByClinicalRecordId(recordId),
-        ]).subscribe({
-          next: ([patRes, datRes, imgRes, diagRes]) => {
-            this.patient.set(patRes.data ?? null);
-            this.datums.set(datRes.data ?? []);
-            this.images.set(imgRes.data ?? []);
-            this.diagnoses.set(diagRes.data ?? []);
-            this.loading.set(false);
-          },
-          error: () => this.loading.set(false),
-        });
+        this.patient.set(patRes.data ?? null);
+        this.datums.set(datRes.data ?? []);
+        this.images.set(imgRes.data ?? []);
+        this.diagnoses.set(diagRes.data ?? []);
+        this.loading.set(false);
       },
       error: () => { this.error.set(true); this.loading.set(false); },
     });
@@ -148,7 +142,7 @@ export class InfoComponent implements OnInit {
   }
 
   goBack(): void {
-    const doc = this.record()?.patientInfo?.document;
+    const doc = this.patient()?.document ?? this.record()?.patientInfo?.document;
     if (doc) this.router.navigate(['/clinical-records/patient', doc, 'records']);
     else     this.router.navigate(['/clinical-records']);
   }
