@@ -343,7 +343,7 @@ export class ListComponent implements OnInit {
 
   goToRecord(): void {
     const id = this.currentRecordId();
-    if (id != null) this.router.navigate([`/clinical-records/${id}`]);
+    if (id != null) this.router.navigate(['/clinical-records', id, 'info']);
   }
 
   // ── Toast ─────────────────────────────────────────────────────

@@ -1,0 +1,303 @@
+<div class="info-root">
+
+  <!-- ── LOADING ─────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="full-center">
+      <mat-spinner diameter="52"></mat-spinner>
+      <p class="loading-text">Cargando información del registro...</p>
+    </div>
+  }
+
+  <!-- ── ERROR ───────────────────────────────────────────────────── -->
+  @else if (error()) {
+    <div class="full-center">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p class="error-text">No se pudo cargar el registro clínico.</p>
+      <button mat-stroked-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon> Volver
+      </button>
+    </div>
+  }
+
+  <!-- ── CONTENT ─────────────────────────────────────────────────── -->
+  @else {
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <button mat-icon-button class="back-btn" (click)="goBack()" title="Volver">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="page-header__icon">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <div class="page-header__text">
+        <h1 class="record-title">Registro clínico {{ formatRecordId(record()?.id) }}</h1>
+        <p class="record-date">{{ formatVisitDate(record()?.visitDate) }}</p>
+      </div>
+    </div>
+
+    <!-- PATIENT CARD -->
+    <mat-card class="patient-card cardWithShadow">
+      <div class="patient-card__inner">
+
+        <div class="patient-avatar">{{ patientInitials() }}</div>
+
+        <div class="patient-main">
+          <h2 class="patient-name">{{ patient()?.userInfo?.name ?? '—' }}</h2>
+          <p class="patient-pid">ID: {{ patientDisplayId() }}</p>
+        </div>
+
+        <div class="patient-meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">Documento</span>
+            <strong class="meta-value">{{ record()?.patientInfo?.document ?? '—' }}</strong>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Sexo</span>
+            <strong class="meta-value">{{ formatSex(record()?.patientInfo?.sex) }}</strong>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Fecha de nacimiento</span>
+            <strong class="meta-value">{{ formatDob(record()?.patientInfo?.dob) }}</strong>
+          </div>
+        </div>
+
+        <button mat-stroked-button class="btn-report">
+          <mat-icon>download</mat-icon>
+          Descargar reporte
+        </button>
+
+      </div>
+    </mat-card>
+
+    <!-- TABS -->
+    <mat-tab-group class="record-tabs" animationDuration="200ms" [disableRipple]="false">
+
+      <!-- ── Tab 1: Datos clínicos ───────────────────────────────── -->
+      <mat-tab label="Datos clínicos">
+        <div class="tab-body">
+          <div class="tab-grid">
+
+            <!-- LEFT: datos primitivos -->
+            <div class="tab-left">
+              <mat-card class="section-card cardWithShadow">
+                <div class="section-header">
+                  <div class="section-icon"><mat-icon>biotech</mat-icon></div>
+                  <h3>Datos primitivos</h3>
+                </div>
+
+                @if (datums().length === 0) {
+                  <div class="empty-section">
+                    <mat-icon>table_rows</mat-icon>
+                    <p>Sin datos primitivos registrados</p>
+                  </div>
+                } @else {
+                  <div class="table-wrapper">
+                    <table mat-table [dataSource]="datums()" class="datum-table">
+
+                      <ng-container matColumnDef="tipo">
+                        <th mat-header-cell *matHeaderCellDef>Tipo de dato</th>
+                        <td mat-cell *matCellDef="let d">{{ d.primitiveDatum?.name ?? '—' }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="valor">
+                        <th mat-header-cell *matHeaderCellDef>Valor</th>
+                        <td mat-cell *matCellDef="let d" class="valor-cell">{{ d.description ?? '—' }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="tipoDato">
+                        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                        <td mat-cell *matCellDef="let d" class="type-cell">
+                          {{ formatDatumType(d.primitiveDatum?.type) }}
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="datumColumns; sticky: true"></tr>
+                      <tr mat-row *matRowDef="let row; columns: datumColumns;"></tr>
+                    </table>
+                  </div>
+                }
+              </mat-card>
+            </div>
+
+            <!-- RIGHT: imágenes + diagnósticos + observaciones -->
+            <div class="tab-right">
+
+              <!-- Imágenes médicas -->
+              <mat-card class="section-card cardWithShadow">
+                <div class="section-header">
+                  <div class="section-icon"><mat-icon>image_search</mat-icon></div>
+                  <h3>Imágenes médicas</h3>
+                  @if (images().length > 3) {
+                    <button mat-button color="primary" class="see-all-btn">Ver todas</button>
+                  }
+                </div>
+
+                @if (images().length === 0) {
+                  <div class="empty-section">
+                    <mat-icon>hide_image</mat-icon>
+                    <p>Sin imágenes médicas</p>
+                  </div>
+                } @else {
+                  <div class="image-grid">
+                    @for (img of previewImages(); track img.id) {
+                      <div class="image-thumb">
+                        <div class="image-thumb__bg">
+                          <mat-icon>image</mat-icon>
+                        </div>
+                        <p class="image-thumb__name">{{ img.medicalImageTypeName ?? 'Imagen médica' }}</p>
+                        <p class="image-thumb__date">{{ formatVisitDate(img.createdAt) }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+              </mat-card>
+
+              <!-- Diagnósticos -->
+              <mat-card class="section-card cardWithShadow">
+                <div class="section-header">
+                  <div class="section-icon"><mat-icon>medical_information</mat-icon></div>
+                  <h3>Diagnósticos</h3>
+                </div>
+
+                @if (diagnoses().length === 0) {
+                  <div class="empty-section">
+                    <mat-icon>info_outline</mat-icon>
+                    <p>Sin diagnósticos registrados</p>
+                  </div>
+                } @else {
+                  <div class="diagnosis-block">
+                    @if (mainDiagnosis()) {
+                      <p class="diag-section-label">Diagnóstico principal</p>
+                      <div class="diag-main-row">
+                        <span class="diag-name">{{ mainDiagnosis()!.medicalDiagnostic?.diagnosticName ?? '—' }}</span>
+                        <span class="diag-code-badge">{{ mainDiagnosis()!.medicalDiagnostic?.diagnosticCode }}</span>
+                      </div>
+                    }
+                    @if (secondaryDiagnoses().length > 0) {
+                      <p class="diag-section-label" style="margin-top: 12px">Diagnósticos secundarios</p>
+                      <div class="diag-chips-row">
+                        @for (d of secondaryDiagnoses(); track d.id) {
+                          <span class="diag-chip">
+                            {{ d.medicalDiagnostic?.diagnosticName }}
+                            <span class="diag-chip__code">{{ d.medicalDiagnostic?.diagnosticCode }}</span>
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </mat-card>
+
+              <!-- Observaciones -->
+              <mat-card class="section-card cardWithShadow">
+                <div class="section-header">
+                  <div class="section-icon"><mat-icon>notes</mat-icon></div>
+                  <h3>Observaciones</h3>
+                </div>
+                <p class="observations-text">{{ record()?.chiefComplaint ?? '—' }}</p>
+
+                <mat-divider class="section-divider"></mat-divider>
+
+                <div class="record-footer-row">
+                  <div class="footer-item">
+                    <mat-icon>event</mat-icon>
+                    <div>
+                      <p class="footer-label">Fecha de diagnóstico</p>
+                      <p class="footer-value">{{ formatVisitDate(record()?.visitDate) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </mat-card>
+
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- ── Tab 2: Imágenes médicas ────────────────────────────── -->
+      <mat-tab label="Imágenes médicas">
+        <div class="tab-body">
+          <mat-card class="section-card cardWithShadow">
+            <div class="section-header">
+              <div class="section-icon"><mat-icon>image_search</mat-icon></div>
+              <h3>Todas las imágenes médicas</h3>
+              <span class="section-badge">{{ images().length }}</span>
+            </div>
+            @if (images().length === 0) {
+              <div class="empty-section">
+                <mat-icon>hide_image</mat-icon>
+                <p>Sin imágenes médicas registradas</p>
+              </div>
+            } @else {
+              <div class="image-grid image-grid--full">
+                @for (img of images(); track img.id) {
+                  <div class="image-thumb">
+                    <div class="image-thumb__bg">
+                      <mat-icon>image</mat-icon>
+                    </div>
+                    <p class="image-thumb__name">{{ img.medicalImageTypeName ?? 'Imagen médica' }}</p>
+                    <p class="image-thumb__date">{{ formatVisitDate(img.createdAt) }}</p>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- ── Tab 3: Diagnósticos ───────────────────────────────── -->
+      <mat-tab label="Diagnósticos">
+        <div class="tab-body">
+          <mat-card class="section-card cardWithShadow">
+            <div class="section-header">
+              <div class="section-icon"><mat-icon>medical_information</mat-icon></div>
+              <h3>Todos los diagnósticos</h3>
+              <span class="section-badge">{{ diagnoses().length }}</span>
+            </div>
+            @if (diagnoses().length === 0) {
+              <div class="empty-section">
+                <mat-icon>info_outline</mat-icon>
+                <p>Sin diagnósticos registrados</p>
+              </div>
+            } @else {
+              <div class="diagnosis-list">
+                @for (d of diagnoses(); track d.id; let i = $index) {
+                  <div class="diagnosis-row">
+                    <div class="diag-index">{{ i + 1 }}</div>
+                    <div class="diag-row__content">
+                      <p class="diag-row__name">{{ d.medicalDiagnostic?.diagnosticName ?? '—' }}</p>
+                      <p class="diag-row__code">Código: {{ d.medicalDiagnostic?.diagnosticCode ?? '—' }}</p>
+                    </div>
+                    <span [class]="i === 0 ? 'type-badge type-badge--main' : 'type-badge type-badge--secondary'">
+                      {{ i === 0 ? 'Principal' : 'Secundario' }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- ── Tab 4: Historial ──────────────────────────────────── -->
+      <mat-tab label="Historial de modificaciones">
+        <div class="tab-body">
+          <mat-card class="section-card cardWithShadow">
+            <div class="section-header">
+              <div class="section-icon"><mat-icon>history</mat-icon></div>
+              <h3>Historial de modificaciones</h3>
+            </div>
+            <div class="empty-section">
+              <mat-icon>history</mat-icon>
+              <p>Funcionalidad en desarrollo</p>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+
+  }
+
+</div>
