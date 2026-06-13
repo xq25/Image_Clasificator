@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DaignosticCategoryDataset, DaignosticCategoryDatasetExtended, ApiResponse } from '@models/ms-clasificator';
+import { ApiResponse } from '@models/ms-clasificator';
+import { DaignosticCategoryDataset, DaignosticCategoryDatasetExtended } from '@models/ms-clasificator/DiagnosticCategoryDataset/DiagnosticCategoryDataset';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/diagnostic-category-datasets`;
 

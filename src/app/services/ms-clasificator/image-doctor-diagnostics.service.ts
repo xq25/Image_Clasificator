@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ImageDoctorDiagnostics, ImageDoctorDiagnosticsExtended, ApiResponse } from '@models/ms-clasificator';
+import { ApiResponse } from '@models/ms-clasificator';
+import { ImageDoctorDiagnostics, ImageDoctorDiagnosticsExtended } from '@models/ms-clasificator/ImageDoctorDiagnostics/ImageDoctorDiagnostics';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/image-doctor-diagnostics`;
 
