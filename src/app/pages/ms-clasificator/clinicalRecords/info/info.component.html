@@ -62,10 +62,16 @@
           </div>
         </div>
 
-        <button mat-stroked-button class="btn-report">
-          <mat-icon>download</mat-icon>
-          Descargar reporte
-        </button>
+        <div class="header-actions">
+          <button mat-stroked-button class="btn-report">
+            <mat-icon>download</mat-icon>
+            Descargar reporte
+          </button>
+          <button mat-flat-button color="primary" (click)="goUpload()">
+            <mat-icon>upload</mat-icon>
+            Cargar datos
+          </button>
+        </div>
 
       </div>
     </mat-card>

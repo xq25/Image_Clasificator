@@ -9,4 +9,8 @@ export const ClinicalRecordRoutes: Routes = [
     path: ':id/info/:patientId',
     loadComponent: () => import('./info/info.component').then(m => m.InfoComponent),
   },
+  {
+    path: ':id/upload/:patientId',
+    loadComponent: () => import('./upload/upload.component').then(m => m.UploadComponent),
+  },
 ];

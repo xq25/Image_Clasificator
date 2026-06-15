@@ -1,0 +1,545 @@
+<div class="create-dataset-root" [class.wide]="currentStep() === 3">
+
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">{{ toast()!.message }}</div>
+  }
+
+  <!-- HEADER (oculto en step 3 para dar más espacio) -->
+  @if (currentStep() !== 3) {
+    <div class="page-header">
+      <button mat-icon-button (click)="goBack()" class="btn-back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1 class="page-title">Crear dataset</h1>
+        <p class="page-sub">Configura el dataset paso a paso.</p>
+      </div>
+    </div>
+  }
+
+  @if (loadingCatalogs()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando catálogos...</p>
+    </div>
+  } @else {
+
+    <!-- STEPPER -->
+    <div class="stepper-header">
+      @for (step of [1, 2, 3, 4]; track step) {
+        <div class="step-item" [class.active]="currentStep() === step" [class.done]="currentStep() > step">
+          <div class="step-circle">
+            @if (currentStep() > step) {
+              <mat-icon class="step-check">check</mat-icon>
+            } @else {
+              <span>{{ step }}</span>
+            }
+          </div>
+          <span class="step-label">
+            @if (step === 1) { Información básica }
+            @else if (step === 2) { Categorías }
+            @else if (step === 3) { Vista de clasificación }
+            @else { Revisión }
+          </span>
+        </div>
+        @if (step < 4) {
+          <div class="step-connector" [class.done]="currentStep() > step"></div>
+        }
+      }
+    </div>
+
+    <!-- ══ STEP 1 ══════════════════════════════════════════════════════════════ -->
+    @if (currentStep() === 1) {
+      <form [formGroup]="form">
+        <mat-card class="cardWithShadow wizard-card">
+          <div class="step-content">
+            <div class="step-intro">
+              <mat-icon class="step-icon-big">dataset</mat-icon>
+              <div>
+                <h2 class="step-title">Información básica</h2>
+                <p class="step-desc">Define los datos principales del dataset.</p>
+              </div>
+            </div>
+            <mat-divider />
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nombre del dataset *</mat-label>
+              <input matInput formControlName="name" placeholder="Ej. Infartos – Cardiología" />
+              <mat-hint>Nombre descriptivo y único para el dataset.</mat-hint>
+              @if (form.get('name')?.invalid && form.get('name')?.touched) {
+                <mat-error>El nombre es obligatorio (mínimo 3 caracteres)</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="field-block">
+              <label class="field-label">Diagnóstico padre (CIE-10) *</label>
+              @if (selectedDiagnostic()) {
+                <div class="selected-chip">
+                  <mat-icon class="chip-icon">check_circle</mat-icon>
+                  <div class="chip-info">
+                    <span class="chip-code">{{ selectedDiagnostic()!.diagnosticCode }}</span>
+                    <span class="chip-name">{{ selectedDiagnostic()!.diagnosticName }}</span>
+                  </div>
+                  <button type="button" mat-icon-button class="chip-clear" (click)="clearDiagnostic()">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              } @else {
+                <div class="search-wrapper">
+                  <mat-icon class="search-prefix">search</mat-icon>
+                  <input class="search-input" [value]="diagnosticSearch()"
+                    (input)="onSearchChange($any($event.target).value)"
+                    placeholder="Buscar diagnóstico CIE-10..." />
+                </div>
+                @if (diagnosticSearch().length > 0 || diagnostics().length <= 20) {
+                  <div class="diagnostic-list">
+                    @if (filteredDiagnostics().length === 0) {
+                      <div class="empty-search"><mat-icon>search_off</mat-icon><span>Sin resultados</span></div>
+                    } @else {
+                      @for (d of filteredDiagnostics().slice(0, 50); track d.id) {
+                        <div class="diagnostic-item" (click)="selectDiagnostic(d)">
+                          <span class="diag-code">{{ d.diagnosticCode }}</span>
+                          <span class="diag-name">{{ d.diagnosticName }}</span>
+                          @if (d.parentDiagnostic) {
+                            <span class="diag-parent">↳ {{ d.parentDiagnostic.diagnosticName }}</span>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              }
+              @if (form.get('medicalDiagnosticId')?.invalid && form.get('medicalDiagnosticId')?.touched) {
+                <p class="field-error">Selecciona un diagnóstico CIE-10</p>
+              }
+              <p class="field-hint">Diagnóstico principal o categoría padre en CIE-10.</p>
+            </div>
+
+            <div class="field-block">
+              <label class="field-label">Área de evaluación <span class="optional-tag">Opcional</span></label>
+              <div class="areas-grid">
+                @for (area of evaluationAreas(); track area.id) {
+                  <div class="area-card" [class.selected]="selectedArea()?.id === area.id" (click)="selectArea(area)">
+                    <mat-icon class="area-icon">local_hospital</mat-icon>
+                    <div class="area-info">
+                      <span class="area-code">{{ area.codeArea }}</span>
+                      <span class="area-name">{{ area.name }}</span>
+                    </div>
+                    @if (selectedArea()?.id === area.id) {
+                      <mat-icon class="area-check">check_circle</mat-icon>
+                    }
+                  </div>
+                }
+                @if (evaluationAreas().length === 0) {
+                  <p class="no-areas">No hay áreas disponibles.</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          <mat-divider />
+          <div class="wizard-footer">
+            <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+            <button mat-flat-button color="primary" type="button"
+                    (click)="step1Next()" [disabled]="submittingStep1()">
+              @if (submittingStep1()) {
+                <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+              } @else {
+                <ng-container>Siguiente <mat-icon>arrow_forward</mat-icon></ng-container>
+              }
+            </button>
+          </div>
+        </mat-card>
+      </form>
+    }
+
+    <!-- ══ STEP 2: Categorías ══════════════════════════════════════════════════ -->
+    @if (currentStep() === 2) {
+      <div class="step2-root">
+        <div class="step2-header">
+          <div>
+            <h2 class="step2-title">Categorías del dataset</h2>
+            <p class="step2-sub">Crea de 1 a N categorías. Cada categoría puede tener uno o varios sub-diagnósticos asociados.</p>
+          </div>
+          <button mat-stroked-button color="primary" type="button" (click)="addCategory()" [disabled]="categoriesSaved()">
+            <mat-icon>add</mat-icon> Agregar categoría
+          </button>
+        </div>
+
+        @if (categoriesSaved()) {
+          <div class="info-banner success">
+            <mat-icon>check_circle</mat-icon>
+            <span>Las categorías ya fueron guardadas. Puedes continuar o volver atrás para editar el dataset.</span>
+          </div>
+        }
+
+        @if (subDiagnostics().length === 0) {
+          <div class="info-banner warn">
+            <mat-icon>info</mat-icon>
+            <span>El diagnóstico seleccionado no tiene sub-diagnósticos registrados.</span>
+          </div>
+        } @else {
+          <div class="categories-list">
+            @for (cat of categories(); track cat.numValue; let i = $index) {
+              <mat-card class="cardWithShadow category-row">
+                <div class="cat-number" [style.background]="getCategoryColor(i) + '22'" [style.color]="getCategoryColor(i)">
+                  {{ cat.numValue }}
+                </div>
+                <div class="cat-body">
+                  <label class="field-label">Sub-diagnósticos asociados *</label>
+                  <div class="chips-search-box" [class.focused]="cat.showDropdown">
+                    @for (sd of cat.selectedDiagnostics; track sd.id) {
+                      <div class="diag-chip" [style.background]="getCategoryColor(i) + '22'"
+                           [style.border-color]="getCategoryColor(i) + '66'"
+                           [style.color]="getCategoryColor(i)">
+                        <span class="chip-label">{{ sd.diagnosticCode }}</span>
+                        <button type="button" class="chip-remove" [disabled]="categoriesSaved()"
+                                (click)="removeSubDiagnostic(i, sd.id!)">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    }
+                    <input class="chips-input" [value]="cat.searchValue"
+                      [disabled]="categoriesSaved()"
+                      (input)="onCategorySearch(i, $any($event.target).value)"
+                      (focus)="openDropdown(i)"
+                      (blur)="closeDropdown(i)"
+                      placeholder="Buscar y agregar sub-diagnóstico..." />
+                    <mat-icon class="chips-search-icon">search</mat-icon>
+                  </div>
+
+                  @if (cat.showDropdown) {
+                    <div class="subdiag-dropdown">
+                      @if (cat.filteredOptions.length === 0) {
+                        <div class="empty-search"><mat-icon>search_off</mat-icon><span>Sin resultados</span></div>
+                      } @else {
+                        @for (sd of cat.filteredOptions.slice(0, 30); track sd.id) {
+                          <div class="subdiag-option" (mousedown)="addSubDiagnosticToCategory(i, sd)">
+                            <span class="sub-code">{{ sd.diagnosticCode }}</span>
+                            <span class="sub-name">{{ sd.diagnosticName }}</span>
+                          </div>
+                        }
+                      }
+                    </div>
+                  }
+
+                  @if (cat.selectedDiagnostics.length === 0 && !categoriesSaved()) {
+                    <p class="field-error">Agrega al menos un sub-diagnóstico</p>
+                  }
+                </div>
+
+                <button mat-icon-button class="btn-delete-cat" type="button"
+                        [disabled]="categories().length === 1 || categoriesSaved()"
+                        (click)="removeCategory(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card>
+            }
+          </div>
+          <p class="total-cats">Total de categorías: {{ categories().length }}</p>
+        }
+
+        <div class="wizard-footer flat">
+          <button mat-stroked-button type="button" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon> Anterior
+          </button>
+          <div class="footer-right">
+            <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+            <button mat-flat-button color="primary" type="button"
+                    (click)="step2Next()"
+                    [disabled]="submittingStep2() || subDiagnostics().length === 0">
+              @if (submittingStep2()) {
+                <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+              } @else {
+                <ng-container>Siguiente <mat-icon>arrow_forward</mat-icon></ng-container>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ══ STEP 3: Vista de clasificación ════════════════════════════════════ -->
+    @if (currentStep() === 3) {
+      <div class="preview-layout">
+
+        <!-- Panel principal -->
+        <div class="preview-main">
+          <div class="preview-main-header">
+            <div>
+              <h2 class="preview-title">Vista de clasificación</h2>
+              <p class="preview-sub">Arrastra la imagen hacia la categoría que corresponda.</p>
+            </div>
+          </div>
+
+          <!-- ── MODO TINDER (≤ 4 categorías) ──────────────────────────────── -->
+          @if (tinderMode()) {
+            <div class="tinder-layout">
+
+              <!-- Arriba -->
+              @if (tinderSlots()[0]; as slot) {
+                <div class="tinder-area tinder-top">
+                  <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
+                    <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                      <mat-icon>{{ slot.icon }}</mat-icon>
+                    </div>
+                    <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
+                    <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Fila central: Izquierda + Imagen + Derecha -->
+              <div class="tinder-middle-row">
+                @if (tinderSlots()[1]; as slot) {
+                  <div class="tinder-area tinder-left">
+                    <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
+                      <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                        <mat-icon>{{ slot.icon }}</mat-icon>
+                      </div>
+                      <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
+                      <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Imagen central -->
+                <div class="preview-image-area">
+                  <div class="img-counter-badge">– / –</div>
+                  <div class="img-placeholder">
+                    <mat-icon class="img-placeholder-icon">image_search</mat-icon>
+                    <span>Previsualización</span>
+                  </div>
+                  <div class="img-info-btn"><mat-icon>info</mat-icon></div>
+                </div>
+
+                @if (tinderSlots()[2]; as slot) {
+                  <div class="tinder-area tinder-right">
+                    <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
+                      <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                        <mat-icon>{{ slot.icon }}</mat-icon>
+                      </div>
+                      <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
+                      <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Abajo -->
+              @if (tinderSlots()[3]; as slot) {
+                <div class="tinder-area tinder-bottom">
+                  <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
+                    <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                      <mat-icon>{{ slot.icon }}</mat-icon>
+                    </div>
+                    <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
+                    <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                    @if (slot.isLast) {
+                      <span class="default-badge">Por defecto</span>
+                    }
+                  </div>
+                </div>
+              }
+
+            </div>
+          }
+
+          <!-- ── MODO BOTONES (> 4 categorías) ──────────────────────────────── -->
+          @if (!tinderMode()) {
+            <div class="button-layout">
+              <div class="preview-image-area centered">
+                <div class="img-counter-badge">– / –</div>
+                <div class="img-placeholder">
+                  <mat-icon class="img-placeholder-icon">image_search</mat-icon>
+                  <span>Previsualización</span>
+                </div>
+                <div class="img-info-btn"><mat-icon>info</mat-icon></div>
+              </div>
+              <p class="btn-layout-hint">Arrastra hacia la categoría que corresponda.</p>
+
+              <!-- Chips de categorías -->
+              <div class="cats-chips-label">
+                <span>Categorías ({{ categories().length }})</span>
+                <mat-icon class="cats-info-icon">info_outline</mat-icon>
+              </div>
+              <div class="cats-chips-row">
+                @for (slot of buttonSlots(); track slot.cat.numValue) {
+                  <div class="cat-btn-chip">
+                    <span class="cat-btn-dot" [style.background]="slot.color"></span>
+                    <div class="cat-btn-info">
+                      <span class="cat-btn-name">{{ slot.displayName }}</span>
+                      <span class="cat-btn-codes">{{ slot.codeCount }} código(s) CIE-10</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Progreso -->
+          <div class="preview-progress">
+            <span class="progress-text">0 de 0 imágenes clasificadas</span>
+            <span class="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width: 0%"></div></div>
+
+          <!-- Footer preview -->
+          <div class="preview-footer">
+            <button mat-stroked-button type="button" (click)="goBack()">
+              <mat-icon>arrow_back</mat-icon> Anterior
+            </button>
+            <div class="footer-right">
+              <button mat-stroked-button type="button" (click)="step3Next()">Saltar por ahora</button>
+              <button mat-flat-button color="primary" type="button" (click)="step3Next()">
+                Siguiente <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar derecho -->
+        <div class="preview-sidebar">
+          <mat-card class="cardWithShadow sidebar-card">
+            <h3 class="sidebar-title">Resumen del dataset</h3>
+            <mat-divider />
+
+            <div class="sidebar-rows">
+              <div class="sidebar-row">
+                <span class="sb-label">Nombre</span>
+                <span class="sb-value">{{ form.get('name')?.value }}</span>
+              </div>
+              @if (selectedArea()) {
+                <div class="sidebar-row">
+                  <span class="sb-label">Área de evaluación</span>
+                  <span class="sb-value accent">{{ selectedArea()!.name }}</span>
+                </div>
+              }
+              <div class="sidebar-row">
+                <span class="sb-label">Diagnóstico padre (CIE-10)</span>
+                <span class="sb-value accent small">
+                  {{ selectedDiagnostic()?.diagnosticCode }} – {{ selectedDiagnostic()?.diagnosticName }}
+                </span>
+              </div>
+              <mat-divider />
+              <div class="sidebar-row">
+                <span class="sb-label">Total de categorías</span>
+                <span class="sb-value num">{{ categories().length }}</span>
+              </div>
+              <div class="sidebar-row">
+                <span class="sb-label">Total de códigos CIE-10</span>
+                <span class="sb-value num">{{ totalCodes() }}</span>
+              </div>
+              <div class="sidebar-row">
+                <span class="sb-label">Imágenes totales</span>
+                <span class="sb-value num">—</span>
+              </div>
+              <div class="sidebar-row">
+                <span class="sb-label">Imágenes clasificadas</span>
+                <span class="sb-value num">—</span>
+              </div>
+            </div>
+
+            <mat-divider />
+
+            <!-- Lista de categorías -->
+            <div class="sidebar-cats-header">
+              <h4 class="sidebar-cats-title">Categorías ({{ categories().length }})</h4>
+              <button mat-icon-button class="edit-cats-btn" (click)="currentStep.set(2)" title="Editar categorías">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+
+            <div class="sidebar-cats-list">
+              @for (slot of buttonSlots(); track slot.cat.numValue) {
+                <div class="sidebar-cat-row">
+                  <span class="sb-cat-dot" [style.background]="slot.color"></span>
+                  <span class="sb-cat-name">{{ slot.displayName }}</span>
+                  <span class="sb-cat-codes">{{ slot.codeCount }} código(s)</span>
+                </div>
+              }
+            </div>
+          </mat-card>
+        </div>
+
+      </div>
+    }
+
+    <!-- ══ STEP 4: Revisión final ════════════════════════════════════════════ -->
+    @if (currentStep() === 4) {
+      <mat-card class="cardWithShadow wizard-card">
+        <div class="step-content">
+          <div class="step-intro">
+            <mat-icon class="step-icon-big done-icon">check_circle</mat-icon>
+            <div>
+              <h2 class="step-title">Dataset creado exitosamente</h2>
+              <p class="step-desc">El dataset y sus categorías han sido registrados correctamente.</p>
+            </div>
+          </div>
+          <mat-divider />
+          <div class="review-grid">
+            <div class="review-item">
+              <mat-icon>label</mat-icon>
+              <div>
+                <span class="review-label">Nombre</span>
+                <span class="review-value">{{ form.get('name')?.value }}</span>
+              </div>
+            </div>
+            <div class="review-item">
+              <mat-icon>medical_services</mat-icon>
+              <div>
+                <span class="review-label">Diagnóstico padre</span>
+                <span class="review-value">{{ selectedDiagnostic()?.diagnosticCode }} — {{ selectedDiagnostic()?.diagnosticName }}</span>
+              </div>
+            </div>
+            @if (selectedArea()) {
+              <div class="review-item">
+                <mat-icon>area_chart</mat-icon>
+                <div>
+                  <span class="review-label">Área de evaluación</span>
+                  <span class="review-value">{{ selectedArea()!.codeArea }} — {{ selectedArea()!.name }}</span>
+                </div>
+              </div>
+            }
+            <div class="review-item">
+              <mat-icon>category</mat-icon>
+              <div>
+                <span class="review-label">Categorías</span>
+                <span class="review-value">{{ categories().length }} categoría(s) · {{ totalCodes() }} código(s) CIE-10</span>
+              </div>
+            </div>
+          </div>
+          <div class="review-cats">
+            @for (slot of buttonSlots(); track slot.cat.numValue) {
+              <div class="review-cat-row">
+                <span class="review-cat-num" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                  {{ slot.cat.numValue }}
+                </span>
+                <span class="review-cat-name">{{ slot.displayName }}</span>
+                <div class="review-chips">
+                  @for (sd of slot.cat.selectedDiagnostics; track sd.id) {
+                    <span class="review-chip" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                      {{ sd.diagnosticCode }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        <mat-divider />
+        <div class="wizard-footer">
+          <button mat-stroked-button type="button" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon> Anterior
+          </button>
+          <button mat-flat-button color="primary" type="button" (click)="finish()">
+            <mat-icon>check</mat-icon> Finalizar
+          </button>
+        </div>
+      </mat-card>
+    }
+
+  }
+
+</div>

@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Dataset, DatasetExtended, ApiResponse } from '@models/ms-clasificator';
+import { ApiResponse } from '@models/ms-clasificator';
+import { Dataset, DatasetExtended } from '@app/models/ms-clasificator/Dataset/Dataset';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/datasets`;
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectorRef, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,9 @@ import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
 import { EvaluationArea } from '@app/models/ms-clasificator';
 import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
+import { DoctorAreaService } from '@app/services/ms-clasificator/doctor-area.service';
+import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
+import { Doctor } from '@app/models/ms-clasificator/Doctor/Doctor';
 
 interface Toast {
   message: string;
@@ -48,16 +51,34 @@ export class ListComponent implements OnInit {
   panelOpen              = signal(false);
   panelLoading           = signal(false);
   isViewMode             = signal(false);
+  isDoctorsMode          = signal(false);
   formConfig             = signal<DynamicFormConfig | null>(null);
   detailConfig           = signal<EntityDetailConfig | null>(null);
   currentAreaId          = signal<number | null>(null);
   toast                  = signal<Toast | null>(null);
 
+  // ─── DOCTORS PANEL STATE ──────────────────────────────────────────────────
+  managedArea            = signal<EvaluationArea | null>(null);
+  areaDoctors            = signal<Doctor[]>([]);
+  doctorsLoading         = signal(false);
+  doctorsPage            = signal(0);
+  readonly DOCTORS_PAGE_SIZE = 5;
+
+  pagedDoctors = computed(() => {
+    const start = this.doctorsPage() * this.DOCTORS_PAGE_SIZE;
+    return this.areaDoctors().slice(start, start + this.DOCTORS_PAGE_SIZE);
+  });
+
+  totalDoctorsPages = computed(() =>
+    Math.ceil(this.areaDoctors().length / this.DOCTORS_PAGE_SIZE)
+  );
+
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
-    { key: 'id',       label: 'ID'     },
-    { key: 'codeArea', label: 'Código' },
-    { key: 'name',     label: 'Nombre' },
+    { key: 'id',           label: 'ID'                  },
+    { key: 'codeArea',     label: 'Código'              },
+    { key: 'name',         label: 'Nombre'              },
+    { key: 'doctorsCount', label: 'Doctores asociados'  },
   ];
 
   actionButtons: TableAction[] = [
@@ -70,6 +91,8 @@ export class ListComponent implements OnInit {
   constructor(
     private router: Router,
     private evaluationAreaService: EvaluationAreaService,
+    private doctorAreaService: DoctorAreaService,
+    private doctorService: DoctorService,
   ) {}
 
   ngOnInit(): void {
@@ -100,7 +123,7 @@ export class ListComponent implements OnInit {
       case 'view':               this.openView(row.id);   break;
       case 'edit':               this.openEdit(row.id);   break;
       case 'delete':             this.delete(row.id);     break;
-      case 'manageDoctorInArea': this.router.navigate([`${this.initialPath}/manage-doctor-in-area/${row.id}`]); break;
+      case 'manageDoctorInArea': this.openManageDoctors(row); break;
     }
   }
 
@@ -168,13 +191,54 @@ export class ListComponent implements OnInit {
     });
   }
 
+  openManageDoctors(area: EvaluationArea): void {
+    this.panelOpen.set(true);
+    this.isViewMode.set(false);
+    this.isDoctorsMode.set(true);
+    this.managedArea.set(area);
+    this.doctorsPage.set(0);
+    this.areaDoctors.set([]);
+    this.doctorsLoading.set(true);
+
+    this.doctorAreaService.findByEvaluationAreaId(area.id!).subscribe({
+      next: (res) => {
+        const relations = res.data ?? [];
+        const doctorIds = relations.map(r => r.doctorId).filter((id): id is number => !!id);
+
+        if (doctorIds.length === 0) {
+          this.areaDoctors.set([]);
+          this.doctorsLoading.set(false);
+          return;
+        }
+
+        this.doctorService.findAll().subscribe({
+          next: (doctorsRes) => {
+            const allDoctors = doctorsRes.data ?? [];
+            const filtered = allDoctors.filter(d => doctorIds.includes(d.id!));
+            this.areaDoctors.set(filtered);
+            this.doctorsLoading.set(false);
+          },
+          error: () => this.doctorsLoading.set(false),
+        });
+      },
+      error: () => {
+        this.showToast('Error al cargar doctores del área', 'error');
+        this.doctorsLoading.set(false);
+      },
+    });
+  }
+
   closePanel(): void {
     this.panelOpen.set(false);
     this.isViewMode.set(false);
+    this.isDoctorsMode.set(false);
     this.formConfig.set(null);
     this.detailConfig.set(null);
     this.currentAreaId.set(null);
     this.panelLoading.set(false);
+    this.managedArea.set(null);
+    this.areaDoctors.set([]);
+    this.doctorsPage.set(0);
   }
 
   // ─── FORM BUILDER ─────────────────────────────────────────────────────────────

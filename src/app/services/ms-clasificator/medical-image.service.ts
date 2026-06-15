@@ -42,12 +42,16 @@ export class MedicalImageService {
   upload(
     file: File,
     medicalImageTypeId: number,
-    folder = 'diagnostics'
+    folder = 'diagnostics',
+    clinicalRecordId?: number
   ): Observable<ApiResponse<MedicalImgExtended>> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('medicalImageTypeId', String(medicalImageTypeId));
     formData.append('folder', folder);
+    if (clinicalRecordId != null) {
+      formData.append('clinicalRecordId', String(clinicalRecordId));
+    }
     return this.http.post<ApiResponse<MedicalImgExtended>>(`${apiUrl}/upload`, formData);
   }
 
