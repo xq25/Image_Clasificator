@@ -1,0 +1,293 @@
+<div class="list-root">
+
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">{{ toast()!.message }}</div>
+  }
+
+  <div class="split-layout" [class.panel-open]="panelOpen()">
+
+    <!-- ══ COLUMNA IZQUIERDA ══════════════════════════════════════════════════ -->
+    <div class="table-column">
+
+      <div class="sticky-header">
+        <mat-card class="cardWithShadow">
+          <div class="header-bar">
+            <div>
+              <h2 class="header-title">Datos del Sistema</h2>
+              <p class="header-sub">Gestión de tipos de datos clínicos e imágenes médicas</p>
+            </div>
+            <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new">
+              <mat-icon>add</mat-icon>
+              Nuevo dato
+            </button>
+          </div>
+          <div class="tab-bar">
+            <button class="tab-btn" [class.active]="activeTab() === 'primitivos'" (click)="setTab('primitivos')">
+              <mat-icon class="tab-icon">data_object</mat-icon>Primitivos
+            </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'imagenes'" (click)="setTab('imagenes')">
+              <mat-icon class="tab-icon">image</mat-icon>Imágenes
+            </button>
+          </div>
+        </mat-card>
+      </div>
+
+      <mat-card class="cardWithShadow table-card">
+        @if (loading()) {
+          <div class="empty-state">
+            <mat-icon class="animate-spin">cached</mat-icon>
+            <p>Cargando...</p>
+          </div>
+        } @else if (activeTab() === 'primitivos') {
+          @if (primitiveDatums().length === 0) {
+            <div class="empty-state">
+              <mat-icon class="empty-icon">data_object</mat-icon>
+              <p>No hay datos primitivos registrados</p>
+            </div>
+          } @else {
+            <app-dynamic-table
+              [data]="primitiveDatums()"
+              [columns]="primitiveCols"
+              [pageSize]="8"
+              [searchKey]="'name'"
+              [mobileKey]="'name'"
+              [actionButtons]="primitiveActionButtons"
+              (actionClicked)="handleAction($event)"
+            />
+          }
+        } @else {
+          @if (medicalImages().length === 0) {
+            <div class="empty-state">
+              <mat-icon class="empty-icon">image</mat-icon>
+              <p>No hay imágenes médicas registradas</p>
+            </div>
+          } @else {
+            <app-dynamic-table
+              [data]="medicalImages()"
+              [columns]="imageCols"
+              [pageSize]="8"
+              [searchKey]="'medicalImageTypeName'"
+              [mobileKey]="'medicalImageTypeName'"
+              [actionButtons]="actionButtons"
+              (actionClicked)="handleAction($event)"
+            />
+          }
+        }
+      </mat-card>
+
+    </div>
+
+    <!-- ══ PANEL LATERAL ══════════════════════════════════════════════════════ -->
+    @if (panelOpen()) {
+      <div class="mobile-backdrop" (click)="closePanel()"></div>
+
+      <mat-card class="cardWithShadow form-panel">
+
+        <div class="panel-header">
+          <h3 class="panel-title">
+            @if (panelMode() === 'create') { Nuevo dato del sistema }
+            @else if (panelMode() === 'edit') { Editar dato primitivo }
+            @else if (activeTab() === 'primitivos') { Detalle del dato primitivo }
+            @else { Detalle de imagen médica }
+          </h3>
+          <button mat-icon-button (click)="closePanel()"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <div class="panel-body">
+
+          @if (panelLoading()) {
+            <div class="panel-loading"><mat-spinner diameter="48"></mat-spinner></div>
+
+          } @else if (panelMode() === 'view' && detailConfig()) {
+
+            <!-- Vista imagen médica con preview -->
+            @if (activeTab() === 'imagenes' && viewImageUrl()) {
+              <div class="image-view-wrapper">
+                <img [src]="viewImageUrl()!" alt="Imagen médica" class="image-view-preview"
+                     (error)="viewImageUrl.set(null)" />
+              </div>
+            } @else if (activeTab() === 'imagenes' && !viewImageUrl()) {
+              <div class="image-view-placeholder">
+                <mat-icon>image_not_supported</mat-icon>
+                <span>Vista previa no disponible</span>
+              </div>
+            }
+
+            <app-entity-detail
+              [config]="detailConfig()!"
+              (back)="handleFormCancel()"
+              (primaryAction)="openEdit(currentId()!)"
+            />
+
+          } @else if (panelMode() === 'edit' && formConfig()) {
+            <app-dynamic-form
+              [config]="formConfig()!"
+              (formSubmit)="handleFormSubmit($event)"
+              (formCancel)="handleFormCancel()"
+            />
+
+          } @else if (panelMode() === 'create') {
+
+            <!-- ══ FORMULARIO DE CREACIÓN ════════════════════════════════════ -->
+            <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="create-form">
+
+              <!-- Selector de tipo -->
+              <div class="type-selector-section">
+                <p class="section-label">¿Qué tipo de dato deseas crear?</p>
+                <div class="type-selector-grid">
+                  <button type="button" class="type-card"
+                    [class.selected]="selectedKind() === 'primitiveDatum'"
+                    (click)="createForm.get('dataKind')!.setValue('primitiveDatum')">
+                    <mat-icon class="type-card-icon">data_object</mat-icon>
+                    <span class="type-card-title">Dato Primitivo</span>
+                    <span class="type-card-desc">Valores numéricos, texto, booleanos, etc.</span>
+                  </button>
+                  <button type="button" class="type-card"
+                    [class.selected]="selectedKind() === 'medicalImage'"
+                    (click)="createForm.get('dataKind')!.setValue('medicalImage')">
+                    <mat-icon class="type-card-icon">image</mat-icon>
+                    <span class="type-card-title">Imagen Médica</span>
+                    <span class="type-card-desc">Radiografías, TAC, ecografías, etc.</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ── Campos Dato Primitivo ── -->
+              @if (selectedKind() === 'primitiveDatum') {
+                <div class="fields-section">
+                  <p class="section-label">Información del dato primitivo</p>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput formControlName="primName" placeholder="Ej. Colesterol total" />
+                    @if (createForm.get('primName')?.invalid && createForm.get('primName')?.touched) {
+                      <mat-error>El nombre es obligatorio</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Tipo de dato (computacional)</mat-label>
+                    <mat-select formControlName="primType">
+                      @for (opt of primitiveTypeOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                    @if (createForm.get('primType')?.invalid && createForm.get('primType')?.touched) {
+                      <mat-error>Selecciona un tipo</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Unidad</mat-label>
+                    <mat-select formControlName="primUnit">
+                      @for (opt of primitiveUnitOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                    @if (createForm.get('primUnit')?.invalid && createForm.get('primUnit')?.touched) {
+                      <mat-error>Selecciona una unidad</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              }
+
+              <!-- ── Campos Imagen Médica ── -->
+              @if (selectedKind() === 'medicalImage') {
+                <div class="fields-section">
+                  <p class="section-label">Información de la imagen médica</p>
+
+                  <!-- Selector de tipo de imagen -->
+                  <div class="image-type-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Tipo de imagen médica</mat-label>
+                      <mat-select formControlName="imgTypeId">
+                        @for (opt of imageTypeOptions; track opt.value) {
+                          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                        }
+                      </mat-select>
+                      @if (createForm.get('imgTypeId')?.invalid && createForm.get('imgTypeId')?.touched) {
+                        <mat-error>Selecciona un tipo de imagen</mat-error>
+                      }
+                    </mat-form-field>
+                    <button type="button" mat-icon-button class="btn-add-type"
+                      [class.active]="showNewTypeForm()"
+                      (click)="toggleNewTypeForm()"
+                      matTooltip="Crear nuevo tipo de imagen">
+                      <mat-icon>{{ showNewTypeForm() ? 'remove' : 'add' }}</mat-icon>
+                    </button>
+                  </div>
+
+                  <!-- Sub-formulario: nuevo tipo de imagen inline -->
+                  @if (showNewTypeForm()) {
+                    <div class="new-type-subform" [formGroup]="newTypeForm">
+                      <p class="subform-label">Nuevo tipo de imagen médica</p>
+                      <div class="subform-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Nombre del tipo</mat-label>
+                          <input matInput formControlName="typeName" placeholder="Ej. Radiografía" />
+                          @if (newTypeForm.get('typeName')?.invalid && newTypeForm.get('typeName')?.touched) {
+                            <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
+                          }
+                        </mat-form-field>
+                        <button type="button" mat-flat-button color="accent" class="btn-save-type"
+                          (click)="submitNewType()" [disabled]="newTypeForm.invalid">
+                          Crear
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Upload de archivo -->
+                  <div class="file-upload-area" [class.has-file]="selectedFile()">
+                    @if (!selectedFile()) {
+                      <label class="file-drop-label" for="fileInput">
+                        <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                        <span class="upload-title">Selecciona o arrastra la imagen</span>
+                        <span class="upload-desc">DICOM, PNG, JPG, PDF — máx. 20 MB</span>
+                      </label>
+                      <input id="fileInput" type="file"
+                        accept="image/*,.dcm,.pdf"
+                        class="file-input"
+                        (change)="onFileSelected($event)" />
+                    } @else {
+                      <div class="file-preview">
+                        @if (filePreviewUrl() && selectedFile()!.type.startsWith('image/')) {
+                          <img [src]="filePreviewUrl()!" alt="preview" class="preview-img" />
+                        } @else {
+                          <mat-icon class="file-icon">description</mat-icon>
+                        }
+                        <div class="file-info">
+                          <span class="file-name">{{ selectedFile()!.name }}</span>
+                          <span class="file-size">{{ (selectedFile()!.size / 1024).toFixed(1) }} KB</span>
+                        </div>
+                        <button type="button" mat-icon-button class="btn-remove-file" (click)="removeFile()">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              }
+
+              <!-- Acciones -->
+              @if (selectedKind()) {
+                <div class="form-actions">
+                  <button type="button" mat-stroked-button (click)="closePanel()">Cancelar</button>
+                  <button type="submit" mat-flat-button color="primary"
+                    [disabled]="createForm.invalid || (selectedKind() === 'medicalImage' && !selectedFile())">
+                    Guardar
+                  </button>
+                </div>
+              }
+
+            </form>
+          }
+
+        </div>
+      </mat-card>
+    }
+
+  </div>
+</div>

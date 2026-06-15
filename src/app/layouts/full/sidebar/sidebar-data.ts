@@ -56,6 +56,11 @@ export const navItems: NavItem[] = [
     route: '/medical-images/list',
   },
   {
+    displayName: 'System Data',
+    iconName: 'solar:database-line-duotone',
+    route: '/system-data/list',
+  },
+  {
     displayName: 'UI Configs',
     iconName: 'solar:monitor-line-duotone',
     route: '/ui-configs/list',

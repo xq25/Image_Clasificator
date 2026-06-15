@@ -4,13 +4,14 @@ import { ClinicalRecord } from "@models/ms-clasificator/ClinicalRecord/ClinicalR
 export interface MedicalImg {
   id?: number;
   imageKey: string;
+  imageUrl?: string;
   provider: string;
   contentType?: string;
-  medicalImageTypeName? : string;
+  medicalImageTypeName?: string;
   fileSize?: number;
   createdAt?: Date | string;
 }
 export interface MedicalImgExtended extends MedicalImg {
   medicalImageType: MedicalImageType;
-  clinicalRecord? : ClinicalRecord;
+  clinicalRecord?:  ClinicalRecord;
 }
