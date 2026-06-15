@@ -2,66 +2,68 @@ export interface PrimitiveDatum {
     id?: number;
     name: string;
     type: PrimitiveDatumType;
+    unit?: PrimitiveUnit;
+}
 
-}
 export enum PrimitiveDatumType {
-    STRING,
-    INTEGER,
-    DOUBLE,
-    BOOLEAN,
-    DATE,
-    DATETIME,
-    TIME,
-    BINARY,
-    TEXT
+    STRING   = 'STRING',
+    INTEGER  = 'INTEGER',
+    DOUBLE   = 'DOUBLE',
+    BOOLEAN  = 'BOOLEAN',
+    DATE     = 'DATE',
+    DATETIME = 'DATETIME',
+    TIME     = 'TIME',
+    BINARY   = 'BINARY',
+    TEXT     = 'TEXT',
 }
-export enum PrimitiveUnit{
+
+export enum PrimitiveUnit {
     // Sin unidad
-    NONE,
+    NONE                    = 'NONE',
 
     // Peso
-    KILOGRAM,
-    GRAM,
-    MILLIGRAM,
-    MICROGRAM,
+    KILOGRAM                = 'KILOGRAM',
+    GRAM                    = 'GRAM',
+    MILLIGRAM               = 'MILLIGRAM',
+    MICROGRAM               = 'MICROGRAM',
 
     // Volumen
-    LITER,
-    MILLILITER,
+    LITER                   = 'LITER',
+    MILLILITER              = 'MILLILITER',
 
     // Longitud
-    METER,
-    CENTIMETER,
-    MILLIMETER,
+    METER                   = 'METER',
+    CENTIMETER              = 'CENTIMETER',
+    MILLIMETER              = 'MILLIMETER',
 
     // Temperatura
-    CELSIUS,
-    FAHRENHEIT,
+    CELSIUS                 = 'CELSIUS',
+    FAHRENHEIT              = 'FAHRENHEIT',
 
     // Presión
-    MMHG,
+    MMHG                    = 'MMHG',
 
     // Frecuencia
-    BPM,            // Beats Per Minute
-    RESPIRATIONS_PER_MINUTE,
+    BPM                     = 'BPM',
+    RESPIRATIONS_PER_MINUTE = 'RESPIRATIONS_PER_MINUTE',
 
     // Saturación
-    PERCENT,
+    PERCENT                 = 'PERCENT',
 
     // Tiempo
-    SECOND,
-    MINUTE,
-    HOUR,
-    DAY,
+    SECOND                  = 'SECOND',
+    MINUTE                  = 'MINUTE',
+    HOUR                    = 'HOUR',
+    DAY                     = 'DAY',
 
     // Glucosa
-    MG_DL,
-    MMOL_L,
+    MG_DL                   = 'MG_DL',
+    MMOL_L                  = 'MMOL_L',
 
     // Dosis
-    UNIT,
-    INTERNATIONAL_UNIT,
+    UNIT                    = 'UNIT',
+    INTERNATIONAL_UNIT      = 'INTERNATIONAL_UNIT',
 
     // Índices clínicos
-    KG_M2
+    KG_M2                   = 'KG_M2',
 }
