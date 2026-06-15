@@ -146,4 +146,10 @@ export class InfoComponent implements OnInit {
     if (doc) this.router.navigate(['/clinical-records/patient', doc, 'records']);
     else     this.router.navigate(['/clinical-records']);
   }
+
+  goUpload(): void {
+    const id        = this.route.snapshot.paramMap.get('id');
+    const patientId = this.route.snapshot.paramMap.get('patientId');
+    this.router.navigate([`/clinical-records/${id}/upload/${patientId}`]);
+  }
 }

@@ -59,7 +59,15 @@
 
       <mat-card class="cardWithShadow form-panel">
 
-        @if (!isViewMode()) {
+        <!-- Header del panel -->
+        @if (isDoctorsMode()) {
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">Doctores del Área</h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else if (!isViewMode()) {
           <div class="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold">
               @if (formConfig()?.mode === 1) { Nueva Área de Evaluación }
@@ -71,11 +79,87 @@
           </div>
         }
 
-        <div [class.p-4]="!isViewMode()">
+        <div [class.p-4]="!isViewMode() && !isDoctorsMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (isDoctorsMode()) {
+
+            <!-- INFO DEL ÁREA -->
+            @if (managedArea()) {
+              <div class="doctors-area-info">
+                <div class="doctors-area-info__icon">
+                  <mat-icon>area_chart</mat-icon>
+                </div>
+                <div class="doctors-area-info__data">
+                  <span class="doctors-area-info__name">{{ managedArea()!.name }}</span>
+                  <span class="doctors-area-info__code">Código: {{ managedArea()!.codeArea }}</span>
+                  <span class="doctors-area-info__count">
+                    {{ areaDoctors().length }} doctor{{ areaDoctors().length !== 1 ? 'es' : '' }} asociado{{ areaDoctors().length !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+            }
+
+            <!-- TABLA DE DOCTORES -->
+            @if (doctorsLoading()) {
+              <div class="flex items-center justify-center py-10">
+                <mat-spinner diameter="36"></mat-spinner>
+              </div>
+            } @else if (areaDoctors().length === 0) {
+              <div class="doctors-empty">
+                <mat-icon>person_off</mat-icon>
+                <p>No hay doctores asociados a esta área</p>
+              </div>
+            } @else {
+              <div class="doctors-table-wrap">
+                <table class="doctors-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Código</th>
+                      <th>User ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (doctor of pagedDoctors(); track doctor.id) {
+                      <tr>
+                        <td>{{ doctor.id }}</td>
+                        <td>{{ doctor.code }}</td>
+                        <td class="text-truncate">{{ doctor.userId }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+
+                <!-- PAGINACIÓN -->
+                @if (totalDoctorsPages() > 1) {
+                  <div class="doctors-pagination">
+                    <button mat-icon-button
+                      [disabled]="doctorsPage() === 0"
+                      (click)="doctorsPage.set(doctorsPage() - 1)">
+                      <mat-icon>chevron_left</mat-icon>
+                    </button>
+                    <span class="doctors-pagination__label">
+                      {{ doctorsPage() + 1 }} / {{ totalDoctorsPages() }}
+                    </span>
+                    <button mat-icon-button
+                      [disabled]="doctorsPage() === totalDoctorsPages() - 1"
+                      (click)="doctorsPage.set(doctorsPage() + 1)">
+                      <mat-icon>chevron_right</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="p-4 pt-0">
+              <button mat-stroked-button (click)="closePanel()" class="w-full">
+                <mat-icon>close</mat-icon> Cerrar
+              </button>
+            </div>
+
           } @else if (isViewMode() && detailConfig()) {
             <app-entity-detail
               [config]="detailConfig()!"

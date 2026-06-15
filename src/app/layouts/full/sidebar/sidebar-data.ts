@@ -51,21 +51,15 @@ export const navItems: NavItem[] = [
     route: '/medical-diagnostics/list',
   },
   {
-    displayName: 'Medical Images',
-    iconName: 'solar:gallery-line-duotone',
-    route: '/medical-images/list',
-  },
-  {
     displayName: 'System Data',
     iconName: 'solar:database-line-duotone',
     route: '/system-data/list',
   },
   {
-    displayName: 'UI Configs',
-    iconName: 'solar:monitor-line-duotone',
-    route: '/ui-configs/list',
+    displayName: 'Datasets',
+    iconName: 'solar:layers-line-duotone',
+    route: '/datasets/create',
   },
-  
   {
     displayName: 'Profile',
     iconName: 'solar:user-circle-line-duotone',
