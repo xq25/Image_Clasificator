@@ -1,0 +1,375 @@
+<div class="list-root">
+
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">{{ toast()!.message }}</div>
+  }
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+  <mat-card class="cardWithShadow">
+    <div class="header-bar">
+      <div>
+        <h2 class="header-title">Datasets</h2>
+        <p class="header-sub">Conjuntos de datos para clasificación de imágenes médicas</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new">
+        <mat-icon>add</mat-icon> Nuevo dataset
+      </button>
+    </div>
+  </mat-card>
+
+  <!-- ══ TABLA ═══════════════════════════════════════════════════════════════ -->
+  <mat-card class="cardWithShadow table-card">
+    @if (loading()) {
+      <div class="empty-state">
+        <mat-icon class="animate-spin">cached</mat-icon>
+        <p>Cargando datasets...</p>
+      </div>
+    } @else if (datasets().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">dataset</mat-icon>
+        <p>No hay datasets registrados</p>
+        <button mat-stroked-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Crear primer dataset
+        </button>
+      </div>
+    } @else {
+      <app-dynamic-table
+        [data]="datasets()"
+        [columns]="columns"
+        [pageSize]="10"
+        [searchKey]="'name'"
+        [mobileKey]="'name'"
+        [actionButtons]="actionButtons"
+        (actionClicked)="handleAction($event)"
+      />
+    }
+  </mat-card>
+
+  <!-- ══ PANEL INFERIOR ══════════════════════════════════════════════════════ -->
+  @if (panelOpen()) {
+    <mat-card class="cardWithShadow detail-panel">
+
+      <!-- Encabezado -->
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <mat-icon class="panel-icon">dataset</mat-icon>
+          <h3 class="panel-title">{{ viewDataset()?.name ?? 'Detalle del dataset' }}</h3>
+        </div>
+        <button mat-icon-button (click)="closePanel()" title="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      @if (panelLoading()) {
+        <div class="panel-loading">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>Cargando información...</p>
+        </div>
+      } @else if (viewDataset()) {
+
+        <div class="panel-body">
+
+          <!-- ══ SECCIÓN: INFORMACIÓN GENERAL ══════════════════════════════════ -->
+          <div class="section-block">
+            <div class="section-header">
+              <h4 class="section-title">
+                <mat-icon class="section-icon">info</mat-icon>
+                Información general
+              </h4>
+              @if (!editingGeneral()) {
+                <button mat-icon-button class="btn-edit" title="Editar información general"
+                        (click)="startEditGeneral()">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+            </div>
+            <mat-divider />
+
+            <!-- ── MODO LECTURA ────────────────────────────────────────────────── -->
+            @if (!editingGeneral()) {
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label"><mat-icon class="row-icon">tag</mat-icon> ID</span>
+                  <span class="info-value">{{ viewDataset()!.id }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"><mat-icon class="row-icon">label</mat-icon> Nombre</span>
+                  <span class="info-value">{{ viewDataset()!.name }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"><mat-icon class="row-icon">qr_code</mat-icon> Código CIE-10</span>
+                  <span class="info-value accent">{{ viewDataset()!.medicalDiagnostic.diagnosticCode }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"><mat-icon class="row-icon">medical_services</mat-icon> Diagnóstico padre</span>
+                  <span class="info-value">{{ viewDataset()!.medicalDiagnostic.diagnosticName }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"><mat-icon class="row-icon">area_chart</mat-icon> Área de evaluación</span>
+                  <span class="info-value">{{ viewDataset()!.evaluationArea?.name ?? 'Sin asignar' }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- ── MODO EDICIÓN GENERAL ────────────────────────────────────────── -->
+            @if (editingGeneral()) {
+              <div class="edit-form">
+
+                @if (loadingCatalogs()) {
+                  <div class="catalogs-loading">
+                    <mat-spinner diameter="28"></mat-spinner>
+                    <span>Cargando catálogos...</span>
+                  </div>
+                }
+
+                <!-- Nombre -->
+                <div class="edit-field">
+                  <label class="edit-label">Nombre del dataset</label>
+                  <input class="edit-input" [(ngModel)]="editName"
+                         placeholder="Nombre descriptivo..." />
+                </div>
+
+                <!-- Diagnóstico -->
+                <div class="edit-field">
+                  <label class="edit-label">Diagnóstico padre (CIE-10)</label>
+                  @if (editDiagnostic()) {
+                    <div class="selected-chip-edit">
+                      <mat-icon class="chip-check-icon">check_circle</mat-icon>
+                      <span class="chip-code-txt">{{ editDiagnostic()!.diagnosticCode }}</span>
+                      <span class="chip-name-txt">{{ editDiagnostic()!.diagnosticName }}</span>
+                      <button type="button" mat-icon-button class="chip-clear-btn"
+                              (click)="editDiagnostic.set(null); diagSearch.set('')">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="search-box">
+                      <mat-icon class="search-prefix">search</mat-icon>
+                      <input class="search-input-edit" [(ngModel)]="diagSearch"
+                             placeholder="Buscar diagnóstico CIE-10..." />
+                    </div>
+                    @if (diagSearch().length > 0) {
+                      <div class="diag-dropdown">
+                        @for (d of filteredDiags(); track d.id) {
+                          <div class="diag-option" (click)="editDiagnostic.set(d); diagSearch.set('')">
+                            <span class="opt-code">{{ d.diagnosticCode }}</span>
+                            <span class="opt-name">{{ d.diagnosticName }}</span>
+                          </div>
+                        }
+                        @if (filteredDiags().length === 0) {
+                          <div class="opt-empty">
+                            <mat-icon>search_off</mat-icon> Sin resultados
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+
+                <!-- Área de evaluación -->
+                <div class="edit-field">
+                  <label class="edit-label">Área de evaluación <span class="opt-tag">Opcional</span></label>
+                  <div class="areas-grid">
+                    @for (area of allAreas(); track area.id) {
+                      <div class="area-card"
+                           [class.selected]="editArea()?.id === area.id"
+                           (click)="editArea.set(editArea()?.id === area.id ? null : area)">
+                        <mat-icon class="area-icon">local_hospital</mat-icon>
+                        <div class="area-info">
+                          <span class="area-code">{{ area.codeArea }}</span>
+                          <span class="area-name-txt">{{ area.name }}</span>
+                        </div>
+                        @if (editArea()?.id === area.id) {
+                          <mat-icon class="area-check">check_circle</mat-icon>
+                        }
+                      </div>
+                    }
+                    @if (!loadingCatalogs() && allAreas().length === 0) {
+                      <span class="no-areas">No hay áreas disponibles</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="edit-actions">
+                  <button mat-stroked-button type="button" (click)="cancelEditGeneral()" [disabled]="savingGeneral()">
+                    Cancelar
+                  </button>
+                  <button mat-flat-button color="primary" type="button"
+                          (click)="saveGeneral()"
+                          [disabled]="savingGeneral() || loadingCatalogs() || !editDiagnostic()">
+                    @if (savingGeneral()) {
+                      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+                    } @else {
+                      <mat-icon>save</mat-icon>
+                    }
+                    Guardar
+                  </button>
+                </div>
+
+              </div>
+            }
+          </div>
+
+          <!-- ── STATS ────────────────────────────────────────────────────────── -->
+          @if (!editingGeneral()) {
+            <div class="stats-row">
+              <div class="stat-chip">
+                <mat-icon class="stat-icon">category</mat-icon>
+                <div>
+                  <span class="stat-num">{{ viewCategories().length }}</span>
+                  <span class="stat-label">Categorías</span>
+                </div>
+              </div>
+              <div class="stat-chip">
+                <mat-icon class="stat-icon">qr_code_2</mat-icon>
+                <div>
+                  <span class="stat-num">{{ totalCodes() }}</span>
+                  <span class="stat-label">Códigos CIE-10</span>
+                </div>
+              </div>
+              <div class="stat-chip">
+                <mat-icon class="stat-icon">image</mat-icon>
+                <div>
+                  <span class="stat-num">—</span>
+                  <span class="stat-label">Imágenes</span>
+                </div>
+              </div>
+              <div class="stat-chip">
+                <mat-icon class="stat-icon">check_circle</mat-icon>
+                <div>
+                  <span class="stat-num">—</span>
+                  <span class="stat-label">Clasificadas</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- ══ SECCIÓN: CATEGORÍAS ════════════════════════════════════════════ -->
+          <div class="section-block">
+            <div class="section-header">
+              <h4 class="section-title">
+                <mat-icon class="section-icon">category</mat-icon>
+                Categorías ({{ viewCategories().length }})
+              </h4>
+              @if (!editingCategories()) {
+                <button mat-icon-button class="btn-edit" title="Editar categorías"
+                        (click)="startEditCategories()">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              } @else {
+                <div class="cat-edit-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="addCategory()">
+                    <mat-icon>add</mat-icon> Agregar categoría
+                  </button>
+                  <button mat-stroked-button type="button" (click)="cancelEditCategories()" class="btn-cancel-cats">
+                    <mat-icon>close</mat-icon> Cerrar edición
+                  </button>
+                </div>
+              }
+            </div>
+            <mat-divider />
+
+            @if (loadingSubs()) {
+              <div class="catalogs-loading">
+                <mat-spinner diameter="28"></mat-spinner>
+                <span>Cargando sub-diagnósticos...</span>
+              </div>
+            }
+
+            @if (viewCategories().length === 0 && !loadingSubs()) {
+              <div class="empty-cats">
+                <mat-icon>inbox</mat-icon>
+                <span>Este dataset no tiene categorías registradas</span>
+              </div>
+            } @else {
+              <div class="categories-grid">
+                @for (cv of viewCategories(); track cv.category.id; let i = $index) {
+                  <div class="cat-card" [style.border-left-color]="getCategoryColor(i)">
+
+                    <!-- Cabecera de categoría -->
+                    <div class="cat-card-header" [style.background]="getCategoryColor(i) + '18'">
+                      <span class="cat-num"
+                            [style.background]="getCategoryColor(i) + '33'"
+                            [style.color]="getCategoryColor(i)">
+                        {{ cv.category.numValue }}
+                      </span>
+                      <span class="cat-name">Categoría {{ cv.category.numValue }}</span>
+                      <span class="cat-count" [style.color]="getCategoryColor(i)">
+                        {{ cv.diagnostics.length }} código(s)
+                      </span>
+                      <!-- Eliminar categoría (solo en modo edición) -->
+                      @if (editingCategories()) {
+                        <button mat-icon-button class="btn-delete-cat" title="Eliminar categoría"
+                                (click)="deleteCategory(i)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+                    </div>
+
+                    <!-- Chips de diagnósticos -->
+                    <div class="cat-chips-wrap">
+                      @if (cv.diagnostics.length === 0) {
+                        <span class="no-diag">Sin diagnósticos asociados</span>
+                      }
+                      @for (d of cv.diagnostics; track d.id) {
+                        <span class="diag-chip"
+                              [style.background]="getCategoryColor(i) + '22'"
+                              [style.border-color]="getCategoryColor(i) + '66'"
+                              [style.color]="getCategoryColor(i)">
+                          {{ d.medicalDiagnostic.diagnosticCode }}
+                          @if (editingCategories()) {
+                            <button class="chip-x" (click)="removeDiagFromCategory(i, d.id!)">
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          }
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Input para agregar diagnóstico (solo en modo edición) -->
+                    @if (editingCategories()) {
+                      <div class="cat-add-wrap">
+                        <div class="cat-search-box" [class.focused]="cv.showDropdown">
+                          <mat-icon class="cat-search-icon">search</mat-icon>
+                          <input class="cat-search-input"
+                                 [value]="cv.searchValue"
+                                 (input)="onCategorySearch(i, $any($event.target).value)"
+                                 (focus)="openCatDropdown(i)"
+                                 (blur)="closeCatDropdown(i)"
+                                 placeholder="Agregar sub-diagnóstico..." />
+                        </div>
+                        @if (cv.showDropdown) {
+                          <div class="cat-dropdown">
+                            @if (cv.filteredOptions.length === 0) {
+                              <div class="opt-empty">
+                                <mat-icon>search_off</mat-icon>
+                                <span>Sin resultados{{ cv.searchValue ? ' para "' + cv.searchValue + '"' : '' }}</span>
+                              </div>
+                            } @else {
+                              @for (sd of cv.filteredOptions.slice(0, 30); track sd.id) {
+                                <div class="cat-dropdown-opt" (mousedown)="addDiagToCategory(i, sd)">
+                                  <span class="sub-code">{{ sd.diagnosticCode }}</span>
+                                  <span class="sub-name">{{ sd.diagnosticName }}</span>
+                                </div>
+                              }
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+
+    </mat-card>
+  }
+
+</div>

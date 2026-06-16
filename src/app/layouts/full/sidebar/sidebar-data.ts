@@ -58,7 +58,7 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Datasets',
     iconName: 'solar:layers-line-duotone',
-    route: '/datasets/create',
+    route: '/datasets/list',
   },
   {
     displayName: 'Profile',
