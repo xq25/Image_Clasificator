@@ -12,7 +12,10 @@ import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
 import { UserService } from '@app/services/ms-security/user-service';
+import { DoctorAreaService } from '@app/services/ms-clasificator/doctor-area.service';
+import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
 import { Doctor, DoctorExtended } from '@app/models/ms-clasificator/Doctor/Doctor';
+import { EvaluationArea } from '@app/models/ms-clasificator/EvaluationArea/EvaluationArea';
 import { User } from '@app/models/User';
 
 interface Toast {
@@ -55,6 +58,14 @@ export class ListComponent implements OnInit {
   currentDoctorId = signal<number | null>(null);
   toast           = signal<Toast | null>(null);
 
+  // ─── DOCTOR AREA ASSOCIATION STATE ────────────────────────────────────────────
+  showDoctorAreaForm    = signal(false);
+  doctorAreaFormLoading = signal(false);
+  evaluationAreas       = signal<EvaluationArea[]>([]);
+  doctorAreaFormConfig  = signal<DynamicFormConfig | null>(null);
+  showEvaluationAreaForm = signal(false);
+  evaluationAreaFormConfig = signal<DynamicFormConfig | null>(null);
+
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
     { key: 'id',     label: 'ID' },
@@ -73,6 +84,8 @@ export class ListComponent implements OnInit {
     private router: Router,
     private doctorService: DoctorService,
     private userService: UserService,
+    private doctorAreaService: DoctorAreaService,
+    private evaluationAreaService: EvaluationAreaService,
   ) {}
 
   ngOnInit(): void {
@@ -268,10 +281,18 @@ export class ListComponent implements OnInit {
 
     if (mode === 1) {
       this.doctorService.create(data).subscribe({
-        next: () => {
+        next: (response) => {
           this.showToast('Doctor creado exitosamente', 'success');
-          this.closePanel();
-          this.loadDoctors();
+          const doctorId = response.data?.id;
+          if (doctorId) {
+            this.currentDoctorId.set(doctorId);
+            // Cambiar a modo de asociar área
+            this.formConfig.set(null);
+            this.loadEvaluationAreasForDoctorArea();
+          } else {
+            this.closePanel();
+            this.loadDoctors();
+          }
         },
         error: () => this.showToast('Error al crear doctor', 'error'),
       });
@@ -288,7 +309,137 @@ export class ListComponent implements OnInit {
   }
 
   handleFormCancel(): void {
-    this.closePanel();
+    if (this.showDoctorAreaForm()) {
+      this.resetDoctorAreaForm();
+    } else {
+      this.closePanel();
+    }
+  }
+
+  // ─── DOCTOR AREA ASSOCIATION FLOW ─────────────────────────────────────────────
+
+  loadEvaluationAreasForDoctorArea(): void {
+    this.doctorAreaFormLoading.set(true);
+    this.evaluationAreaService.findAll().subscribe({
+      next: (response) => {
+        this.evaluationAreas.set(response.data ?? []);
+        this.buildDoctorAreaForm();
+        this.showDoctorAreaForm.set(true);
+        this.doctorAreaFormLoading.set(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.showToast('Error al cargar las áreas de evaluación', 'error');
+        this.doctorAreaFormLoading.set(false);
+      },
+    });
+  }
+
+  buildDoctorAreaForm(): void {
+    const areaOptions = this.evaluationAreas()
+      .filter(area => area.id)
+      .map(area => ({ value: area.id, label: area.name }));
+      
+    //console.log('Opciones de áreas cargadas:', areaOptions);
+
+    this.doctorAreaFormConfig.set({
+      mode: 1, // Custom mode for DoctorArea association
+      model: null,
+      fields: [
+        {
+          name: 'evaluationAreaId',
+          label: 'Área de Evaluación',
+          type: 'select',
+          placeholder: 'Selecciona un área de evaluación',
+          validators: [Validators.required],
+          options: areaOptions,
+        },
+      ],
+    });
+  }
+
+  handleDoctorAreaFormSubmit(data: any): void {
+    const doctorId = this.currentDoctorId();
+    const evaluationAreaId = data.evaluationAreaId;
+
+    if (!doctorId || !evaluationAreaId) {
+      this.showToast('Error: doctor o área no válidos', 'error');
+      return;
+    }
+
+    this.doctorAreaFormLoading.set(true);
+    this.doctorAreaService.create({ doctorId, evaluationAreaId }).subscribe({
+      next: () => {
+        this.showToast('Área asociada al doctor exitosamente', 'success');
+        this.doctorAreaFormLoading.set(false);
+        this.closePanel();
+        this.loadDoctors();
+      },
+      error: () => {
+        this.showToast('Error al asociar el área al doctor', 'error');
+        this.doctorAreaFormLoading.set(false);
+      },
+    });
+  }
+
+  openCreateEvaluationArea(): void {
+    this.showEvaluationAreaForm.set(true);
+    this.buildEvaluationAreaForm();
+  }
+
+  buildEvaluationAreaForm(): void {
+    this.evaluationAreaFormConfig.set({
+      mode: 1,
+      model: null,
+      fields: [
+        {
+          name: 'codeArea',
+          label: 'Código del Área',
+          type: 'text',
+          placeholder: 'Ej: CARD',
+          validators: [Validators.required, Validators.minLength(2)],
+        },
+        {
+          name: 'name',
+          label: 'Nombre del Área',
+          type: 'text',
+          placeholder: 'Ej: Cardiología',
+          validators: [Validators.required, Validators.minLength(3)],
+        },
+      ],
+    });
+  }
+
+  handleEvaluationAreaFormSubmit(data: any): void {
+    this.doctorAreaFormLoading.set(true);
+    this.evaluationAreaService.create(data).subscribe({
+      next: (response) => {
+        const newArea = response.data;
+        if (newArea && newArea.id) {
+          // Agregar el nuevo área a la lista
+          this.evaluationAreas.set([...this.evaluationAreas(), newArea]);
+          // Reconstruir el formulario de DoctorArea con la nueva área
+          this.buildDoctorAreaForm();
+          // Cerrar formulario de evaluación
+          this.showEvaluationAreaForm.set(false);
+          this.showToast('Área de evaluación creada exitosamente', 'success');
+        }
+        this.doctorAreaFormLoading.set(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.showToast('Error al crear el área de evaluación', 'error');
+        this.doctorAreaFormLoading.set(false);
+      },
+    });
+  }
+
+  resetDoctorAreaForm(): void {
+    this.showDoctorAreaForm.set(false);
+    this.showEvaluationAreaForm.set(false);
+    this.doctorAreaFormConfig.set(null);
+    this.evaluationAreaFormConfig.set(null);
+    this.currentDoctorId.set(null);
   }
 
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
