@@ -157,22 +157,18 @@
     <!-- ══ STEP 2: Categorías ══════════════════════════════════════════════════ -->
     @if (currentStep() === 2) {
       <div class="step2-root">
+
         <div class="step2-header">
           <div>
             <h2 class="step2-title">Categorías del dataset</h2>
-            <p class="step2-sub">Crea de 1 a N categorías. Cada categoría puede tener uno o varios sub-diagnósticos asociados.</p>
+            <p class="step2-sub">Cada categoría se guarda al instante. Añade sub-diagnósticos antes de continuar.</p>
           </div>
-          <button mat-stroked-button color="primary" type="button" (click)="addCategory()" [disabled]="categoriesSaved()">
+          <button mat-stroked-button color="primary" type="button"
+                  (click)="addCategory()"
+                  [disabled]="subDiagnostics().length === 0 || hasPendingSaves()">
             <mat-icon>add</mat-icon> Agregar categoría
           </button>
         </div>
-
-        @if (categoriesSaved()) {
-          <div class="info-banner success">
-            <mat-icon>check_circle</mat-icon>
-            <span>Las categorías ya fueron guardadas. Puedes continuar o volver atrás para editar el dataset.</span>
-          </div>
-        }
 
         @if (subDiagnostics().length === 0) {
           <div class="info-banner warn">
@@ -180,28 +176,48 @@
             <span>El diagnóstico seleccionado no tiene sub-diagnósticos registrados.</span>
           </div>
         } @else {
+
           <div class="categories-list">
             @for (cat of categories(); track cat.numValue; let i = $index) {
               <mat-card class="cardWithShadow category-row">
+
+                <!-- Número / spinner de guardado -->
                 <div class="cat-number" [style.background]="getCategoryColor(i) + '22'" [style.color]="getCategoryColor(i)">
-                  {{ cat.numValue }}
+                  @if (cat.saving) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    {{ cat.numValue }}
+                  }
                 </div>
+
                 <div class="cat-body">
-                  <label class="field-label">Sub-diagnósticos asociados *</label>
-                  <div class="chips-search-box" [class.focused]="cat.showDropdown">
-                    @for (sd of cat.selectedDiagnostics; track sd.id) {
-                      <div class="diag-chip" [style.background]="getCategoryColor(i) + '22'"
+                  <label class="field-label">
+                    Sub-diagnósticos asociados *
+                    @if (cat.associations.length === 0 && !cat.saving) {
+                      <span class="field-error-inline">— Añade al menos uno</span>
+                    }
+                  </label>
+
+                  <div class="chips-search-box" [class.focused]="cat.showDropdown" [class.disabled]="cat.saving">
+
+                    <!-- Chips de asociaciones ya guardadas -->
+                    @for (assoc of cat.associations; track assoc.assocId) {
+                      <div class="diag-chip"
+                           [style.background]="getCategoryColor(i) + '22'"
                            [style.border-color]="getCategoryColor(i) + '66'"
                            [style.color]="getCategoryColor(i)">
-                        <span class="chip-label">{{ sd.diagnosticCode }}</span>
-                        <button type="button" class="chip-remove" [disabled]="categoriesSaved()"
-                                (click)="removeSubDiagnostic(i, sd.id!)">
+                        <span class="chip-label">{{ assoc.diagnostic.diagnosticCode }}</span>
+                        <button type="button" class="chip-remove"
+                                (click)="removeSubDiagnostic(i, assoc.assocId)">
                           <mat-icon>close</mat-icon>
                         </button>
                       </div>
                     }
-                    <input class="chips-input" [value]="cat.searchValue"
-                      [disabled]="categoriesSaved()"
+
+                    <!-- Input de búsqueda -->
+                    <input class="chips-input"
+                      [value]="cat.searchValue"
+                      [disabled]="cat.saving"
                       (input)="onCategorySearch(i, $any($event.target).value)"
                       (focus)="openDropdown(i)"
                       (blur)="closeDropdown(i)"
@@ -209,10 +225,14 @@
                     <mat-icon class="chips-search-icon">search</mat-icon>
                   </div>
 
+                  <!-- Dropdown de resultados -->
                   @if (cat.showDropdown) {
                     <div class="subdiag-dropdown">
                       @if (cat.filteredOptions.length === 0) {
-                        <div class="empty-search"><mat-icon>search_off</mat-icon><span>Sin resultados</span></div>
+                        <div class="empty-search">
+                          <mat-icon>search_off</mat-icon>
+                          <span>Sin resultados{{ cat.searchValue ? ' para "' + cat.searchValue + '"' : '' }}</span>
+                        </div>
                       } @else {
                         @for (sd of cat.filteredOptions.slice(0, 30); track sd.id) {
                           <div class="subdiag-option" (mousedown)="addSubDiagnosticToCategory(i, sd)">
@@ -223,20 +243,19 @@
                       }
                     </div>
                   }
-
-                  @if (cat.selectedDiagnostics.length === 0 && !categoriesSaved()) {
-                    <p class="field-error">Agrega al menos un sub-diagnóstico</p>
-                  }
                 </div>
 
+                <!-- Eliminar categoría -->
                 <button mat-icon-button class="btn-delete-cat" type="button"
-                        [disabled]="categories().length === 1 || categoriesSaved()"
+                        [disabled]="categories().length === 1 || cat.saving"
                         (click)="removeCategory(i)">
                   <mat-icon>delete</mat-icon>
                 </button>
+
               </mat-card>
             }
           </div>
+
           <p class="total-cats">Total de categorías: {{ categories().length }}</p>
         }
 
@@ -248,15 +267,12 @@
             <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
             <button mat-flat-button color="primary" type="button"
                     (click)="step2Next()"
-                    [disabled]="submittingStep2() || subDiagnostics().length === 0">
-              @if (submittingStep2()) {
-                <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
-              } @else {
-                <ng-container>Siguiente <mat-icon>arrow_forward</mat-icon></ng-container>
-              }
+                    [disabled]="!step2CanAdvance()">
+              Siguiente <mat-icon>arrow_forward</mat-icon>
             </button>
           </div>
         </div>
+
       </div>
     }
 
@@ -285,7 +301,7 @@
                       <mat-icon>{{ slot.icon }}</mat-icon>
                     </div>
                     <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                    <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                    <span class="tinder-cat-codes">{{ slot.cat.associations.length }} código(s) CIE-10</span>
                   </div>
                 </div>
               }
@@ -299,7 +315,7 @@
                         <mat-icon>{{ slot.icon }}</mat-icon>
                       </div>
                       <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                      <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                      <span class="tinder-cat-codes">{{ slot.cat.associations.length }} código(s) CIE-10</span>
                     </div>
                   </div>
                 }
@@ -321,7 +337,7 @@
                         <mat-icon>{{ slot.icon }}</mat-icon>
                       </div>
                       <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                      <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                      <span class="tinder-cat-codes">{{ slot.cat.associations.length }} código(s) CIE-10</span>
                     </div>
                   </div>
                 }
@@ -335,7 +351,7 @@
                       <mat-icon>{{ slot.icon }}</mat-icon>
                     </div>
                     <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                    <span class="tinder-cat-codes">{{ slot.cat.selectedDiagnostics.length }} código(s) CIE-10</span>
+                    <span class="tinder-cat-codes">{{ slot.cat.associations.length }} código(s) CIE-10</span>
                     @if (slot.isLast) {
                       <span class="default-badge">Por defecto</span>
                     }
@@ -518,9 +534,9 @@
                 </span>
                 <span class="review-cat-name">{{ slot.displayName }}</span>
                 <div class="review-chips">
-                  @for (sd of slot.cat.selectedDiagnostics; track sd.id) {
+                  @for (assoc of slot.cat.associations; track assoc.assocId) {
                     <span class="review-chip" [style.background]="slot.color + '22'" [style.color]="slot.color">
-                      {{ sd.diagnosticCode }}
+                      {{ assoc.diagnostic.diagnosticCode }}
                     </span>
                   }
                 </div>

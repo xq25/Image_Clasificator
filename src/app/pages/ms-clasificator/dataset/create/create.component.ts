@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
-import { forkJoin, from, concatMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 import { DatasetService } from '@app/services/ms-clasificator/dataset.service';
 import { DatasetCategoryService } from '@app/services/ms-clasificator/dataset-category.service';
@@ -22,26 +22,31 @@ import { EvaluationArea } from '@app/models/ms-clasificator';
 
 interface Toast { message: string; type: 'success' | 'error'; }
 
-export interface CategoryRow {
-  numValue: number;
-  selectedDiagnostics: MedicalDiagnostic[];
-  searchValue: string;
-  showDropdown: boolean;
-  filteredOptions: MedicalDiagnostic[];
+interface DiagAssociation {
+  assocId: number;
+  diagnostic: MedicalDiagnostic;
 }
 
-// Colores predefinidos para las categorías
+export interface CategoryRow {
+  numValue:     number;
+  categoryId?:  number;
+  associations: DiagAssociation[];
+  searchValue:  string;
+  showDropdown: boolean;
+  filteredOptions: MedicalDiagnostic[];
+  saving:       boolean;
+}
+
 const CATEGORY_COLORS = [
   '#22c55e', '#eab308', '#8b5cf6', '#3b82f6',
   '#ec4899', '#9ca3af', '#f97316', '#06b6d4', '#ef4444', '#84cc16',
 ];
 
-// Posiciones tinder para ≤ 4 categorías
-const TINDER_POSITIONS: { label: string; icon: string; pos: 'top' | 'left' | 'right' | 'bottom' }[] = [
-  { label: 'Arriba',    icon: 'arrow_upward',    pos: 'top'    },
-  { label: 'Izquierda', icon: 'arrow_back',      pos: 'left'   },
-  { label: 'Derecha',   icon: 'arrow_forward',   pos: 'right'  },
-  { label: 'Abajo',     icon: 'arrow_downward',  pos: 'bottom' },
+const TINDER_POSITIONS: { label: string; icon: string }[] = [
+  { label: 'Arriba',    icon: 'arrow_upward'   },
+  { label: 'Izquierda', icon: 'arrow_back'     },
+  { label: 'Derecha',   icon: 'arrow_forward'  },
+  { label: 'Abajo',     icon: 'arrow_downward' },
 ];
 
 @Component({
@@ -71,8 +76,7 @@ export class CreateDatasetComponent implements OnInit {
   currentStep = signal<1 | 2 | 3 | 4>(1);
 
   // ─── DATASET PERSISTIDO ──────────────────────────────────────────────────────
-  createdDatasetId  = signal<number | null>(null);
-  categoriesSaved   = signal(false);
+  createdDatasetId = signal<number | null>(null);
 
   // ─── CATÁLOGOS ───────────────────────────────────────────────────────────────
   diagnostics     = signal<MedicalDiagnosticExtended[]>([]);
@@ -80,7 +84,7 @@ export class CreateDatasetComponent implements OnInit {
   subDiagnostics  = signal<MedicalDiagnostic[]>([]);
   loadingCatalogs = signal(true);
 
-  // ─── ICD-10 SEARCH ───────────────────────────────────────────────────────────
+  // ─── ICD-10 SEARCH (step 1) ──────────────────────────────────────────────────
   diagnosticSearch    = signal('');
   filteredDiagnostics = signal<MedicalDiagnosticExtended[]>([]);
 
@@ -94,7 +98,6 @@ export class CreateDatasetComponent implements OnInit {
 
   // ─── FLAGS ───────────────────────────────────────────────────────────────────
   submittingStep1 = signal(false);
-  submittingStep2 = signal(false);
   toast           = signal<Toast | null>(null);
 
   // ─── COMPUTED (step 3) ───────────────────────────────────────────────────────
@@ -103,11 +106,10 @@ export class CreateDatasetComponent implements OnInit {
   readonly tinderSlots = computed(() =>
     this.categories().map((cat, i) => ({
       cat,
-      color:    CATEGORY_COLORS[i % CATEGORY_COLORS.length],
-      label:    TINDER_POSITIONS[i]?.label ?? `Categoría ${cat.numValue}`,
-      icon:     TINDER_POSITIONS[i]?.icon  ?? 'category',
-      pos:      TINDER_POSITIONS[i]?.pos   ?? 'bottom',
-      isLast:   i === this.categories().length - 1,
+      color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+      label: TINDER_POSITIONS[i]?.label ?? `Categoría ${cat.numValue}`,
+      icon:  TINDER_POSITIONS[i]?.icon  ?? 'category',
+      isLast: i === this.categories().length - 1,
     }))
   );
 
@@ -116,12 +118,22 @@ export class CreateDatasetComponent implements OnInit {
       cat,
       color:       CATEGORY_COLORS[i % CATEGORY_COLORS.length],
       displayName: this.getCategoryName(cat),
-      codeCount:   cat.selectedDiagnostics.length,
+      codeCount:   cat.associations.length,
     }))
   );
 
   readonly totalCodes = computed(() =>
-    this.categories().reduce((sum, c) => sum + c.selectedDiagnostics.length, 0)
+    this.categories().reduce((sum, c) => sum + c.associations.length, 0)
+  );
+
+  readonly hasPendingSaves = computed(() =>
+    this.categories().some(c => c.saving)
+  );
+
+  readonly step2CanAdvance = computed(() =>
+    this.categories().length > 0 &&
+    !this.hasPendingSaves() &&
+    this.categories().every(c => c.associations.length > 0)
   );
 
   constructor(
@@ -156,7 +168,7 @@ export class CreateDatasetComponent implements OnInit {
     });
   }
 
-  // ─── ICD-10 ──────────────────────────────────────────────────────────────────
+  // ─── ICD-10 SEARCH ───────────────────────────────────────────────────────────
 
   onSearchChange(value: string): void {
     this.diagnosticSearch.set(value);
@@ -205,33 +217,32 @@ export class CreateDatasetComponent implements OnInit {
     const raw = this.form.getRawValue();
 
     if (this.createdDatasetId() === null) {
-      this.datasetService.create({ name: raw.name, medicalDiagnosticId: raw.medicalDiagnosticId } as any)
-        .subscribe({
-          next: (res) => {
-            const id = res.data?.id!;
-            this.createdDatasetId.set(id);
-            if (raw.evaluationAreaId) {
-              this.datasetService.assignEvaluationArea(id, raw.evaluationAreaId).subscribe({
-                next:  () => this.afterStep1(id, raw.medicalDiagnosticId),
-                error: () => this.afterStep1(id, raw.medicalDiagnosticId),
-              });
-            } else {
-              this.afterStep1(id, raw.medicalDiagnosticId);
-            }
-          },
-          error: () => { this.showToast('Error al crear el dataset', 'error'); this.submittingStep1.set(false); },
-        });
+      this.datasetService.create({ name: raw.name, medicalDiagnosticId: raw.medicalDiagnosticId } as any).subscribe({
+        next: (res) => {
+          const id = res.data?.id!;
+          this.createdDatasetId.set(id);
+          if (raw.evaluationAreaId) {
+            this.datasetService.assignEvaluationArea(id, raw.evaluationAreaId).subscribe({
+              next:  () => this.afterStep1(raw.medicalDiagnosticId),
+              error: () => this.afterStep1(raw.medicalDiagnosticId),
+            });
+          } else {
+            this.afterStep1(raw.medicalDiagnosticId);
+          }
+        },
+        error: () => { this.showToast('Error al crear el dataset', 'error'); this.submittingStep1.set(false); },
+      });
     } else {
       const id = this.createdDatasetId()!;
-      this.datasetService.changeDiagnostic(id, { medicalDiagnosticId: raw.medicalDiagnosticId } as any).subscribe({
+      this.datasetService.update(id, { name: raw.name, medicalDiagnosticId: raw.medicalDiagnosticId } as any).subscribe({
         next: () => {
           if (raw.evaluationAreaId) {
             this.datasetService.assignEvaluationArea(id, raw.evaluationAreaId).subscribe({
-              next:  () => this.afterStep1(id, raw.medicalDiagnosticId),
-              error: () => this.afterStep1(id, raw.medicalDiagnosticId),
+              next:  () => this.afterStep1(raw.medicalDiagnosticId),
+              error: () => this.afterStep1(raw.medicalDiagnosticId),
             });
           } else {
-            this.afterStep1(id, raw.medicalDiagnosticId);
+            this.afterStep1(raw.medicalDiagnosticId);
           }
         },
         error: () => { this.showToast('Error al actualizar el dataset', 'error'); this.submittingStep1.set(false); },
@@ -239,19 +250,16 @@ export class CreateDatasetComponent implements OnInit {
     }
   }
 
-  private afterStep1(datasetId: number, diagnosticId: number): void {
+  private afterStep1(diagnosticId: number): void {
     this.medicalDiagnosticService.findByParentId(diagnosticId).subscribe({
       next: (res) => {
         this.subDiagnostics.set(res.data ?? []);
-        if (this.categories().length === 0) this.addCategory();
-        else {
+        // Actualizar opciones disponibles en categorías existentes
+        if (this.categories().length > 0) {
           this.categories.update(cats =>
             cats.map(c => ({
               ...c,
-              selectedDiagnostics: c.selectedDiagnostics.filter(sd =>
-                (res.data ?? []).some(s => s.id === sd.id)
-              ),
-              filteredOptions: res.data ?? [],
+              filteredOptions: (res.data ?? []).filter(s => !c.associations.some(a => a.diagnostic.id === s.id)),
             }))
           );
         }
@@ -262,21 +270,62 @@ export class CreateDatasetComponent implements OnInit {
     });
   }
 
-  // ─── CATEGORÍAS ──────────────────────────────────────────────────────────────
+  // ─── CATEGORÍAS — creación inmediata ─────────────────────────────────────────
 
   addCategory(): void {
-    const next = this.categories().length + 1;
+    const numValue    = this.categories().length + 1;
+    const datasetId   = this.createdDatasetId()!;
+
+    // Insertar fila en estado "guardando" optimistamente
     this.categories.update(cats => [
       ...cats,
-      { numValue: next, selectedDiagnostics: [], searchValue: '', showDropdown: false, filteredOptions: [...this.subDiagnostics()] },
+      {
+        numValue,
+        categoryId:   undefined,
+        associations: [],
+        searchValue:  '',
+        showDropdown: false,
+        filteredOptions: [...this.subDiagnostics()],
+        saving: true,
+      },
     ]);
+
+    this.datasetCategoryService.create({ numValue, datasetId } as any).subscribe({
+      next: (res) => {
+        const categoryId = res.data?.id;
+        this.categories.update(cats =>
+          cats.map(c => c.numValue === numValue ? { ...c, categoryId, saving: false } : c)
+        );
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Error al crear la categoría';
+        this.showToast(msg, 'error');
+        // Revertir la fila optimista
+        this.categories.update(cats => cats.filter(c => c.numValue !== numValue));
+      },
+    });
   }
 
   removeCategory(index: number): void {
-    this.categories.update(cats =>
-      cats.filter((_, i) => i !== index).map((c, i) => ({ ...c, numValue: i + 1 }))
-    );
+    const cat = this.categories()[index];
+
+    const removeFromSignal = () =>
+      this.categories.update(cats =>
+        cats.filter((_, i) => i !== index).map((c, i) => ({ ...c, numValue: i + 1 }))
+      );
+
+    if (!cat.categoryId) { removeFromSignal(); return; }
+
+    this.datasetCategoryService.delete(cat.categoryId).subscribe({
+      next:  () => removeFromSignal(),
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Error al eliminar la categoría';
+        this.showToast(msg, 'error');
+      },
+    });
   }
+
+  // ─── SUB-DIAGNÓSTICOS — creación/eliminación inmediata ───────────────────────
 
   onCategorySearch(index: number, value: string): void {
     this.categories.update(cats =>
@@ -288,9 +337,9 @@ export class CreateDatasetComponent implements OnInit {
           searchValue:  value,
           showDropdown: true,
           filteredOptions: !q
-            ? this.subDiagnostics().filter(s => !c.selectedDiagnostics.some(sd => sd.id === s.id))
+            ? this.subDiagnostics().filter(s => !c.associations.some(a => a.diagnostic.id === s.id))
             : this.subDiagnostics().filter(s =>
-                !c.selectedDiagnostics.some(sd => sd.id === s.id) &&
+                !c.associations.some(a => a.diagnostic.id === s.id) &&
                 (s.diagnosticCode.toLowerCase().includes(q) || s.diagnosticName.toLowerCase().includes(q))
               ),
         };
@@ -302,7 +351,8 @@ export class CreateDatasetComponent implements OnInit {
     this.categories.update(cats =>
       cats.map((c, i) => i !== index
         ? { ...c, showDropdown: false }
-        : { ...c, showDropdown: true, filteredOptions: this.subDiagnostics().filter(s => !c.selectedDiagnostics.some(sd => sd.id === s.id)) }
+        : { ...c, showDropdown: true,
+            filteredOptions: this.subDiagnostics().filter(s => !c.associations.some(a => a.diagnostic.id === s.id)) }
       )
     );
   }
@@ -316,87 +366,98 @@ export class CreateDatasetComponent implements OnInit {
   }
 
   addSubDiagnosticToCategory(catIndex: number, diag: MedicalDiagnostic): void {
-    this.categories.update(cats =>
-      cats.map((c, i) => {
-        if (i !== catIndex) return c;
-        const updated = [...c.selectedDiagnostics, diag];
-        return { ...c, selectedDiagnostics: updated, searchValue: '', showDropdown: false,
-          filteredOptions: this.subDiagnostics().filter(s => !updated.some(sd => sd.id === s.id)) };
-      })
-    );
-  }
+    const cat = this.categories()[catIndex];
 
-  removeSubDiagnostic(catIndex: number, diagId: number): void {
-    this.categories.update(cats =>
-      cats.map((c, i) => i !== catIndex ? c :
-        { ...c, selectedDiagnostics: c.selectedDiagnostics.filter(sd => sd.id !== diagId) }
-      )
-    );
-  }
-
-  // ─── STEP 2 → Siguiente ──────────────────────────────────────────────────────
-
-  step2Next(): void {
-    // Si ya están guardadas, sólo avanzar de step
-    if (this.categoriesSaved()) { this.currentStep.set(3); return; }
-
-    const cats = this.categories();
-    if (cats.length === 0) { this.showToast('Agrega al menos una categoría', 'error'); return; }
-    if (cats.some(c => c.selectedDiagnostics.length === 0)) {
-      this.showToast('Cada categoría debe tener al menos un sub-diagnóstico', 'error'); return;
+    if (!cat.categoryId) {
+      this.showToast('La categoría aún se está guardando, intenta de nuevo', 'error');
+      return;
     }
 
-    this.submittingStep2.set(true);
-    const datasetId = this.createdDatasetId()!;
-
-    from(cats).pipe(
-      concatMap(cat => this.datasetCategoryService.create({ numValue: cat.numValue, datasetId } as any))
-    ).subscribe({
-      next:  () => {},
-      error: () => { this.showToast('Error al guardar las categorías', 'error'); this.submittingStep2.set(false); },
-      complete: () => {
-        this.datasetCategoryService.findByDatasetId(datasetId).subscribe({
-          next: (res) => {
-            const createdCats = res.data ?? [];
-            const associations: { categoryId: number; diagId: number }[] = [];
-
-            cats.forEach(cat => {
-              const created = createdCats.find(c => c.numValue === cat.numValue);
-              if (!created?.id) return;
-              cat.selectedDiagnostics.forEach(d => associations.push({ categoryId: created.id!, diagId: d.id! }));
-            });
-
-            from(associations).pipe(
-              concatMap(a => this.diagnosticCategoryDatasetService.create(
-                { medicalDiagnosticId: a.diagId, datasetCategoryId: a.categoryId } as any
-              ))
-            ).subscribe({
-              next:     () => {},
-              error:    () => { this.showToast('Error al asociar sub-diagnósticos', 'error'); this.submittingStep2.set(false); },
-              complete: () => {
-                this.categoriesSaved.set(true);
-                this.submittingStep2.set(false);
-                this.currentStep.set(3);
-              },
-            });
-          },
-          error: () => { this.showToast('Error al verificar categorías', 'error'); this.submittingStep2.set(false); },
-        });
+    this.diagnosticCategoryDatasetService.create({
+      medicalDiagnosticId: diag.id,
+      datasetCategoryId:   cat.categoryId,
+    } as any).subscribe({
+      next: (res) => {
+        const assocId = res.data?.id!;
+        this.categories.update(cats =>
+          cats.map((c, i) => {
+            if (i !== catIndex) return c;
+            const associations = [...c.associations, { assocId, diagnostic: diag }];
+            return {
+              ...c,
+              associations,
+              searchValue:  '',
+              showDropdown: false,
+              filteredOptions: this.subDiagnostics().filter(s =>
+                !associations.some(a => a.diagnostic.id === s.id)
+              ),
+            };
+          })
+        );
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Error al asociar el sub-diagnóstico';
+        this.showToast(msg, 'error');
       },
     });
   }
 
-  // ─── STEP 3 (preview) ────────────────────────────────────────────────────────
+  removeSubDiagnostic(catIndex: number, assocId: number): void {
+    this.diagnosticCategoryDatasetService.delete(assocId).subscribe({
+      next: () => {
+        this.categories.update(cats =>
+          cats.map((c, i) => {
+            if (i !== catIndex) return c;
+            const associations = c.associations.filter(a => a.assocId !== assocId);
+            return {
+              ...c,
+              associations,
+              filteredOptions: this.subDiagnostics().filter(s =>
+                !associations.some(a => a.diagnostic.id === s.id)
+              ),
+            };
+          })
+        );
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Error al eliminar el sub-diagnóstico';
+        this.showToast(msg, 'error');
+      },
+    });
+  }
+
+  // ─── STEP 2 → Siguiente (solo validación, todo ya está en BD) ────────────────
+
+  step2Next(): void {
+    if (this.hasPendingSaves()) {
+      this.showToast('Espera a que terminen de guardarse las categorías', 'error');
+      return;
+    }
+    if (this.categories().length === 0) {
+      this.showToast('Agrega al menos una categoría', 'error');
+      return;
+    }
+    const invalid = this.categories().find(c => c.associations.length === 0);
+    if (invalid) {
+      this.showToast(`La categoría ${invalid.numValue} necesita al menos un sub-diagnóstico`, 'error');
+      return;
+    }
+    this.currentStep.set(3);
+  }
+
+  // ─── STEP 3 ──────────────────────────────────────────────────────────────────
 
   getCategoryName(cat: CategoryRow): string {
-    if (cat.selectedDiagnostics.length === 0) return `Categoría ${cat.numValue}`;
-    if (cat.selectedDiagnostics.length === 1) return cat.selectedDiagnostics[0].diagnosticName;
-    return cat.selectedDiagnostics.map(d => d.diagnosticCode).join(', ');
+    if (cat.associations.length === 0) return `Categoría ${cat.numValue}`;
+    if (cat.associations.length === 1)  return cat.associations[0].diagnostic.diagnosticName;
+    return cat.associations.map(a => a.diagnostic.diagnosticCode).join(', ');
   }
 
   getCategoryColor(index: number): string {
     return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
   }
+
+  step3Next(): void { this.currentStep.set(4); }
 
   // ─── NAVEGACIÓN ──────────────────────────────────────────────────────────────
 
@@ -408,10 +469,7 @@ export class CreateDatasetComponent implements OnInit {
     else if (s === 4) this.currentStep.set(3);
   }
 
-  step3Next(): void { this.currentStep.set(4); }
-
   finish(): void { this.router.navigate(['/datasets']); }
-
   cancel(): void { this.router.navigate(['/datasets']); }
 
   step1Valid(): boolean {

@@ -39,8 +39,8 @@ export class DatasetService {
   }
 
   /** Cambiar el diagnóstico médico de un dataset → DatasetResponseDTO */
-  changeDiagnostic(id: number, dataset: Partial<Dataset>): Observable<ApiResponse<DatasetExtended>> {
-    return this.http.put<ApiResponse<DatasetExtended>>(`${apiUrl}/${id}/change-diagnostic`, dataset);
+  update(id: number, dataset: Partial<Dataset>): Observable<ApiResponse<DatasetExtended>> {
+    return this.http.put<ApiResponse<DatasetExtended>>(`${apiUrl}/${id}`, dataset);
   }
 
   /** Asignar un dataset a un área de evaluación → DatasetResponseDTO */
