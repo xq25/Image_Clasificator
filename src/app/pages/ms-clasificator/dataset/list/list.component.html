@@ -106,8 +106,8 @@
                   <span class="info-value">{{ viewDataset()!.medicalDiagnostic.diagnosticName }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label"><mat-icon class="row-icon">area_chart</mat-icon> Área de evaluación</span>
-                  <span class="info-value">{{ viewDataset()!.evaluationArea?.name ?? 'Sin asignar' }}</span>
+                  <span class="info-label"><mat-icon class="row-icon">image</mat-icon> Tipo de imagen médica</span>
+                  <span class="info-value">{{ viewDataset()!.medicalImageType.name }}</span>
                 </div>
               </div>
             }
@@ -167,26 +167,25 @@
                   }
                 </div>
 
-                <!-- Área de evaluación -->
+                <!-- Tipo de imagen médica -->
                 <div class="edit-field">
-                  <label class="edit-label">Área de evaluación <span class="opt-tag">Opcional</span></label>
+                  <label class="edit-label">Tipo de imagen médica *</label>
                   <div class="areas-grid">
-                    @for (area of allAreas(); track area.id) {
+                    @for (it of allImageTypes(); track it.id) {
                       <div class="area-card"
-                           [class.selected]="editArea()?.id === area.id"
-                           (click)="editArea.set(editArea()?.id === area.id ? null : area)">
-                        <mat-icon class="area-icon">local_hospital</mat-icon>
+                           [class.selected]="editImageType()?.id === it.id"
+                           (click)="editImageType.set(it)">
+                        <mat-icon class="area-icon">image</mat-icon>
                         <div class="area-info">
-                          <span class="area-code">{{ area.codeArea }}</span>
-                          <span class="area-name-txt">{{ area.name }}</span>
+                          <span class="area-name-txt">{{ it.name }}</span>
                         </div>
-                        @if (editArea()?.id === area.id) {
+                        @if (editImageType()?.id === it.id) {
                           <mat-icon class="area-check">check_circle</mat-icon>
                         }
                       </div>
                     }
-                    @if (!loadingCatalogs() && allAreas().length === 0) {
-                      <span class="no-areas">No hay áreas disponibles</span>
+                    @if (!loadingCatalogs() && allImageTypes().length === 0) {
+                      <span class="no-areas">No hay tipos de imagen disponibles</span>
                     }
                   </div>
                 </div>
@@ -198,7 +197,7 @@
                   </button>
                   <button mat-flat-button color="primary" type="button"
                           (click)="saveGeneral()"
-                          [disabled]="savingGeneral() || loadingCatalogs() || !editDiagnostic()">
+                          [disabled]="savingGeneral() || loadingCatalogs() || !editDiagnostic() || !editImageType()">
                     @if (savingGeneral()) {
                       <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
                     } @else {
@@ -227,20 +226,6 @@
                 <div>
                   <span class="stat-num">{{ totalCodes() }}</span>
                   <span class="stat-label">Códigos CIE-10</span>
-                </div>
-              </div>
-              <div class="stat-chip">
-                <mat-icon class="stat-icon">image</mat-icon>
-                <div>
-                  <span class="stat-num">—</span>
-                  <span class="stat-label">Imágenes</span>
-                </div>
-              </div>
-              <div class="stat-chip">
-                <mat-icon class="stat-icon">check_circle</mat-icon>
-                <div>
-                  <span class="stat-num">—</span>
-                  <span class="stat-label">Clasificadas</span>
                 </div>
               </div>
             </div>

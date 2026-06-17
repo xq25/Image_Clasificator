@@ -15,13 +15,13 @@ import { DatasetService } from '@app/services/ms-clasificator/dataset.service';
 import { DatasetCategoryService } from '@app/services/ms-clasificator/dataset-category.service';
 import { DiagnosticCategoryDatasetService } from '@app/services/ms-clasificator/diagnostic-category-dataset.service';
 import { MedicalDiagnosticService } from '@app/services/ms-clasificator/medical-diagnostic.service';
-import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
+import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
 
 import { DatasetExtended } from '@app/models/ms-clasificator/Dataset/Dataset';
 import { DatasetCategory } from '@app/models/ms-clasificator/DatasetCategory/DatasetCategory';
 import { DaignosticCategoryDataset } from '@app/models/ms-clasificator/DiagnosticCategoryDataset/DiagnosticCategoryDataset';
 import { MedicalDiagnostic, MedicalDiagnosticExtended } from '@app/models/ms-clasificator/MedicalDiagnostic/MedicalDiagnostic';
-import { EvaluationArea } from '@app/models/ms-clasificator/EvaluationArea/EvaluationArea';
+import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
 
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 
@@ -30,7 +30,6 @@ interface Toast { message: string; type: 'success' | 'error'; }
 export interface CategoryView {
   category:        DatasetCategory;
   diagnostics:     DaignosticCategoryDataset[];
-  // edit-mode fields
   searchValue:     string;
   showDropdown:    boolean;
   filteredOptions: MedicalDiagnostic[];
@@ -79,10 +78,10 @@ export class DatasetListComponent implements OnInit {
   editingGeneral  = signal(false);
   editName        = signal('');
   editDiagnostic  = signal<MedicalDiagnosticExtended | null>(null);
-  editArea        = signal<EvaluationArea | null>(null);
+  editImageType   = signal<MedicalImageType | null>(null);
   diagSearch      = signal('');
   allDiagnostics  = signal<MedicalDiagnosticExtended[]>([]);
-  allAreas        = signal<EvaluationArea[]>([]);
+  allImageTypes   = signal<MedicalImageType[]>([]);
   savingGeneral   = signal(false);
   loadingCatalogs = signal(false);
 
@@ -103,10 +102,11 @@ export class DatasetListComponent implements OnInit {
 
   // ─── TABLE ───────────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
-    { key: 'id',   label: 'ID'     },
-    { key: 'name', label: 'Nombre' },
-    { key: 'diagnosticCode', label: 'Código CIE-10' },
-    { key: 'diagnosticName', label: 'Diagnóstico'   },
+    { key: 'id',              label: 'ID'              },
+    { key: 'name',            label: 'Nombre'          },
+    { key: 'diagnosticCode',  label: 'Código CIE-10'   },
+    { key: 'diagnosticName',  label: 'Diagnóstico'     },
+    { key: 'imageTypeName',   label: 'Tipo de imagen'  },
   ];
 
   actionButtons: TableAction[] = [
@@ -119,7 +119,7 @@ export class DatasetListComponent implements OnInit {
     private categoryService:   DatasetCategoryService,
     private diagCatService:    DiagnosticCategoryDatasetService,
     private medDiagService:    MedicalDiagnosticService,
-    private areaService:       EvaluationAreaService,
+    private imageTypeService:  MedicalImageTypeService,
   ) {}
 
   ngOnInit(): void { this.loadDatasets(); }
@@ -134,6 +134,7 @@ export class DatasetListComponent implements OnInit {
           ...d,
           diagnosticCode: (d as any).medicalDiagnostic?.diagnosticCode ?? '—',
           diagnosticName: (d as any).medicalDiagnostic?.diagnosticName ?? '—',
+          imageTypeName:  (d as any).medicalImageType?.name             ?? '—',
         }));
         this.datasets.set(flat as DatasetExtended[]);
         this.loading.set(false);
@@ -234,19 +235,19 @@ export class DatasetListComponent implements OnInit {
     if (!d) return;
     this.editName.set(d.name);
     this.editDiagnostic.set(d.medicalDiagnostic as MedicalDiagnosticExtended);
-    this.editArea.set(d.evaluationArea ?? null);
+    this.editImageType.set(d.medicalImageType ?? null);
     this.diagSearch.set('');
     this.editingCategories.set(false);
 
-    if (this.allDiagnostics().length === 0 || this.allAreas().length === 0) {
+    if (this.allDiagnostics().length === 0 || this.allImageTypes().length === 0) {
       this.loadingCatalogs.set(true);
       forkJoin([
         this.medDiagService.findAll(),
-        this.areaService.findAll(),
+        this.imageTypeService.findAll(),
       ]).subscribe({
-        next: ([diags, areasRes]) => {
+        next: ([diags, imageTypesRes]) => {
           this.allDiagnostics.set(diags ?? []);
-          this.allAreas.set(areasRes.data ?? []);
+          this.allImageTypes.set(imageTypesRes.data ?? []);
           this.loadingCatalogs.set(false);
         },
         error: () => {
@@ -265,31 +266,18 @@ export class DatasetListComponent implements OnInit {
   }
 
   saveGeneral(): void {
-    const d    = this.viewDataset();
-    const diag = this.editDiagnostic();
-    if (!d || !diag) return;
+    const d         = this.viewDataset();
+    const diag      = this.editDiagnostic();
+    const imageType = this.editImageType();
+    if (!d || !diag || !imageType) return;
 
     this.savingGeneral.set(true);
-    const id      = d.id!;
-    const newName = this.editName().trim();
-    const newArea = this.editArea();
+    const id = d.id!;
 
-    // 1. changeDiagnostic also accepts name on this backend
     this.datasetService.update(id, {
-      name: newName || d.name,
       medicalDiagnosticId: diag.id,
-    } as any).pipe(
-      switchMap(() => {
-        const oldAreaId = d.evaluationArea?.id;
-        const newAreaId = newArea?.id;
-        if (newAreaId && newAreaId !== oldAreaId) {
-          return this.datasetService.assignEvaluationArea(id, newAreaId);
-        } else if (!newAreaId && oldAreaId) {
-          return this.datasetService.removeFromEvaluationArea(id);
-        }
-        return of(null);
-      })
-    ).subscribe({
+      medicalImageTypeId:  imageType.id,
+    } as any).subscribe({
       next: () => {
         this.savingGeneral.set(false);
         this.showToast('Dataset actualizado', 'success');
@@ -346,7 +334,6 @@ export class DatasetListComponent implements OnInit {
     })));
   }
 
-  // Quitar diagnóstico de una categoría
   removeDiagFromCategory(catIdx: number, assocId: number): void {
     this.diagCatService.delete(assocId).subscribe({
       next: () => {
@@ -360,7 +347,6 @@ export class DatasetListComponent implements OnInit {
     });
   }
 
-  // Eliminar categoría entera
   deleteCategory(catIdx: number): void {
     const cv = this.viewCategories()[catIdx];
     if (!cv?.category.id) return;
@@ -373,7 +359,6 @@ export class DatasetListComponent implements OnInit {
     });
   }
 
-  // Search sub-diagnósticos en una categoría
   onCategorySearch(catIdx: number, value: string): void {
     const q = value.toLowerCase().trim();
     this.viewCategories.update(cats => cats.map((cv, i) => {
@@ -428,7 +413,6 @@ export class DatasetListComponent implements OnInit {
     });
   }
 
-  // Agregar nueva categoría al dataset
   addCategory(): void {
     const datasetId = this.currentId();
     if (!datasetId) return;

@@ -117,24 +117,27 @@
             </div>
 
             <div class="field-block">
-              <label class="field-label">Área de evaluación <span class="optional-tag">Opcional</span></label>
+              <label class="field-label">Tipo de imagen médica *</label>
               <div class="areas-grid">
-                @for (area of evaluationAreas(); track area.id) {
-                  <div class="area-card" [class.selected]="selectedArea()?.id === area.id" (click)="selectArea(area)">
-                    <mat-icon class="area-icon">local_hospital</mat-icon>
+                @for (imageType of imageTypes(); track imageType.id) {
+                  <div class="area-card" [class.selected]="selectedImageType()?.id === imageType.id" (click)="selectImageType(imageType)">
+                    <mat-icon class="area-icon">image</mat-icon>
                     <div class="area-info">
-                      <span class="area-code">{{ area.codeArea }}</span>
-                      <span class="area-name">{{ area.name }}</span>
+                      <span class="area-name">{{ imageType.name }}</span>
                     </div>
-                    @if (selectedArea()?.id === area.id) {
+                    @if (selectedImageType()?.id === imageType.id) {
                       <mat-icon class="area-check">check_circle</mat-icon>
                     }
                   </div>
                 }
-                @if (evaluationAreas().length === 0) {
-                  <p class="no-areas">No hay áreas disponibles.</p>
+                @if (imageTypes().length === 0) {
+                  <p class="no-areas">No hay tipos de imagen disponibles.</p>
                 }
               </div>
+              @if (form.get('medicalImageTypeId')?.invalid && form.get('medicalImageTypeId')?.touched) {
+                <p class="field-error">Selecciona un tipo de imagen médica</p>
+              }
+              <p class="field-hint">Tipo de imagen que este dataset clasificará.</p>
             </div>
           </div>
 
@@ -426,12 +429,10 @@
                 <span class="sb-label">Nombre</span>
                 <span class="sb-value">{{ form.get('name')?.value }}</span>
               </div>
-              @if (selectedArea()) {
-                <div class="sidebar-row">
-                  <span class="sb-label">Área de evaluación</span>
-                  <span class="sb-value accent">{{ selectedArea()!.name }}</span>
-                </div>
-              }
+              <div class="sidebar-row">
+                <span class="sb-label">Tipo de imagen médica</span>
+                <span class="sb-value accent">{{ selectedImageType()?.name ?? '—' }}</span>
+              </div>
               <div class="sidebar-row">
                 <span class="sb-label">Diagnóstico padre (CIE-10)</span>
                 <span class="sb-value accent small">
@@ -509,15 +510,13 @@
                 <span class="review-value">{{ selectedDiagnostic()?.diagnosticCode }} — {{ selectedDiagnostic()?.diagnosticName }}</span>
               </div>
             </div>
-            @if (selectedArea()) {
-              <div class="review-item">
-                <mat-icon>area_chart</mat-icon>
-                <div>
-                  <span class="review-label">Área de evaluación</span>
-                  <span class="review-value">{{ selectedArea()!.codeArea }} — {{ selectedArea()!.name }}</span>
-                </div>
+            <div class="review-item">
+              <mat-icon>image</mat-icon>
+              <div>
+                <span class="review-label">Tipo de imagen médica</span>
+                <span class="review-value">{{ selectedImageType()?.name ?? '—' }}</span>
               </div>
-            }
+            </div>
             <div class="review-item">
               <mat-icon>category</mat-icon>
               <div>

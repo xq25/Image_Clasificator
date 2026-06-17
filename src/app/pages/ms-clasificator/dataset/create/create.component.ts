@@ -15,10 +15,10 @@ import { DatasetService } from '@app/services/ms-clasificator/dataset.service';
 import { DatasetCategoryService } from '@app/services/ms-clasificator/dataset-category.service';
 import { DiagnosticCategoryDatasetService } from '@app/services/ms-clasificator/diagnostic-category-dataset.service';
 import { MedicalDiagnosticService } from '@app/services/ms-clasificator/medical-diagnostic.service';
-import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
+import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
 
 import { MedicalDiagnostic, MedicalDiagnosticExtended } from '@app/models/ms-clasificator/MedicalDiagnostic/MedicalDiagnostic';
-import { EvaluationArea } from '@app/models/ms-clasificator';
+import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
 
 interface Toast { message: string; type: 'success' | 'error'; }
 
@@ -79,10 +79,10 @@ export class CreateDatasetComponent implements OnInit {
   createdDatasetId = signal<number | null>(null);
 
   // ─── CATÁLOGOS ───────────────────────────────────────────────────────────────
-  diagnostics     = signal<MedicalDiagnosticExtended[]>([]);
-  evaluationAreas = signal<EvaluationArea[]>([]);
-  subDiagnostics  = signal<MedicalDiagnostic[]>([]);
-  loadingCatalogs = signal(true);
+  diagnostics      = signal<MedicalDiagnosticExtended[]>([]);
+  imageTypes       = signal<MedicalImageType[]>([]);
+  subDiagnostics   = signal<MedicalDiagnostic[]>([]);
+  loadingCatalogs  = signal(true);
 
   // ─── ICD-10 SEARCH (step 1) ──────────────────────────────────────────────────
   diagnosticSearch    = signal('');
@@ -91,7 +91,7 @@ export class CreateDatasetComponent implements OnInit {
   // ─── FORMULARIO ──────────────────────────────────────────────────────────────
   form!: FormGroup;
   selectedDiagnostic = signal<MedicalDiagnosticExtended | null>(null);
-  selectedArea       = signal<EvaluationArea | null>(null);
+  selectedImageType  = signal<MedicalImageType | null>(null);
 
   // ─── CATEGORÍAS ──────────────────────────────────────────────────────────────
   categories = signal<CategoryRow[]>([]);
@@ -141,23 +141,23 @@ export class CreateDatasetComponent implements OnInit {
     private datasetCategoryService:           DatasetCategoryService,
     private diagnosticCategoryDatasetService: DiagnosticCategoryDatasetService,
     private medicalDiagnosticService:         MedicalDiagnosticService,
-    private evaluationAreaService:            EvaluationAreaService,
+    private medicalImageTypeService:          MedicalImageTypeService,
   ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
       name:                ['', [Validators.required, Validators.minLength(3)]],
       medicalDiagnosticId: [null, Validators.required],
-      evaluationAreaId:    [null],
+      medicalImageTypeId:  [null, Validators.required],
     });
 
     forkJoin([
       this.medicalDiagnosticService.findAll(),
-      this.evaluationAreaService.findAll(),
+      this.medicalImageTypeService.findAll(),
     ]).subscribe({
-      next: ([diagRes, areaRes]) => {
+      next: ([diagRes, imageTypeRes]) => {
         this.diagnostics.set(diagRes ?? []);
-        this.evaluationAreas.set(areaRes.data ?? []);
+        this.imageTypes.set(imageTypeRes.data ?? []);
         this.filteredDiagnostics.set(diagRes ?? []);
         this.loadingCatalogs.set(false);
       },
@@ -196,13 +196,13 @@ export class CreateDatasetComponent implements OnInit {
     this.filteredDiagnostics.set(this.diagnostics());
   }
 
-  selectArea(area: EvaluationArea): void {
-    if (this.selectedArea()?.id === area.id) {
-      this.selectedArea.set(null);
-      this.form.patchValue({ evaluationAreaId: null });
+  selectImageType(imageType: MedicalImageType): void {
+    if (this.selectedImageType()?.id === imageType.id) {
+      this.selectedImageType.set(null);
+      this.form.patchValue({ medicalImageTypeId: null });
     } else {
-      this.selectedArea.set(area);
-      this.form.patchValue({ evaluationAreaId: area.id });
+      this.selectedImageType.set(imageType);
+      this.form.patchValue({ medicalImageTypeId: imageType.id });
     }
   }
 
@@ -211,41 +211,38 @@ export class CreateDatasetComponent implements OnInit {
   step1Next(): void {
     this.form.get('name')?.markAsTouched();
     this.form.get('medicalDiagnosticId')?.markAsTouched();
+    this.form.get('medicalImageTypeId')?.markAsTouched();
     if (!this.step1Valid()) return;
 
     this.submittingStep1.set(true);
     const raw = this.form.getRawValue();
 
     if (this.createdDatasetId() === null) {
-      this.datasetService.create({ name: raw.name, medicalDiagnosticId: raw.medicalDiagnosticId } as any).subscribe({
+      this.datasetService.create({
+        name: raw.name,
+        medicalDiagnosticId: raw.medicalDiagnosticId,
+        medicalImageTypeId: raw.medicalImageTypeId,
+      } as any).subscribe({
         next: (res) => {
-          const id = res.data?.id!;
-          this.createdDatasetId.set(id);
-          if (raw.evaluationAreaId) {
-            this.datasetService.assignEvaluationArea(id, raw.evaluationAreaId).subscribe({
-              next:  () => this.afterStep1(raw.medicalDiagnosticId),
-              error: () => this.afterStep1(raw.medicalDiagnosticId),
-            });
-          } else {
-            this.afterStep1(raw.medicalDiagnosticId);
-          }
+          this.createdDatasetId.set(res.data?.id!);
+          this.afterStep1(raw.medicalDiagnosticId);
         },
-        error: () => { this.showToast('Error al crear el dataset', 'error'); this.submittingStep1.set(false); },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Error al crear el dataset', 'error');
+          this.submittingStep1.set(false);
+        },
       });
     } else {
       const id = this.createdDatasetId()!;
-      this.datasetService.update(id, { name: raw.name, medicalDiagnosticId: raw.medicalDiagnosticId } as any).subscribe({
-        next: () => {
-          if (raw.evaluationAreaId) {
-            this.datasetService.assignEvaluationArea(id, raw.evaluationAreaId).subscribe({
-              next:  () => this.afterStep1(raw.medicalDiagnosticId),
-              error: () => this.afterStep1(raw.medicalDiagnosticId),
-            });
-          } else {
-            this.afterStep1(raw.medicalDiagnosticId);
-          }
+      this.datasetService.update(id, {
+        medicalDiagnosticId: raw.medicalDiagnosticId,
+        medicalImageTypeId: raw.medicalImageTypeId,
+      } as any).subscribe({
+        next: () => this.afterStep1(raw.medicalDiagnosticId),
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Error al actualizar el dataset', 'error');
+          this.submittingStep1.set(false);
         },
-        error: () => { this.showToast('Error al actualizar el dataset', 'error'); this.submittingStep1.set(false); },
       });
     }
   }
@@ -254,7 +251,6 @@ export class CreateDatasetComponent implements OnInit {
     this.medicalDiagnosticService.findByParentId(diagnosticId).subscribe({
       next: (res) => {
         this.subDiagnostics.set(res.data ?? []);
-        // Actualizar opciones disponibles en categorías existentes
         if (this.categories().length > 0) {
           this.categories.update(cats =>
             cats.map(c => ({
@@ -276,7 +272,6 @@ export class CreateDatasetComponent implements OnInit {
     const numValue    = this.categories().length + 1;
     const datasetId   = this.createdDatasetId()!;
 
-    // Insertar fila en estado "guardando" optimistamente
     this.categories.update(cats => [
       ...cats,
       {
@@ -300,7 +295,6 @@ export class CreateDatasetComponent implements OnInit {
       error: (err) => {
         const msg = err?.error?.message ?? 'Error al crear la categoría';
         this.showToast(msg, 'error');
-        // Revertir la fila optimista
         this.categories.update(cats => cats.filter(c => c.numValue !== numValue));
       },
     });
@@ -426,7 +420,7 @@ export class CreateDatasetComponent implements OnInit {
     });
   }
 
-  // ─── STEP 2 → Siguiente (solo validación, todo ya está en BD) ────────────────
+  // ─── STEP 2 → Siguiente ──────────────────────────────────────────────────────
 
   step2Next(): void {
     if (this.hasPendingSaves()) {
@@ -473,7 +467,9 @@ export class CreateDatasetComponent implements OnInit {
   cancel(): void { this.router.navigate(['/datasets']); }
 
   step1Valid(): boolean {
-    return !!this.form.get('name')?.valid && !!this.selectedDiagnostic();
+    return !!this.form.get('name')?.valid &&
+           !!this.selectedDiagnostic() &&
+           !!this.selectedImageType();
   }
 
   private showToast(message: string, type: 'success' | 'error'): void {

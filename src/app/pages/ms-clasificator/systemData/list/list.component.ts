@@ -22,6 +22,8 @@ import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/M
 import { PrimitiveDatumService }   from '@app/services/ms-clasificator/primitive-datum.service';
 import { MedicalImageService }     from '@app/services/ms-clasificator/medical-image.service';
 import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
+import { EvaluationAreaService }   from '@app/services/ms-clasificator/evaluation-area.service';
+import { EvaluationArea }          from '@app/models/ms-clasificator/EvaluationArea/EvaluationArea';
 
 type ActiveTab = 'primitivos' | 'imagenes';
 type PanelMode = 'create' | 'edit' | 'view';
@@ -82,6 +84,7 @@ export class SystemDataListComponent implements OnInit {
   selectedFile      = signal<File | null>(null);
   filePreviewUrl    = signal<string | null>(null);
   viewImageUrl      = signal<string | null>(null);
+  evaluationAreas   = signal<EvaluationArea[]>([]);
 
   // ─── ENUM OPTIONS ─────────────────────────────────────────────────────────────
   readonly primitiveTypeOptions = [
@@ -155,6 +158,7 @@ export class SystemDataListComponent implements OnInit {
     private primitiveDatumService:   PrimitiveDatumService,
     private medicalImageService:     MedicalImageService,
     private medicalImageTypeService: MedicalImageTypeService,
+    private evaluationAreaService:   EvaluationAreaService,
   ) {}
 
   ngOnInit(): void {
@@ -168,7 +172,7 @@ export class SystemDataListComponent implements OnInit {
   loadAll(): void {
     this.loading.set(true);
     let done = 0;
-    const checkDone = () => { if (++done === 3) this.loading.set(false); };
+    const checkDone = () => { if (++done === 4) this.loading.set(false); };
 
     this.primitiveDatumService.findAll().subscribe({
       next: r => { this.primitiveDatums.set(r.data ?? []); checkDone(); },
@@ -184,6 +188,15 @@ export class SystemDataListComponent implements OnInit {
       next: r => { this.imageTypes.set(r.data ?? []); checkDone(); },
       error: () => checkDone(),
     });
+
+    this.evaluationAreaService.findAll().subscribe({
+      next: r => { this.evaluationAreas.set(r.data ?? []); checkDone(); },
+      error: () => checkDone(),
+    });
+  }
+
+  get evaluationAreaOptions() {
+    return this.evaluationAreas().map(a => ({ value: a.id!, label: `${a.codeArea} – ${a.name}` }));
   }
 
   get imageTypeOptions() {
@@ -347,7 +360,8 @@ export class SystemDataListComponent implements OnInit {
 
   initNewTypeForm(): void {
     this.newTypeForm = this.fb.group({
-      typeName: ['', [Validators.required, Validators.minLength(2)]],
+      typeName:        ['', [Validators.required, Validators.minLength(2)]],
+      evaluationAreaId: [null],
     });
   }
 
@@ -402,20 +416,36 @@ export class SystemDataListComponent implements OnInit {
     if (this.newTypeForm.invalid) return;
 
     const name = this.newTypeForm.value.typeName?.trim();
+    const areaId = this.newTypeForm.value.evaluationAreaId as number | null;
     if (!name) return;
 
     this.medicalImageTypeService.create({ name }).subscribe({
-      next: r => {
-        this.showToast('Tipo de imagen creado', 'success');
-        this.medicalImageTypeService.findAll().subscribe({
-          next: res => {
-            this.imageTypes.set(res.data ?? []);
-            const newType = res.data?.find(t => t.name === name);
-            if (newType?.id) this.createForm.get('imgTypeId')!.setValue(newType.id);
-          },
-        });
-        this.showNewTypeForm.set(false);
-        this.initNewTypeForm();
+      next: created => {
+        const newId = created.data?.id;
+        const afterCreate = () => {
+          this.showToast('Tipo de imagen creado', 'success');
+          this.medicalImageTypeService.findAll().subscribe({
+            next: res => {
+              this.imageTypes.set(res.data ?? []);
+              const newType = res.data?.find(t => t.name === name);
+              if (newType?.id) this.createForm.get('imgTypeId')!.setValue(newType.id);
+            },
+          });
+          this.showNewTypeForm.set(false);
+          this.initNewTypeForm();
+        };
+
+        if (newId && areaId) {
+          this.medicalImageTypeService.assignEvaluationArea(newId, areaId).subscribe({
+            next: () => afterCreate(),
+            error: () => {
+              this.showToast('Tipo creado, pero error al asignar área', 'error');
+              afterCreate();
+            },
+          });
+        } else {
+          afterCreate();
+        }
       },
       error: () => this.showToast('Error al crear tipo de imagen', 'error'),
     });

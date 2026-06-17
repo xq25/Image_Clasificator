@@ -72,6 +72,16 @@ export const FullLayoutRoutes: Routes = [
           import('../../pages/ms-clasificator/systemData/system-data.routes').then((m) => m.SystemDataRoutes),
       },
       {
+        path: 'medical-image-types',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/medicalImageType/medical-image-type.routes').then((m) => m.MedicalImageTypeRoutes),
+      },
+      {
+        path: 'classification',
+        loadChildren: () =>
+          import('../../pages/ms-clasificator/classification/classification.routes').then((m) => m.ClassificationRoutes),
+      },
+      {
         path: 'roles',
         loadChildren: () =>
           import('../../pages/ms-security/roles/roles.routes').then((m) => m.rolesRoutes),

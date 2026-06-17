@@ -56,6 +56,11 @@ export const navItems: NavItem[] = [
     route: '/system-data/list',
   },
   {
+    displayName: 'Medical Image Types',
+    iconName: 'solar:medical-kit-line-duotone',
+    route: '/medical-image-types/list',
+  },
+  {
     displayName: 'Datasets',
     iconName: 'solar:layers-line-duotone',
     route: '/datasets/list',

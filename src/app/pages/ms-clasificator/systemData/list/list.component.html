@@ -230,11 +230,20 @@
                             <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
                           }
                         </mat-form-field>
-                        <button type="button" mat-flat-button color="accent" class="btn-save-type"
-                          (click)="submitNewType()" [disabled]="newTypeForm.invalid">
-                          Crear
-                        </button>
                       </div>
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Área de evaluación (opcional)</mat-label>
+                        <mat-select formControlName="evaluationAreaId">
+                          <mat-option [value]="null">Sin área de evaluación</mat-option>
+                          @for (opt of evaluationAreaOptions; track opt.value) {
+                            <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                      <button type="button" mat-flat-button color="accent" class="btn-save-type"
+                        (click)="submitNewType()" [disabled]="newTypeForm.invalid">
+                        Crear
+                      </button>
                     </div>
                   }
 

@@ -2,10 +2,13 @@ import { Component, OnInit, signal, inject, ChangeDetectorRef, computed } from '
 import { Router } from '@angular/router';
 import { Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
@@ -26,6 +29,7 @@ interface Toast {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
@@ -33,6 +37,8 @@ interface Toast {
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
+    MatFormFieldModule,
   ],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
@@ -60,9 +66,19 @@ export class ListComponent implements OnInit {
   // ─── DOCTORS PANEL STATE ──────────────────────────────────────────────────
   managedArea            = signal<EvaluationArea | null>(null);
   areaDoctors            = signal<Doctor[]>([]);
+  allDoctors             = signal<Doctor[]>([]);
   doctorsLoading         = signal(false);
+  addingDoctor           = signal(false);
+  removingDoctorId       = signal<number | null>(null);
+  selectedDoctorId       = signal<number | null>(null);
+  selectedDoctorIdValue: number | null = null;
   doctorsPage            = signal(0);
   readonly DOCTORS_PAGE_SIZE = 5;
+
+  availableDoctors = computed(() => {
+    const assigned = new Set(this.areaDoctors().map(d => d.id));
+    return this.allDoctors().filter(d => !assigned.has(d.id));
+  });
 
   pagedDoctors = computed(() => {
     const start = this.doctorsPage() * this.DOCTORS_PAGE_SIZE;
@@ -198,32 +214,71 @@ export class ListComponent implements OnInit {
     this.managedArea.set(area);
     this.doctorsPage.set(0);
     this.areaDoctors.set([]);
+    this.allDoctors.set([]);
+    this.selectedDoctorId.set(null);
+    this.selectedDoctorIdValue = null;
     this.doctorsLoading.set(true);
 
-    this.doctorAreaService.findByEvaluationAreaId(area.id!).subscribe({
-      next: (res) => {
-        const relations = res.data ?? [];
-        const doctorIds = relations.map(r => r.doctorId).filter((id): id is number => !!id);
+    this.doctorService.findAll().subscribe({
+      next: (doctorsRes) => {
+        this.allDoctors.set(doctorsRes.data ?? []);
 
-        if (doctorIds.length === 0) {
-          this.areaDoctors.set([]);
-          this.doctorsLoading.set(false);
-          return;
-        }
-
-        this.doctorService.findAll().subscribe({
-          next: (doctorsRes) => {
-            const allDoctors = doctorsRes.data ?? [];
-            const filtered = allDoctors.filter(d => doctorIds.includes(d.id!));
+        this.doctorAreaService.findByEvaluationAreaId(area.id!).subscribe({
+          next: (res) => {
+            const relations = res.data ?? [];
+            const doctorIds = relations.map(r => r.doctorId).filter((id): id is number => !!id);
+            const filtered = this.allDoctors().filter(d => doctorIds.includes(d.id!));
             this.areaDoctors.set(filtered);
             this.doctorsLoading.set(false);
           },
-          error: () => this.doctorsLoading.set(false),
+          error: () => {
+            this.showToast('Error al cargar doctores del área', 'error');
+            this.doctorsLoading.set(false);
+          },
         });
       },
       error: () => {
-        this.showToast('Error al cargar doctores del área', 'error');
+        this.showToast('Error al cargar la lista de doctores', 'error');
         this.doctorsLoading.set(false);
+      },
+    });
+  }
+
+  removeDoctorFromArea(doctor: Doctor): void {
+    const areaId = this.managedArea()?.id;
+    if (!areaId || !doctor.id) return;
+
+    this.removingDoctorId.set(doctor.id);
+    this.doctorAreaService.deleteByDoctorAndArea(doctor.id, areaId).subscribe({
+      next: () => {
+        this.areaDoctors.update(list => list.filter(d => d.id !== doctor.id));
+        this.removingDoctorId.set(null);
+        this.showToast('Doctor quitado del área', 'success');
+      },
+      error: () => {
+        this.removingDoctorId.set(null);
+        this.showToast('Error al quitar el doctor', 'error');
+      },
+    });
+  }
+
+  addDoctorToArea(): void {
+    const doctorId = this.selectedDoctorIdValue;
+    const areaId = this.managedArea()?.id;
+    if (!doctorId || !areaId) return;
+
+    this.addingDoctor.set(true);
+    this.doctorAreaService.create({ doctorId, evaluationAreaId: areaId }).subscribe({
+      next: () => {
+        const doctor = this.allDoctors().find(d => d.id === doctorId)!;
+        this.areaDoctors.update(list => [...list, doctor]);
+        this.selectedDoctorIdValue = null;
+        this.addingDoctor.set(false);
+        this.showToast('Doctor agregado al área', 'success');
+      },
+      error: () => {
+        this.addingDoctor.set(false);
+        this.showToast('Error al agregar el doctor', 'error');
       },
     });
   }
@@ -238,6 +293,9 @@ export class ListComponent implements OnInit {
     this.panelLoading.set(false);
     this.managedArea.set(null);
     this.areaDoctors.set([]);
+    this.allDoctors.set([]);
+    this.selectedDoctorId.set(null);
+    this.selectedDoctorIdValue = null;
     this.doctorsPage.set(0);
   }
 

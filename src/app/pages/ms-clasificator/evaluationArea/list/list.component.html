@@ -102,6 +102,31 @@
               </div>
             }
 
+            <!-- AGREGAR DOCTOR -->
+            <div class="add-doctor-row">
+              <mat-form-field appearance="outline" class="add-doctor-select">
+                <mat-label>Agregar doctor al área</mat-label>
+                <mat-select [(ngModel)]="selectedDoctorIdValue" [disabled]="doctorsLoading() || addingDoctor()">
+                  @for (doctor of availableDoctors(); track doctor.id) {
+                    <mat-option [value]="doctor.id">{{ doctor.code }}{{ doctor.userId ? ' — ' + doctor.userId : '' }}</mat-option>
+                  }
+                  @if (availableDoctors().length === 0) {
+                    <mat-option disabled>No hay doctores disponibles</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-flat-button color="primary"
+                [disabled]="!selectedDoctorIdValue || addingDoctor()"
+                (click)="addDoctorToArea()">
+                @if (addingDoctor()) {
+                  <mat-spinner diameter="18" style="display:inline-block"></mat-spinner>
+                } @else {
+                  <mat-icon>person_add</mat-icon>
+                }
+                Agregar
+              </button>
+            </div>
+
             <!-- TABLA DE DOCTORES -->
             @if (doctorsLoading()) {
               <div class="flex items-center justify-center py-10">
@@ -120,6 +145,7 @@
                       <th>ID</th>
                       <th>Código</th>
                       <th>User ID</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -128,6 +154,18 @@
                         <td>{{ doctor.id }}</td>
                         <td>{{ doctor.code }}</td>
                         <td class="text-truncate">{{ doctor.userId }}</td>
+                        <td class="doctors-table__action-cell">
+                          <button mat-icon-button class="btn-remove-doctor"
+                            [disabled]="removingDoctorId() === doctor.id"
+                            (click)="removeDoctorFromArea(doctor)"
+                            title="Quitar del área">
+                            @if (removingDoctorId() === doctor.id) {
+                              <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                              <mat-icon>person_remove</mat-icon>
+                            }
+                          </button>
+                        </td>
                       </tr>
                     }
                   </tbody>

@@ -28,32 +28,19 @@ export class DatasetService {
     return this.http.get<ApiResponse<DatasetExtended[]>>(`${apiUrl}/diagnostic/${medicalDiagnosticId}`);
   }
 
-  /** Obtener dataset por área de evaluación → DatasetSummaryDTO */
-  findByEvaluationAreaId(evaluationAreaId: number): Observable<ApiResponse<Dataset>> {
-    return this.http.get<ApiResponse<Dataset>>(`${apiUrl}/area/${evaluationAreaId}`);
+  /** Obtener dataset por tipo de imagen médica → DatasetSummaryDTO */
+  findByMedicalImageTypeId(medicalImageTypeId: number): Observable<ApiResponse<Dataset>> {
+    return this.http.get<ApiResponse<Dataset>>(`${apiUrl}/image-type/${medicalImageTypeId}`);
   }
 
   /** Crear un nuevo dataset → DatasetResponseDTO */
-  create(dataset: Partial<Dataset>): Observable<ApiResponse<DatasetExtended>> {
+  create(dataset: Partial<Dataset & { medicalDiagnosticId: number; medicalImageTypeId: number }>): Observable<ApiResponse<DatasetExtended>> {
     return this.http.post<ApiResponse<DatasetExtended>>(`${apiUrl}`, dataset);
   }
 
-  /** Cambiar el diagnóstico médico de un dataset → DatasetResponseDTO */
-  update(id: number, dataset: Partial<Dataset>): Observable<ApiResponse<DatasetExtended>> {
+  /** Actualizar diagnóstico y tipo de imagen de un dataset → DatasetResponseDTO */
+  update(id: number, dataset: Partial<Dataset & { medicalDiagnosticId: number; medicalImageTypeId: number }>): Observable<ApiResponse<DatasetExtended>> {
     return this.http.put<ApiResponse<DatasetExtended>>(`${apiUrl}/${id}`, dataset);
-  }
-
-  /** Asignar un dataset a un área de evaluación → DatasetResponseDTO */
-  assignEvaluationArea(datasetId: number, evaluationAreaId: number): Observable<ApiResponse<DatasetExtended>> {
-    return this.http.put<ApiResponse<DatasetExtended>>(
-      `${apiUrl}/${datasetId}/evaluation-area/${evaluationAreaId}`,
-      {}
-    );
-  }
-
-  /** Desasignar un dataset de su área de evaluación → DatasetResponseDTO */
-  removeFromEvaluationArea(datasetId: number): Observable<ApiResponse<DatasetExtended>> {
-    return this.http.put<ApiResponse<DatasetExtended>>(`${apiUrl}/removeFromArea/${datasetId}`, {});
   }
 
   /** Eliminar un dataset */

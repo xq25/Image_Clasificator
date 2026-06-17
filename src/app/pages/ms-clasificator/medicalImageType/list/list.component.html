@@ -1,0 +1,147 @@
+<div class="list-root">
+
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">{{ toast()!.message }}</div>
+  }
+
+  <div class="split-layout" [class.panel-open]="panelOpen()">
+
+    <!-- ══ COLUMNA IZQUIERDA ═══════════════════════════════════════════════════ -->
+    <div class="table-column">
+
+      <div class="sticky-header">
+        <mat-card class="cardWithShadow">
+          <div class="header-bar">
+            <div>
+              <h2>Tipos de Imagen Médica</h2>
+              <p>Gestiona los tipos de imagen y sus áreas de evaluación asociadas</p>
+            </div>
+            <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new">
+              <mat-icon>add</mat-icon>
+              Nuevo tipo
+            </button>
+          </div>
+        </mat-card>
+      </div>
+
+      <mat-card class="cardWithShadow table-card">
+        @if (loading()) {
+          <div class="empty-state">
+            <mat-icon class="animate-spin">cached</mat-icon>
+            <p>Cargando...</p>
+          </div>
+        } @else if (imageTypes().length === 0) {
+          <div class="empty-state">
+            <mat-icon>image_search</mat-icon>
+            <p>No hay tipos de imagen médica registrados</p>
+          </div>
+        } @else {
+          <app-dynamic-table
+            [data]="imageTypes()"
+            [columns]="columns"
+            [pageSize]="8"
+            [searchKey]="'name'"
+            [mobileKey]="'name'"
+            [actionButtons]="actionButtons"
+            (actionClicked)="handleAction($event)"
+          />
+        }
+      </mat-card>
+
+    </div>
+
+    <!-- ══ PANEL LATERAL ══════════════════════════════════════════════════════ -->
+    @if (panelOpen()) {
+      <div class="mobile-backdrop" (click)="closePanel()"></div>
+
+      <mat-card class="cardWithShadow form-panel">
+
+        <div class="panel-header">
+          <h3 class="panel-title">
+            @if (panelMode() === 'create')      { Nuevo tipo de imagen médica }
+            @else if (panelMode() === 'edit')   { Editar tipo de imagen }
+            @else if (panelMode() === 'view')   { Detalle del tipo de imagen }
+            @else                               { Gestionar área de evaluación }
+          </h3>
+          <button mat-icon-button (click)="closePanel()"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <div class="panel-body">
+
+          @if (panelLoading()) {
+            <div class="panel-loading"><mat-spinner diameter="48"></mat-spinner></div>
+
+          } @else if (panelMode() === 'view' && detailConfig()) {
+            <app-entity-detail
+              [config]="detailConfig()!"
+              (back)="handleFormCancel()"
+              (primaryAction)="openEdit(currentId()!)"
+            />
+
+          } @else if ((panelMode() === 'create' || panelMode() === 'edit') && formConfig()) {
+            <app-dynamic-form
+              [config]="formConfig()!"
+              (formSubmit)="handleFormSubmit($event)"
+              (formCancel)="handleFormCancel()"
+            />
+
+          } @else if (panelMode() === 'assign-area') {
+
+            <!-- ── ÁREA ACTUAL ── -->
+            @if (currentDetail()?.evaluationArea) {
+              <div class="area-info-panel">
+                <div class="area-info-panel__icon">
+                  <mat-icon>area_chart</mat-icon>
+                </div>
+                <div class="area-info-panel__data">
+                  <span class="area-info-panel__label">Área asignada</span>
+                  <span class="area-info-panel__name">{{ currentDetail()!.evaluationArea.name }}</span>
+                  <span class="area-info-panel__code">{{ currentDetail()!.evaluationArea.codeArea }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="area-none-state">
+                <mat-icon>link_off</mat-icon>
+                <span>Sin área de evaluación asignada</span>
+              </div>
+            }
+
+            <!-- ── FORMULARIO ASIGNACIÓN ── -->
+            <form [formGroup]="assignAreaForm" class="assign-area-section">
+              <p class="assign-area-label">Asignar área de evaluación</p>
+
+              <div class="assign-area-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Área de evaluación</mat-label>
+                  <mat-select formControlName="evaluationAreaId">
+                    @for (opt of evaluationAreaOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                @if (currentDetail()?.evaluationArea) {
+                  <button type="button" mat-stroked-button color="warn" (click)="removeArea()">
+                    <mat-icon>link_off</mat-icon> Quitar área
+                  </button>
+                }
+                <button type="button" mat-stroked-button (click)="closePanel()">Cancelar</button>
+                <button type="button" mat-flat-button color="primary"
+                  [disabled]="!assignAreaForm.value.evaluationAreaId"
+                  (click)="submitAssignArea()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+              </div>
+            </form>
+
+          }
+
+        </div>
+      </mat-card>
+    }
+
+  </div>
+</div>
