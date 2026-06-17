@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap, of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { DatasetService } from '@app/services/ms-clasificator/dataset.service';
 import { DatasetCategoryService } from '@app/services/ms-clasificator/dataset-category.service';
 import { DiagnosticCategoryDatasetService } from '@app/services/ms-clasificator/diagnostic-category-dataset.service';
+import { InternalServicesService } from '@app/services/ms-clasificator/internal-services.service';
+import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
+import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
+import { SecurityService } from '@app/services/ms-security/security';
 import { DatasetExtended } from '@app/models/ms-clasificator/Dataset/Dataset';
 import { MedicalDiagnostic } from '@app/models/ms-clasificator/MedicalDiagnostic/MedicalDiagnostic';
 
@@ -89,56 +93,126 @@ export class ClassifyComponent implements OnInit {
     private datasetService:                   DatasetService,
     private datasetCategoryService:           DatasetCategoryService,
     private diagnosticCategoryDatasetService: DiagnosticCategoryDatasetService,
+    private internalService:                  InternalServicesService,
+    private doctorService:                    DoctorService,
+    private medicalImageTypeService:          MedicalImageTypeService,
+    private securityService:                  SecurityService,
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('datasetId'));
-    if (!id) { this.router.navigate(['/datasets']); return; }
-    this.loadDataset(id);
+    const imageTypeId = Number(this.route.snapshot.paramMap.get('imageTypeId'));
+    if (!imageTypeId) { this.router.navigate(['/datasets']); return; }
+
+    const userId = this.securityService.getCurrentSession()?.user?.id;
+    if (!userId) { this.router.navigate(['/login']); return; }
+
+    this.validateAndLoad(imageTypeId, userId);
   }
 
-  private loadDataset(id: number): void {
+  private validateAndLoad(imageTypeId: number, userId: string): void {
     this.loading.set(true);
 
-    this.datasetService.findById(id).subscribe({
-      next: (res) => {
-        const ds = res.data;
-        if (!ds) { this.router.navigate(['/datasets']); return; }
-        this.dataset.set(ds);
+    // 1. Verificar que el usuario es doctor
+    this.internalService.existRelationWithDoctor(userId).pipe(
+      switchMap((isDoctor) => {
+        if (!isDoctor) {
+          this.showToast('Acceso restringido: no tiene perfil de médico.', 'error');
+          setTimeout(() => this.router.navigate(['/datasets']), 2000);
+          return of(null);
+        }
+        // 2. Doctor, tipo de imagen y dataset en paralelo
+        return forkJoin({
+          doctor:    this.doctorService.findByUserId(userId),
+          imageType: this.medicalImageTypeService.findById(imageTypeId),
+          dataset:   this.datasetService.findByMedicalImageTypeId(imageTypeId),
+        });
+      }),
+      switchMap((result) => {
+        if (!result) return of(null);
 
-        this.datasetCategoryService.findByDatasetId(id).subscribe({
-          next: (catRes) => {
-            const cats = catRes.data ?? [];
-            if (cats.length === 0) { this.loading.set(false); return; }
+        const doctor    = result.doctor.data;
+        const imageType = result.imageType.data;
+        const dataset   = result.dataset.data;
 
-            forkJoin(
-              cats.map(c =>
-                this.diagnosticCategoryDatasetService.findByDatasetCategoryId(c.id!)
-              )
-            ).subscribe({
-              next: (assocResults) => {
-                const built: ClassifyCategory[] = cats.map((c, i) => ({
-                  categoryId: c.id!,
-                  numValue:   c.numValue,
-                  codes:      (assocResults[i].data ?? []).map(a => a.medicalDiagnostic),
-                }));
-                this.categories.set(built);
-                this.loading.set(false);
-              },
-              error: () => {
-                this.showToast('Error al cargar los sub-diagnósticos', 'error');
-                this.loading.set(false);
-              },
-            });
+        if (!doctor || !imageType) {
+          this.showToast('No se pudo obtener la información necesaria.', 'error');
+          setTimeout(() => this.router.navigate(['/datasets']), 2000);
+          return of(null);
+        }
+
+        if (!dataset) {
+          this.showToast(
+            `La clasificación de "${imageType.name}" no está disponible: aún no se ha definido un dataset para este tipo de imagen.`,
+            'error'
+          );
+          setTimeout(() => this.router.navigate(['/datasets']), 3500);
+          return of(null);
+        }
+
+        this.dataset.set(dataset);
+
+        const evaluationAreaId = imageType.evaluationArea?.id;
+        if (!evaluationAreaId) {
+          this.showToast(`El tipo de imagen "${imageType.name}" no tiene área de evaluación asignada.`, 'error');
+          setTimeout(() => this.router.navigate(['/datasets']), 2000);
+          return of(null);
+        }
+
+        // 3. Verificar que el doctor pertenece al área del tipo de imagen
+        return this.internalService.existsDoctorInArea(doctor.id!, evaluationAreaId).pipe(
+          switchMap((hasAccess) => {
+            if (!hasAccess) {
+              this.showToast('No tiene permisos para clasificar este tipo de imagen médica.', 'error');
+              setTimeout(() => this.router.navigate(['/datasets']), 2000);
+              return of(null);
+            }
+            return of(dataset.id!);
+          })
+        );
+      })
+    ).subscribe({
+      next: (authorizedDatasetId) => {
+        if (authorizedDatasetId !== null && authorizedDatasetId !== undefined) {
+          this.loadCategories(authorizedDatasetId);
+        } else {
+          this.loading.set(false);
+        }
+      },
+      error: () => {
+        this.showToast('Error al validar el acceso.', 'error');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private loadCategories(datasetId: number): void {
+    this.datasetCategoryService.findByDatasetId(datasetId).subscribe({
+      next: (catRes) => {
+        const cats = catRes.data ?? [];
+        if (cats.length === 0) { this.loading.set(false); return; }
+
+        forkJoin(
+          cats.map(c =>
+            this.diagnosticCategoryDatasetService.findByDatasetCategoryId(c.id!)
+          )
+        ).subscribe({
+          next: (assocResults) => {
+            const built: ClassifyCategory[] = cats.map((c, i) => ({
+              categoryId: c.id!,
+              numValue:   c.numValue,
+              codes:      (assocResults[i].data ?? []).map(a => a.medicalDiagnostic),
+            }));
+            this.categories.set(built);
+            this.loading.set(false);
           },
           error: () => {
-            this.showToast('Error al cargar las categorías', 'error');
+            this.showToast('Error al cargar los sub-diagnósticos', 'error');
             this.loading.set(false);
           },
         });
       },
       error: () => {
-        this.showToast('Error al cargar el dataset', 'error');
+        this.showToast('Error al cargar las categorías', 'error');
         this.loading.set(false);
       },
     });

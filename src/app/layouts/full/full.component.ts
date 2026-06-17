@@ -16,7 +16,7 @@ import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { AppNavItemComponent } from './sidebar/nav-item/nav-item.component';
 import { NavItem } from './sidebar/nav-item/nav-item';
-import { SidebarSection } from '@app/models/sideBarRules';
+import { SidebarSection, SidebarRoute } from '@app/models/sideBarRules';
 import { SideBarService } from '@app/services/side-bar.service';
 
 const MOBILE_VIEW   = 'screen and (max-width: 768px)';
@@ -164,10 +164,20 @@ export class FullComponent implements OnInit {
     for (const section of sections) {
       items.push({ navCap: section.navCap });
       for (const route of section.routes) {
-        items.push({ displayName: route.displayName, iconName: route.iconName, route: route.route });
+        items.push(this.mapRouteToNavItem(route));
       }
     }
     return items;
+  }
+
+  private mapRouteToNavItem(route: SidebarRoute): NavItem {
+    return {
+      displayName: route.displayName,
+      iconName:    route.iconName,
+      route:       route.route,
+      disabled:    route.disabled,
+      children:    route.children?.map((child) => this.mapRouteToNavItem(child)),
+    };
   }
 
   private toggleDarkTheme(options: AppSettings): void {

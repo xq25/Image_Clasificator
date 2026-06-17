@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 export const ClassificationRoutes: Routes = [
   {
-    path: ':datasetId',
+    path: ':imageTypeId',
     loadComponent: () => import('./classify.component').then(m => m.ClassifyComponent),
   },
 ];

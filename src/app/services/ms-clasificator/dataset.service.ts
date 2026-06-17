@@ -28,9 +28,9 @@ export class DatasetService {
     return this.http.get<ApiResponse<DatasetExtended[]>>(`${apiUrl}/diagnostic/${medicalDiagnosticId}`);
   }
 
-  /** Obtener dataset por tipo de imagen médica → DatasetSummaryDTO */
-  findByMedicalImageTypeId(medicalImageTypeId: number): Observable<ApiResponse<Dataset>> {
-    return this.http.get<ApiResponse<Dataset>>(`${apiUrl}/image-type/${medicalImageTypeId}`);
+  /** Obtener dataset por tipo de imagen médica → DatasetResponseDTO */
+  findByMedicalImageTypeId(medicalImageTypeId: number): Observable<ApiResponse<DatasetExtended>> {
+    return this.http.get<ApiResponse<DatasetExtended>>(`${apiUrl}/image-type/${medicalImageTypeId}`);
   }
 
   /** Crear un nuevo dataset → DatasetResponseDTO */

@@ -27,6 +27,11 @@ export class InternalServicesService {
     return this.http.get<boolean>(`${apiUrl}/exist-relation-patient/${userId}`);
   }
 
+  /** Verificar si un doctor pertenece a un área de evaluación */
+  existsDoctorInArea(doctorId: number, evaluationAreaId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${apiUrl}/exists-doctor-in-area/${doctorId}/${evaluationAreaId}`);
+  }
+
   /**
    * Registrar un doctor sin pasar por el flujo de registro estándar.
    * Útil para generación de datos de prueba.

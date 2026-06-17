@@ -10,12 +10,12 @@ export interface SidebarSection {
 
 // Ruta especifica de cada pagina de nuestro aplicativo(Principalmente List)
 export interface SidebarRoute {
-
   displayName: string;
   iconName?: string;
-  route: string;
-  
+  route?: string;
   visible: boolean;
+  disabled?: boolean;
+  children?: SidebarRoute[];
 }
 
 export enum NavCap{

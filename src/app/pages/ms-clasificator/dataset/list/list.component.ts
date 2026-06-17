@@ -136,7 +136,7 @@ export class DatasetListComponent implements OnInit {
           diagnosticName: (d as any).medicalDiagnostic?.diagnosticName ?? '—',
           imageTypeName:  (d as any).medicalImageType?.name             ?? '—',
         }));
-        this.datasets.set(flat as DatasetExtended[]);
+        this.datasets.set(flat as unknown as DatasetExtended[]);
         this.loading.set(false);
       },
       error: () => {
