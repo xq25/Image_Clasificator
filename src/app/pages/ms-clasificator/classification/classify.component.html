@@ -154,12 +154,21 @@
                 <mat-icon>info</mat-icon>
               </button>
 
-              <!-- Indicador de dirección al arrastrar -->
-              @if (dragDirection() !== null) {
-                <div class="drag-indicator">
-                  <mat-icon>
-                    {{ dragDirection() === 0 ? 'arrow_upward' : dragDirection() === 1 ? 'arrow_back' : dragDirection() === 2 ? 'arrow_forward' : 'arrow_downward' }}
-                  </mat-icon>
+              <!-- Indicador enriquecido al arrastrar -->
+              @if (dragTargetSlot(); as slot) {
+                <div
+                  class="drag-indicator"
+                  [class]="'drag-indicator drag-indicator--' + (dragDirection() === 0 ? 'top' : dragDirection() === 1 ? 'left' : dragDirection() === 2 ? 'right' : 'bottom')"
+                  [style.--di-color]="slot.color"
+                  [style.opacity]="dragProgress()"
+                >
+                  <div class="di-badge">
+                    <div class="di-arrow" [style.color]="slot.color">
+                      <mat-icon>{{ slot.icon }}</mat-icon>
+                    </div>
+                    <span class="di-name">{{ getCategoryName(slot.cat) }}</span>
+                    <span class="di-codes">{{ slot.cat.codes.length }} cód. CIE-10</span>
+                  </div>
                 </div>
               }
             </div>

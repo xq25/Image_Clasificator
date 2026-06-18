@@ -281,10 +281,20 @@ kbd {
   }
 }
 
-.tinder-top    { grid-area: top;   max-width: 260px; }
+.tinder-top    { grid-area: top; justify-self: center; width: 180px; }
 .tinder-left   { grid-area: left;  justify-self: end; }
 .tinder-right  { grid-area: right; justify-self: start; }
-.tinder-bottom { grid-area: bot;   max-width: 260px; }
+.tinder-bottom { grid-area: bot; justify-self: center; width: 180px; }
+
+// Top y bottom siempre horizontales (igual que los laterales)
+.tinder-top .cat-card,
+.tinder-bottom .cat-card {
+  flex-direction: row;
+  text-align: left;
+  gap: 10px;
+  padding: 10px 14px;
+  align-items: center;
+}
 
 // ── CATEGORY CARD ─────────────────────────────────────────────────────────────
 .cat-card {
@@ -463,20 +473,60 @@ kbd {
 .drag-indicator {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--di-color, #5d5fef) 18%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,.12);
-  pointer-events: none;
+  transition: background .05s;
+}
 
+.di-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 18px;
+  border: 2.5px solid var(--di-color, #5d5fef);
+  border-radius: 14px;
+  background: rgba(10, 10, 20, .72);
+  backdrop-filter: blur(6px);
+  text-align: center;
+  min-width: 100px;
+}
+
+.di-arrow {
   mat-icon {
-    font-size: 44px;
-    width: 44px;
-    height: 44px;
-    color: #fff;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,.4));
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,.5));
   }
 }
+
+.di-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.di-codes {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--di-color, #a5b4fc);
+  background: color-mix(in srgb, var(--di-color) 20%, transparent);
+  padding: 1px 8px;
+  border-radius: 20px;
+}
+
+// Rotación del badge según dirección (siempre centrado)
+.drag-indicator--left  .di-badge { transform: rotate(-10deg); }
+.drag-indicator--right .di-badge { transform: rotate(10deg); }
 
 // ── BUTTON LAYOUT (> 4 categorías) ────────────────────────────────────────────
 .button-layout {
@@ -537,6 +587,8 @@ kbd {
 
   .tinder-top, .tinder-bottom { max-width: 220px; }
 
+  .image-card { max-height: 72%; }
+
   .cat-card {
     padding: 8px 12px;
     gap: 5px;
@@ -575,6 +627,8 @@ kbd {
 
   .tinder-top, .tinder-bottom { max-width: 200px; }
 
+  .image-card { max-height: 65%; }
+
   .cat-card-codes { display: none; }
 
   .cat-card--side { padding: 8px 10px; gap: 8px; }
@@ -610,38 +664,48 @@ kbd {
   .instruction-sub { display: none; }
   .instruction-title { font-size: 12px; }
 
-  // Tinder: columnas laterales = solo icono
   .tinder-layout {
-    grid-template-columns: 58px minmax(0, 1fr) 58px;
+    grid-template-columns: 64px minmax(0, 1fr) 64px;
     gap: 4px;
   }
 
-  .tinder-top, .tinder-bottom { max-width: 180px; }
+  .image-card { max-height: 44vh; }
 
-  // Tarjeta lateral: solo flecha, sin texto
+  // Todas las cards: solo el círculo con la flecha
+  .tinder-top .cat-card,
+  .tinder-bottom .cat-card,
   .cat-card--side {
-    padding: 8px;
-    gap: 0;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    align-self: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    gap: 0;
+    margin: 0 auto;
 
     .cat-card-body { display: none; }
+    .cat-card-codes { display: none; }
 
     .cat-card-arrow {
-      width: 36px;
-      height: 36px;
-      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      width: 40px;
+      height: 40px;
+      mat-icon { font-size: 20px; width: 20px; height: 20px; }
     }
   }
 
-  // Bottom bar: texto más corto
+  // Bottom bar: siempre visible con texto, compacto
+  .bottom-bar {
+    padding-top: 6px;
+    gap: 4px;
+  }
+
   .bottom-btn {
-    padding: 6px 10px;
+    padding: 7px 11px;
     font-size: 11px;
     gap: 4px;
+    mat-icon { font-size: 15px; width: 15px; height: 15px; }
   }
 }
 
@@ -650,13 +714,19 @@ kbd {
   // Stats: solo barra de progreso
   .stats-col:first-child { display: none; }
 
-  .stats-header {
+  .stats-header { padding: 6px 10px; }
+
+  // Bottom bar: botones más pequeños pero con texto visible
+  .bottom-bar { padding-top: 6px; }
+
+  .bottom-btn {
     padding: 6px 10px;
+    font-size: 11px;
+    gap: 3px;
+
+    mat-icon { font-size: 15px; width: 15px; height: 15px; }
   }
 
-  // Bottom bar: solo iconos
-  .bottom-btn span { display: none; }
-  .bottom-btn { padding: 8px; border-radius: 50%; }
   .bottom-btn--kbd { display: none; }
 }
 

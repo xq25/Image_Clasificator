@@ -123,6 +123,19 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     return `translate(${x}px, ${y}px) rotate(${rot}deg)`;
   });
 
+  readonly dragTargetSlot = computed(() => {
+    const dir = this.dragDirection();
+    if (dir === null) return null;
+    return this.tinderSlots()[dir] ?? null;
+  });
+
+  // Aparece a partir de 15px y alcanza opacidad total a la mitad del umbral
+  readonly dragProgress = computed(() => {
+    const { x, y } = this.dragOffset();
+    const dist = Math.max(Math.abs(x), Math.abs(y));
+    return Math.min(1, Math.max(0, (dist - 15) / (DRAG_THRESHOLD * 0.5)));
+  });
+
   constructor(
     private datasetService:                   DatasetService,
     private datasetCategoryService:           DatasetCategoryService,
