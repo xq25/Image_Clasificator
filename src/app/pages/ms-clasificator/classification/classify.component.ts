@@ -302,14 +302,14 @@ export class ClassifyComponent implements OnInit, OnDestroy {
               setTimeout(() => this.router.navigate(['/datasets']), 2000);
               return of(null);
             }
-            return of({ datasetId: dataset.id!, imageTypeId });
+            return of({ datasetId: dataset.id!, imageTypeId, doctorId: doctor.id! });
           })
         );
       })
     ).subscribe({
       next: (result) => {
         if (result) {
-          this.loadAll(result.datasetId, result.imageTypeId);
+          this.loadAll(result.datasetId, result.imageTypeId, result.doctorId);
         } else {
           this.loading.set(false);
         }
@@ -321,10 +321,10 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadAll(datasetId: number, imageTypeId: number): void {
+  private loadAll(datasetId: number, imageTypeId: number, doctorId: number): void {
     forkJoin({
       categories: this.datasetCategoryService.findByDatasetId(datasetId),
-      images:     this.medicalImageService.findByMedicalImageType(imageTypeId),
+      images:     this.medicalImageService.findUndiagnosedByDoctorAndMedicalImageType(doctorId, imageTypeId),
     }).subscribe({
       next: ({ categories, images }) => {
         const cats = categories.data ?? [];

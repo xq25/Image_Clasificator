@@ -378,19 +378,17 @@ kbd {
   justify-content: center;
 
   &--centered {
-    max-width: 320px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 420px;
     margin: 0 auto;
-    aspect-ratio: 3 / 4;
-    height: auto;
   }
 }
 
 .image-card {
   position: relative;
   height: 100%;
-  width: auto;
-  aspect-ratio: 3 / 4;
-  max-width: 100%;
+  width: 100%;
   border-radius: 14px;
   overflow: hidden;
   background: #1a1a2e;
@@ -412,9 +410,11 @@ kbd {
 }
 
 .image-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   display: block;
   pointer-events: none;
 }
@@ -587,7 +587,6 @@ kbd {
 
   .tinder-top, .tinder-bottom { max-width: 220px; }
 
-  .image-card { max-height: 72%; }
 
   .cat-card {
     padding: 8px 12px;
@@ -627,7 +626,6 @@ kbd {
 
   .tinder-top, .tinder-bottom { max-width: 200px; }
 
-  .image-card { max-height: 65%; }
 
   .cat-card-codes { display: none; }
 
@@ -669,7 +667,7 @@ kbd {
     gap: 4px;
   }
 
-  .image-card { max-height: 44vh; }
+  .image-card { max-height: 44vh; width: 100%; }
 
   // Todas las cards: solo el círculo con la flecha
   .tinder-top .cat-card,

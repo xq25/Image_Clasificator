@@ -55,6 +55,11 @@ export class MedicalImageService {
     return this.http.post<ApiResponse<MedicalImgExtended>>(`${apiUrl}/upload`, formData);
   }
 
+  /** Obtener imágenes sin diagnóstico por doctor y tipo de imagen → List<MedicalImgSummaryDTO> */
+  findUndiagnosedByDoctorAndMedicalImageType(doctorId: number, medicalImageTypeId: number): Observable<ApiResponse<MedicalImgExtended[]>> {
+    return this.http.get<ApiResponse<MedicalImgExtended[]>>(`${apiUrl}/undianosed/doctor/${doctorId}/image-type/${medicalImageTypeId}`);
+  }
+
   /** Eliminar una imagen médica */
   delete(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);
