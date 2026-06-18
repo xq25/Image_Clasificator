@@ -1,11 +1,11 @@
 .classify-root {
   padding: 24px;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   position: relative;
 }
 
-// ── TOAST ────────────────────────────────────────────────────────────────────
+// ── TOAST ─────────────────────────────────────────────────────────────────────
 .toast {
   position: fixed;
   top: 20px;
@@ -27,49 +27,92 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── HEADER ───────────────────────────────────────────────────────────────────
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 28px;
-}
-
-.page-title { font-size: 22px; font-weight: 700; margin: 0; }
-.page-sub   { font-size: 13px; color: #6b7280; margin: 2px 0 0; }
-
+// ── LOADING ───────────────────────────────────────────────────────────────────
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 60px 0;
+  padding: 80px 0;
   color: #6b7280;
 }
 
-// ══ LAYOUT PRINCIPAL ═════════════════════════════════════════════════════════
-.preview-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
-  align-items: start;
+// ── RESUMEN SUPERIOR ──────────────────────────────────────────────────────────
+.summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: #f8f9ff;
+  border: 1px solid #e8eaf6;
+  margin-bottom: 24px;
 }
 
-.preview-main {
+.summary-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.summary-sep {
+  color: #d1d5db;
+  font-size: 16px;
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #5d5fef;
+  font-weight: 500;
+
+  .chip-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: #5d5fef;
+  }
+}
+
+.summary-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.stat-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5d5fef;
+  background: #eef0ff;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+// ── ZONA DE CLASIFICACIÓN ─────────────────────────────────────────────────────
+.classify-area {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
-
-.preview-main-header { margin-bottom: 4px; }
-.preview-title { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
-.preview-sub   { font-size: 13px; color: #6b7280; margin: 0; }
 
 // ── Imagen central ────────────────────────────────────────────────────────────
 .preview-image-area {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   aspect-ratio: 3 / 4;
   margin: 0 auto;
   border-radius: 12px;
@@ -79,7 +122,7 @@
   align-items: center;
   justify-content: center;
 
-  &.centered { max-width: 360px; }
+  &.centered { max-width: 340px; }
 }
 
 .img-placeholder {
@@ -174,7 +217,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform .15s;
   cursor: default;
 
   mat-icon { font-size: 22px; width: 22px; height: 22px; }
@@ -186,7 +228,7 @@
 .tinder-left  .tinder-cat-card,
 .tinder-right .tinder-cat-card { min-width: 90px; }
 
-// ── BUTTON LAYOUT (> 4 categorías) ───────────────────────────────────────────
+// ── BUTTON LAYOUT (> 4 categorías) ────────────────────────────────────────────
 .button-layout {
   display: flex;
   flex-direction: column;
@@ -202,23 +244,12 @@
   text-align: center;
 }
 
-.cats-chips-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a1a2e;
-  align-self: flex-start;
-}
-
-.cats-info-icon { font-size: 18px; width: 18px; height: 18px; color: #9ca3af; }
-
 .cats-chips-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   width: 100%;
+  justify-content: center;
 }
 
 .cat-btn-chip {
@@ -239,7 +270,7 @@
 .cat-btn-codes { font-size: 11px; color: #9ca3af; }
 
 // ── PROGRESO ──────────────────────────────────────────────────────────────────
-.preview-progress {
+.classify-progress {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -262,93 +293,3 @@
   border-radius: 4px;
   transition: width .3s ease;
 }
-
-.preview-footer {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding-top: 8px;
-}
-
-// ══ SIDEBAR ══════════════════════════════════════════════════════════════════
-.preview-sidebar { position: sticky; top: 16px; }
-
-.sidebar-card {
-  border-radius: 14px !important;
-  overflow: hidden;
-}
-
-.sidebar-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0;
-  padding: 18px 18px 12px;
-}
-
-.sidebar-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 18px;
-}
-
-.sidebar-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-
-  .sb-label { flex-shrink: 0; }
-  .sb-value { text-align: right; font-size: 13px; }
-  .sb-value.small { font-size: 11px; }
-}
-
-.sb-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #9ca3af;
-  letter-spacing: .5px;
-}
-
-.sb-value {
-  font-size: 13px;
-  color: #1a1a2e;
-  font-weight: 500;
-
-  &.accent { color: #5d5fef; }
-  &.small  { font-size: 12px; }
-  &.num    { font-weight: 700; }
-}
-
-.sidebar-cats-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px 8px;
-}
-
-.sidebar-cats-title { font-size: 14px; font-weight: 700; margin: 0; }
-
-.sidebar-cats-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 18px 16px;
-}
-
-.sidebar-cat-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid #f3f4f6;
-  &:last-child { border-bottom: none; }
-}
-
-.sb-cat-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.sb-cat-name  { font-size: 13px; color: #1a1a2e; flex: 1; }
-.sb-cat-codes { font-size: 11px; color: #9ca3af; white-space: nowrap; }
-
-.no-cats { font-size: 13px; color: #9ca3af; margin: 0; padding: 8px 0; }

@@ -1,12 +1,9 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, switchMap, of } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
+import { forkJoin, switchMap, of, Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 
 import { DatasetService } from '@app/services/ms-clasificator/dataset.service';
 import { DatasetCategoryService } from '@app/services/ms-clasificator/dataset-category.service';
@@ -43,20 +40,18 @@ const TINDER_POSITIONS: { label: string; icon: string }[] = [
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
     MatIconModule,
-    MatCardModule,
     MatProgressSpinnerModule,
-    MatDividerModule,
   ],
   templateUrl: './classify.component.html',
   styleUrl: './classify.component.scss',
 })
-export class ClassifyComponent implements OnInit {
+export class ClassifyComponent implements OnInit, OnDestroy {
 
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
   private toastTimer: any;
+  private routeSub!: Subscription;
 
   // ─── STATE ───────────────────────────────────────────────────────────────────
   loading    = signal(true);
@@ -100,13 +95,22 @@ export class ClassifyComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const imageTypeId = Number(this.route.snapshot.paramMap.get('imageTypeId'));
-    if (!imageTypeId) { this.router.navigate(['/datasets']); return; }
-
     const userId = this.securityService.getCurrentSession()?.user?.id;
     if (!userId) { this.router.navigate(['/login']); return; }
 
-    this.validateAndLoad(imageTypeId, userId);
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const imageTypeId = Number(params.get('imageTypeId'));
+      if (!imageTypeId) { this.router.navigate(['/datasets']); return; }
+
+      this.dataset.set(null);
+      this.categories.set([]);
+      this.validateAndLoad(imageTypeId, userId);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
+    clearTimeout(this.toastTimer);
   }
 
   private validateAndLoad(imageTypeId: number, userId: string): void {
@@ -227,8 +231,6 @@ export class ClassifyComponent implements OnInit {
   getCategoryColor(index: number): string {
     return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
   }
-
-  goBack(): void { this.router.navigate(['/datasets']); }
 
   private showToast(message: string, type: 'success' | 'error'): void {
     this.toast.set({ message, type });
