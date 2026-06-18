@@ -5,99 +5,194 @@
     <div class="toast" [ngClass]="'toast--' + toast()!.type">{{ toast()!.message }}</div>
   }
 
+  <!-- KEYBOARD HINT OVERLAY -->
+  @if (showKeyboardHint()) {
+    <div class="kbd-overlay" (click)="showKeyboardHint.set(false)">
+      <div class="kbd-panel" (click)="$event.stopPropagation()">
+        <div class="kbd-panel-header">
+          <span>Atajos de teclado</span>
+          <button class="kbd-close" (click)="showKeyboardHint.set(false)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <div class="kbd-list">
+          @for (slot of tinderSlots(); track slot.num) {
+            <div class="kbd-row">
+              <kbd>{{ slot.key }}</kbd>
+              <span>{{ slot.label }} — {{ getCategoryName(slot.cat) }}</span>
+            </div>
+          }
+          <div class="kbd-row">
+            <kbd>D</kbd>
+            <span>Descartar imagen</span>
+          </div>
+          <div class="kbd-row">
+            <kbd>Esc</kbd>
+            <span>Cerrar este panel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- LOADING -->
   @if (loading()) {
     <div class="loading-state">
       <mat-spinner diameter="40"></mat-spinner>
-      <p>Cargando...</p>
+      <p>Cargando sesión de clasificación…</p>
     </div>
   } @else {
 
-    <!-- RESUMEN SUPERIOR -->
+    <!-- ── HEADER STATS ─────────────────────────────────────────────────────── -->
     @if (dataset()) {
-      <div class="summary-bar">
-        <div class="summary-main">
-          <span class="summary-title">{{ dataset()!.name }}</span>
-          <span class="summary-sep">·</span>
-          <span class="summary-chip">
-            <mat-icon class="chip-icon">image</mat-icon>
-            {{ dataset()!.medicalImageType.name }}
-          </span>
-          <span class="summary-sep">·</span>
-          <span class="summary-chip">
-            <mat-icon class="chip-icon">label</mat-icon>
-            {{ dataset()!.medicalDiagnostic.diagnosticCode }} – {{ dataset()!.medicalDiagnostic.diagnosticName }}
+      <div class="stats-header">
+
+        <div class="stats-col">
+          <span class="stats-label">Diagnóstico padre (CIE-10)</span>
+          <span class="stats-value stats-value--link">
+            {{ dataset()!.medicalDiagnostic.diagnosticCode }} –
+            {{ dataset()!.medicalDiagnostic.diagnosticName }}
           </span>
         </div>
-        <div class="summary-stats">
-          <span class="stat-badge">{{ categories().length }} categorías</span>
-          <span class="stat-badge">{{ totalCodes() }} códigos CIE-10</span>
+
+        <div class="stats-col stats-col--center">
+          <span class="stats-label">Progreso de clasificación</span>
+          <div class="stats-progress-row">
+            <span class="stats-count">
+              <strong>{{ classifiedCount() }}</strong> / {{ totalImages() }}
+            </span>
+          </div>
+          <div class="stats-bar-track">
+            <div class="stats-bar-fill" [style.width.%]="progressPct()"></div>
+          </div>
+          <span class="stats-pct">{{ progressPct() }}%</span>
         </div>
+
+        <div class="stats-col stats-col--right">
+          <span class="stats-label">Imágenes clasificadas hoy</span>
+          <span class="stats-count-big">{{ classifiedCount() }}</span>
+          <span class="stats-link">Ver estadísticas</span>
+        </div>
+
       </div>
     }
 
-    <!-- ZONA DE CLASIFICACIÓN -->
+    <!-- ── INSTRUCCIÓN ──────────────────────────────────────────────────────── -->
+    <div class="instruction-block">
+      <span class="instruction-title">Arrastra la imagen hacia la categoría que corresponda</span>
+      <span class="instruction-sub">
+        <mat-icon class="instruction-icon">info</mat-icon>
+        Si no pertenece a ninguna, arrástrala a "Descartar"
+      </span>
+    </div>
+
+    <!-- ── ZONA DE CLASIFICACIÓN ────────────────────────────────────────────── -->
     <div class="classify-area">
 
-      <!-- ── MODO TINDER (≤ 4 categorías) ─────────────────────────────────── -->
+      <!-- MODO TINDER (≤ 4 categorías) -->
       @if (tinderMode()) {
         <div class="tinder-layout">
 
+          <!-- ARRIBA -->
           @if (tinderSlots()[0]; as slot) {
-            <div class="tinder-area tinder-top">
-              <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
-                <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+            <div class="tinder-zone tinder-top" [class.tinder-zone--active]="dragDirection() === 0">
+              <div class="cat-card" [style.--cat-color]="slot.color">
+                <div class="cat-card-arrow" [style.background]="slot.color + '22'" [style.color]="slot.color">
                   <mat-icon>{{ slot.icon }}</mat-icon>
                 </div>
-                <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                <span class="tinder-cat-codes">{{ slot.cat.codes.length }} código(s)</span>
+                <div class="cat-card-body">
+                  <span class="cat-card-num">{{ slot.num }}. {{ slot.label }}</span>
+                  <span class="cat-card-name">{{ getCategoryName(slot.cat) }}</span>
+                  <span class="cat-card-codes">{{ slot.cat.codes.length }} código{{ slot.cat.codes.length !== 1 ? 's' : '' }} CIE-10</span>
+                </div>
               </div>
             </div>
           }
 
-          <div class="tinder-middle-row">
-            @if (tinderSlots()[1]; as slot) {
-              <div class="tinder-area tinder-left">
-                <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
-                  <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
-                    <mat-icon>{{ slot.icon }}</mat-icon>
-                  </div>
-                  <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                  <span class="tinder-cat-codes">{{ slot.cat.codes.length }} código(s)</span>
-                </div>
-              </div>
-            }
-
-            <div class="preview-image-area">
-              <div class="img-counter-badge">– / –</div>
-              <div class="img-placeholder">
-                <mat-icon class="img-placeholder-icon">image_search</mat-icon>
-                <span>Previsualización</span>
-              </div>
-              <div class="img-info-btn"><mat-icon>info</mat-icon></div>
-            </div>
-
-            @if (tinderSlots()[2]; as slot) {
-              <div class="tinder-area tinder-right">
-                <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
-                  <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
-                    <mat-icon>{{ slot.icon }}</mat-icon>
-                  </div>
-                  <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                  <span class="tinder-cat-codes">{{ slot.cat.codes.length }} código(s)</span>
-                </div>
-              </div>
-            }
-          </div>
-
-          @if (tinderSlots()[3]; as slot) {
-            <div class="tinder-area tinder-bottom">
-              <div class="tinder-cat-card" [style.border-color]="slot.color + '66'">
-                <div class="tinder-arrow-btn" [style.background]="slot.color + '22'" [style.color]="slot.color">
+          <!-- IZQUIERDA -->
+          @if (tinderSlots()[1]; as slot) {
+            <div class="tinder-zone tinder-left" [class.tinder-zone--active]="dragDirection() === 1">
+              <div class="cat-card cat-card--side" [style.--cat-color]="slot.color">
+                <div class="cat-card-arrow" [style.background]="slot.color + '22'" [style.color]="slot.color">
                   <mat-icon>{{ slot.icon }}</mat-icon>
                 </div>
-                <span class="tinder-cat-name">{{ getCategoryName(slot.cat) }}</span>
-                <span class="tinder-cat-codes">{{ slot.cat.codes.length }} código(s)</span>
+                <div class="cat-card-body">
+                  <span class="cat-card-num">{{ slot.num }}. {{ slot.label }}</span>
+                  <span class="cat-card-name">{{ getCategoryName(slot.cat) }}</span>
+                  <span class="cat-card-codes">{{ slot.cat.codes.length }} código{{ slot.cat.codes.length !== 1 ? 's' : '' }} CIE-10</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- IMAGEN CENTRAL -->
+          <div class="image-stage">
+            <div
+              #imageCard
+              class="image-card"
+              [class.image-card--dragging]="dragOffset().x !== 0 || dragOffset().y !== 0"
+              [style.transform]="dragTransform()"
+              (pointerdown)="onPointerDown($event)"
+              (pointermove)="onPointerMove($event)"
+              (pointerup)="onPointerUp($event)"
+            >
+              @if (currentImage()) {
+                <img
+                  class="image-card-img"
+                  [src]="currentImage()!.imageUrl"
+                  [alt]="currentImage()!.imageKey"
+                  draggable="false"
+                />
+              } @else {
+                <div class="image-placeholder">
+                  <mat-icon class="image-placeholder-icon">image_search</mat-icon>
+                  <span>Sin imágenes disponibles</span>
+                </div>
+              }
+              <div class="image-counter">{{ currentIndex() + 1 }} / {{ totalImages() }}</div>
+              <button class="image-info-btn">
+                <mat-icon>info</mat-icon>
+              </button>
+
+              <!-- Indicador de dirección al arrastrar -->
+              @if (dragDirection() !== null) {
+                <div class="drag-indicator">
+                  <mat-icon>
+                    {{ dragDirection() === 0 ? 'arrow_upward' : dragDirection() === 1 ? 'arrow_back' : dragDirection() === 2 ? 'arrow_forward' : 'arrow_downward' }}
+                  </mat-icon>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- DERECHA -->
+          @if (tinderSlots()[2]; as slot) {
+            <div class="tinder-zone tinder-right" [class.tinder-zone--active]="dragDirection() === 2">
+              <div class="cat-card cat-card--side" [style.--cat-color]="slot.color">
+                <div class="cat-card-arrow" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                  <mat-icon>{{ slot.icon }}</mat-icon>
+                </div>
+                <div class="cat-card-body">
+                  <span class="cat-card-num">{{ slot.num }}. {{ slot.label }}</span>
+                  <span class="cat-card-name">{{ getCategoryName(slot.cat) }}</span>
+                  <span class="cat-card-codes">{{ slot.cat.codes.length }} código{{ slot.cat.codes.length !== 1 ? 's' : '' }} CIE-10</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- ABAJO -->
+          @if (tinderSlots()[3]; as slot) {
+            <div class="tinder-zone tinder-bottom" [class.tinder-zone--active]="dragDirection() === 3">
+              <div class="cat-card" [style.--cat-color]="slot.color">
+                <div class="cat-card-arrow" [style.background]="slot.color + '22'" [style.color]="slot.color">
+                  <mat-icon>{{ slot.icon }}</mat-icon>
+                </div>
+                <div class="cat-card-body">
+                  <span class="cat-card-num">{{ slot.num }}. {{ slot.label }}</span>
+                  <span class="cat-card-name">{{ getCategoryName(slot.cat) }}</span>
+                  <span class="cat-card-codes">{{ slot.cat.codes.length }} código{{ slot.cat.codes.length !== 1 ? 's' : '' }} CIE-10</span>
+                </div>
               </div>
             </div>
           }
@@ -105,42 +200,66 @@
         </div>
       }
 
-      <!-- ── MODO BOTONES (> 4 categorías) ─────────────────────────────────── -->
+      <!-- MODO BOTONES (> 4 categorías) -->
       @if (!tinderMode()) {
         <div class="button-layout">
-          <div class="preview-image-area centered">
-            <div class="img-counter-badge">– / –</div>
-            <div class="img-placeholder">
-              <mat-icon class="img-placeholder-icon">image_search</mat-icon>
-              <span>Previsualización</span>
+          <div class="image-stage image-stage--centered">
+            <div class="image-card">
+              @if (currentImage()) {
+                <img
+                  class="image-card-img"
+                  [src]="currentImage()!.imageUrl"
+                  [alt]="currentImage()!.imageKey"
+                  draggable="false"
+                />
+              } @else {
+                <div class="image-placeholder">
+                  <mat-icon class="image-placeholder-icon">image_search</mat-icon>
+                  <span>Sin imágenes disponibles</span>
+                </div>
+              }
+              <div class="image-counter">{{ currentIndex() + 1 }} / {{ totalImages() }}</div>
+              <button class="image-info-btn"><mat-icon>info</mat-icon></button>
             </div>
-            <div class="img-info-btn"><mat-icon>info</mat-icon></div>
           </div>
-          <p class="btn-layout-hint">Selecciona la categoría que corresponda a la imagen.</p>
+
+          <p class="btn-hint">Selecciona la categoría que corresponda a la imagen.</p>
+
           <div class="cats-chips-row">
             @for (slot of buttonSlots(); track slot.cat.categoryId) {
-              <div class="cat-btn-chip">
-                <span class="cat-btn-dot" [style.background]="slot.color"></span>
-                <div class="cat-btn-info">
-                  <span class="cat-btn-name">{{ slot.displayName }}</span>
-                  <span class="cat-btn-codes">{{ slot.codeCount }} código(s)</span>
+              <button class="cat-chip" [style.--cat-color]="slot.color" (click)="classifyBySlot($index)">
+                <span class="cat-chip-dot" [style.background]="slot.color"></span>
+                <div class="cat-chip-info">
+                  <span class="cat-chip-num">{{ slot.num }}.</span>
+                  <span class="cat-chip-name">{{ slot.displayName }}</span>
+                  <span class="cat-chip-codes">{{ slot.codeCount }} código(s)</span>
                 </div>
-              </div>
+              </button>
             }
           </div>
         </div>
       }
 
-      <!-- PROGRESO -->
-      <div class="classify-progress">
-        <span class="progress-text">0 de 0 imágenes clasificadas</span>
-        <span class="progress-pct">0%</span>
-      </div>
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill" style="width: 0%"></div>
-      </div>
-
     </div>
+
+    <!-- ── BARRA INFERIOR ───────────────────────────────────────────────────── -->
+    <div class="bottom-bar">
+      <button class="bottom-btn bottom-btn--unsure" (click)="markUnsure()">
+        <mat-icon>help_outline</mat-icon>
+        <span>No estoy seguro</span>
+      </button>
+
+      <button class="bottom-btn bottom-btn--kbd" (click)="showKeyboardHint.set(true)">
+        <mat-icon>keyboard</mat-icon>
+        <span>Atajo de teclado</span>
+      </button>
+
+      <button class="bottom-btn bottom-btn--discard" (click)="discard()">
+        <mat-icon>delete_outline</mat-icon>
+        <span>Descartar</span>
+      </button>
+    </div>
+
   }
 
 </div>
