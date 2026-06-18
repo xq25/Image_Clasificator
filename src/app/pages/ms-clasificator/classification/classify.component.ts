@@ -15,7 +15,10 @@ import { InternalServicesService } from '@app/services/ms-clasificator/internal-
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
 import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
 import { MedicalImageService } from '@app/services/ms-clasificator/medical-image.service';
+import { ImageDiagnosticService } from '@app/services/ms-clasificator/image-diagnostic.service';
+import { ImageDoctorDiagnosticsService } from '@app/services/ms-clasificator/image-doctor-diagnostics.service';
 import { SecurityService } from '@app/services/ms-security/security';
+import { ImageDiagnostic } from '@app/models/ms-clasificator/ImageDiagnostic/ImageDiagnostic';
 import { DatasetExtended } from '@app/models/ms-clasificator/Dataset/Dataset';
 import { MedicalDiagnostic } from '@app/models/ms-clasificator/MedicalDiagnostic/MedicalDiagnostic';
 import { MedicalImgExtended } from '@app/models/ms-clasificator/MedicalImage/MedicalImg';
@@ -57,10 +60,11 @@ export class ClassifyComponent implements OnInit, OnDestroy {
 
   @ViewChild('imageCard') imageCardRef!: ElementRef<HTMLDivElement>;
 
-  private route  = inject(ActivatedRoute);
-  private router = inject(Router);
+  private route    = inject(ActivatedRoute);
+  private router   = inject(Router);
   private toastTimer: any;
   private routeSub!: Subscription;
+  private doctorId = 0;
 
   // ─── DRAG STATE ──────────────────────────────────────────────────────────────
   private dragActive  = false;
@@ -144,6 +148,8 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     private doctorService:                    DoctorService,
     private medicalImageTypeService:          MedicalImageTypeService,
     private medicalImageService:              MedicalImageService,
+    private imageDiagnosticService:           ImageDiagnosticService,
+    private imageDoctorDiagnosticsService:    ImageDoctorDiagnosticsService,
     private securityService:                  SecurityService,
   ) {}
 
@@ -222,21 +228,61 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     this.dragDirection.set(null);
   }
 
-  // ─── ACTIONS (stubs — lógica completa pendiente) ──────────────────────────────
+  // ─── ACTIONS ─────────────────────────────────────────────────────────────────
   classifyBySlot(slotIndex: number): void {
-    const slots = this.tinderSlots();
+    const slots = this.tinderMode() ? this.tinderSlots() : this.buttonSlots();
     if (slotIndex >= slots.length) return;
-    // TODO: llamar API de clasificación con slots[slotIndex].cat.categoryId
-    this.advanceImage();
+
+    const image = this.currentImage();
+    if (!image?.id) return;
+
+    const cat = slots[slotIndex].cat;
+    if (cat.codes.length === 0) return;
+
+    this.loading.set(true);
+
+    const diagPayload: Partial<ImageDiagnostic> = {
+      doctorId:     this.doctorId,
+      medicalImgId: image.id,
+      diagnosticDate: new Date().toISOString(),
+    };
+
+    this.imageDiagnosticService.create(diagPayload).pipe(
+      switchMap(res => {
+        if (!res.success || !res.data?.id) {
+          this.showToast('Error al registrar el diagnóstico.', 'error');
+          return of(null);
+        }
+        const imageDiagnosticId = res.data.id;
+        return forkJoin(
+          cat.codes.map(code =>
+            this.imageDoctorDiagnosticsService.create({
+              imageDiagnosticId,
+              medicalDiagnosticId: code.id,
+            } as any)
+          )
+        );
+      })
+    ).subscribe({
+      next: (results) => {
+        this.loading.set(false);
+        if (results !== null) {
+          this.showToast('Clasificación guardada correctamente.', 'success');
+          this.advanceImage();
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+        this.showToast('Error al guardar la clasificación.', 'error');
+      },
+    });
   }
 
   discard(): void {
-    // TODO: llamar API de descarte
     this.advanceImage();
   }
 
   markUnsure(): void {
-    // TODO: marcar imagen como "no estoy seguro"
     this.advanceImage();
   }
 
@@ -309,6 +355,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (result) => {
         if (result) {
+          this.doctorId = result.doctorId;
           this.loadAll(result.datasetId, result.imageTypeId, result.doctorId);
         } else {
           this.loading.set(false);
