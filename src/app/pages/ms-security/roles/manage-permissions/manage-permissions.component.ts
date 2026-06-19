@@ -7,12 +7,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { forkJoin } from 'rxjs';
 
 import { RolePermissionService } from '@app/services/ms-security/role-permission-service';
 import { RoleService } from '@app/services/ms-security/role-service';
 import { PermissionService } from '@app/services/ms-security/permission-service';
 import { Role } from '@app/models/Role';
-import { Permission, PermissionModel } from '@app/models/Permission';
+import { Permission } from '@app/models/Permission';
 import { RolePermission } from '@app/models/RolePermission';
 
 interface Toast {
@@ -30,7 +33,9 @@ interface Toast {
     MatIconModule,
     MatCardModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './manage-permissions.component.html',
   styleUrl: './manage-permissions.component.scss',
@@ -39,10 +44,6 @@ export class ManagePermissionsComponent implements OnInit {
 
   roleId!: string;
 
-  // Todos los valores del enum para organizar la tabla
-  permissionModels = Object.values(PermissionModel);
-
-  // SIGNALS
   role = signal<Role | null>(null);
   allPermissions = signal<Permission[]>([]);
   rolePermissionRelations = signal<RolePermission[]>([]);
@@ -55,16 +56,14 @@ export class ManagePermissionsComponent implements OnInit {
 
   private toastTimer: any;
 
-  // Contadores
-  totalCount = computed(() => this.allPermissions().length);
+  totalCount    = computed(() => this.allPermissions().length);
   assignedCount = computed(() => this.assignedIds().size);
-  
-  // Modelos únicos de los permisos actuales
+
   uniqueModels = computed(() => {
     const models = new Set(
       this.allPermissions()
         .map(p => p.model)
-        .filter((m): m is string => m !== undefined && m !== null)
+        .filter((m): m is string => !!m)
     );
     return Array.from(models).sort();
   });
@@ -79,49 +78,35 @@ export class ManagePermissionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.roleId = this.route.snapshot.paramMap.get('id') ?? '';
-    this.loadRole();
-    this.loadData();
-  }
-
-  loadRole(): void {
+    // Rol y permisos se cargan en paralelo
     this.roleService.getRoleById(this.roleId).subscribe({
-      next: (response) => this.role.set(response.data ?? null),
+      next: (r) => this.role.set(r.data ?? null),
       error: () => this.showToast('Error al cargar el rol', 'error'),
     });
+    this.loadData();
   }
 
   loadData(): void {
     this.loading.set(true);
 
-    this.permissionService.getPermissions().subscribe({
-      next: (response) => {
-        const permissions = response.data ?? [];
-        this.allPermissions.set(permissions);
-        this.loadAssigned();
+    // Permisos disponibles + permisos asignados al rol en paralelo
+    forkJoin({
+      permissions: this.permissionService.getPermissions(),
+      assigned:    this.rolePermissionService.getRolePermissions(this.roleId),
+    }).subscribe({
+      next: ({ permissions, assigned }) => {
+        this.allPermissions.set(permissions.data ?? []);
+
+        const relations = (assigned.data ?? []).filter(rp => rp?.permission?.id);
+        this.rolePermissionRelations.set(relations);
+        this.assignedIds.set(new Set(relations.map(rp => rp.permission!.id!)));
+
+        this.loading.set(false);
       },
       error: () => {
         this.showToast('Error al cargar los permisos', 'error');
         this.loading.set(false);
-      }
-    });
-  }
-
-  loadAssigned(): void {
-    this.rolePermissionService.getRolePermissions(this.roleId).subscribe({
-      next: (response) => {
-        const relations: RolePermission[] = response.data ?? [];
-
-        const safeRelations = relations.filter(rp => rp?.permission?.id);
-        this.rolePermissionRelations.set(safeRelations);
-
-        const ids = new Set<string>(safeRelations.map(rp => rp.permission!.id!));
-        this.assignedIds.set(ids);
-        this.loading.set(false);
       },
-      error: () => {
-        this.showToast('Error al cargar permisos asignados', 'error');
-        this.loading.set(false);
-      }
     });
   }
 
@@ -131,17 +116,11 @@ export class ManagePermissionsComponent implements OnInit {
 
   onTogglePermission(permission: Permission): void {
     if (!permission?.id) return;
-
-    if (this.isAssigned(permission.id)) {
-      this.removePermission(permission);
-    } else {
-      this.addPermission(permission);
-    }
+    this.isAssigned(permission.id) ? this.removePermission(permission) : this.addPermission(permission);
   }
 
   private addPermission(permission: Permission): void {
     this.processingId.set(permission.id!);
-
     this.rolePermissionService.addRolePermission(this.roleId, permission.id!).subscribe({
       next: (response) => {
         const newRelation = response.data;
@@ -150,12 +129,7 @@ export class ManagePermissionsComponent implements OnInit {
           this.showToast('No se pudo asignar el permiso', 'error');
           return;
         }
-
-        const safeRelation: RolePermission = {
-          ...newRelation,
-          permission: newRelation.permission ?? permission
-        };
-
+        const safeRelation: RolePermission = { ...newRelation, permission: newRelation.permission ?? permission };
         this.rolePermissionRelations.update(prev => [...prev, safeRelation]);
         this.assignedIds.update(prev => new Set([...prev, permission.id!]));
         this.processingId.set(null);
@@ -164,22 +138,19 @@ export class ManagePermissionsComponent implements OnInit {
       error: () => {
         this.processingId.set(null);
         this.showToast('Error al asignar el permiso', 'error');
-      }
+      },
     });
   }
 
   private removePermission(permission: Permission): void {
     this.processingId.set(permission.id!);
-
     const relation = this.rolePermissionRelations().find(rp => rp?.permission?.id === permission.id);
-
     if (!relation?.id) {
       this.showToast('No se encontró la relación', 'error');
       this.processingId.set(null);
-      this.loadAssigned();
+      this.loadData();
       return;
     }
-
     this.rolePermissionService.removeRolePermission(relation.id).subscribe({
       next: () => {
         this.rolePermissionRelations.update(prev => prev.filter(rp => rp.id !== relation.id));
@@ -194,26 +165,21 @@ export class ManagePermissionsComponent implements OnInit {
       error: () => {
         this.processingId.set(null);
         this.showToast('Error al eliminar el permiso', 'error');
-      }
+      },
     });
   }
 
   getFilteredByModel(model: string): Permission[] {
     const query = this.searchQuery().trim().toLowerCase();
     return this.allPermissions().filter(p => {
-      const matchesModel = p.model === model;
-      if (!query) return matchesModel;
-      return matchesModel && (
-        p.url?.toLowerCase().includes(query) ||
-        p.method?.toLowerCase().includes(query)
-      );
+      if (p.model !== model) return false;
+      if (!query) return true;
+      return p.url?.toLowerCase().includes(query) || p.method?.toLowerCase().includes(query);
     });
   }
 
   getAssignedCountByModel(model: string): number {
-    return this.allPermissions().filter(
-      p => p.model === model && this.isAssigned(p.id!)
-    ).length;
+    return this.allPermissions().filter(p => p.model === model && this.isAssigned(p.id!)).length;
   }
 
   onBack(): void {
@@ -225,5 +191,4 @@ export class ManagePermissionsComponent implements OnInit {
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => this.toast.set(null), 3000);
   }
-
 }

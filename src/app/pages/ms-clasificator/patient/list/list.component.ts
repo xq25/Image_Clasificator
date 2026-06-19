@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { PatientService } from '@app/services/ms-clasificator/patient.service';
 import { UserService } from '@app/services/ms-security/user-service';
 import { Patient, PatientExtended, Sex } from '@app/models/ms-clasificator/Patient/Patient';
@@ -28,6 +29,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -55,6 +57,11 @@ export class ListComponent implements OnInit {
   detailConfig    = signal<EntityDetailConfig | null>(null);
   currentPatientId = signal<number | null>(null);
   toast           = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm   = signal(false);
+  deleteTargetId      = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
@@ -109,7 +116,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':         this.openView(row.id);   break;
       case 'edit':         this.openEdit(row.id);   break;
-      case 'delete':       this.delete(row.id);     break;
+      case 'delete':       this.openDeleteConfirm(row.id, row.document); break;
       case 'view-records': this.router.navigate([`/clinical-records/patient/${row.document}/records`]); break;
     }
   }
@@ -317,13 +324,32 @@ export class ListComponent implements OnInit {
 
   // ─── DELETE ───────────────────────────────────────────────────────────────────
 
-  delete(patientId: number): void {
-    this.patientService.delete(patientId).subscribe({
+  openDeleteConfirm(patientId: number, document: string): void {
+    this.deleteTargetId.set(patientId);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar al paciente con ID "${document}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
+    this.patientService.delete(id).subscribe({
       next: () => {
         this.showToast('Paciente eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadPatients();
       },
-      error: () => this.showToast('Error al eliminar paciente', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar paciente', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

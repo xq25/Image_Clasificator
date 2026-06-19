@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { Permission, HttpMethod, PermissionModel } from '@app/models/Permission';
 import { PermissionService } from '@app/services/ms-security/permission-service';
 
@@ -26,6 +27,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -52,6 +54,11 @@ export class ListComponent implements OnInit {
   detailConfig        = signal<EntityDetailConfig | null>(null);
   currentPermissionId = signal<string | null>(null);
   toast               = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<string | null>(null);
+  deleteConfirmMessage = signal('');
 
   readonly pageSize = 10;
 
@@ -104,7 +111,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':   this.openView(row.id);   break;
       case 'edit':   this.openEdit(row.id);   break;
-      case 'delete': this.delete(row.id);     break;
+      case 'delete': this.openDeleteConfirm(row.id); break;
     }
   }
 
@@ -254,13 +261,32 @@ export class ListComponent implements OnInit {
 
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
 
-  delete(id: string): void {
+  openDeleteConfirm(id: string): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el permiso con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
     this.permissionService.deletePermission(id).subscribe({
       next: () => {
         this.showToast('Permiso eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadPermissions();
       },
-      error: () => this.showToast('Error al eliminar permiso', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar permiso', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

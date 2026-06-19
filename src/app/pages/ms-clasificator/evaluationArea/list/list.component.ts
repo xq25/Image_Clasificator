@@ -13,6 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { EvaluationArea } from '@app/models/ms-clasificator';
 import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
 import { DoctorAreaService } from '@app/services/ms-clasificator/doctor-area.service';
@@ -33,6 +34,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -62,6 +64,11 @@ export class ListComponent implements OnInit {
   detailConfig           = signal<EntityDetailConfig | null>(null);
   currentAreaId          = signal<number | null>(null);
   toast                  = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── DOCTORS PANEL STATE ──────────────────────────────────────────────────
   managedArea            = signal<EvaluationArea | null>(null);
@@ -138,7 +145,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':               this.openView(row.id);   break;
       case 'edit':               this.openEdit(row.id);   break;
-      case 'delete':             this.delete(row.id);     break;
+      case 'delete':             this.openDeleteConfirm(row.id); break;
       case 'manageDoctorInArea': this.openManageDoctors(row); break;
     }
   }
@@ -364,13 +371,32 @@ export class ListComponent implements OnInit {
 
   // ─── DELETE ───────────────────────────────────────────────────────────────────
 
-  delete(areaId: number): void {
-    this.evaluationAreaService.delete(areaId).subscribe({
+  openDeleteConfirm(id: number): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el área de evaluación con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
+    this.evaluationAreaService.delete(id).subscribe({
       next: () => {
         this.showToast('Área eliminada exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadEvaluationAreas();
       },
-      error: () => this.showToast('Error al eliminar área de evaluación', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar área de evaluación', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

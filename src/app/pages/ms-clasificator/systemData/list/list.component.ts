@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { EntityDetailComponent, EntityDetailConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 
 import { PrimitiveDatum, PrimitiveDatumType, PrimitiveUnit } from '@app/models/ms-clasificator/PrimitiveDatum/PrimitiveDatum';
@@ -39,6 +40,7 @@ interface Toast { message: string; type: 'success' | 'error'; }
     ReactiveFormsModule,
     DynamicTableComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     DynamicFormComponent,
     MatButtonModule,
     MatIconModule,
@@ -75,6 +77,11 @@ export class SystemDataListComponent implements OnInit {
   formConfig   = signal<DynamicFormConfig | null>(null);
   detailConfig = signal<EntityDetailConfig | null>(null);
   toast        = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── CREATE FORM ─────────────────────────────────────────────────────────────
   createForm!: FormGroup;
@@ -216,7 +223,7 @@ export class SystemDataListComponent implements OnInit {
     const { action, row } = event;
     if (action === 'view')   this.openView(row.id);
     if (action === 'edit')   this.openEdit(row.id);
-    if (action === 'delete') this.delete(row.id);
+    if (action === 'delete') this.openDeleteConfirm(row.id);
   }
 
   // ─── OPEN PANEL ──────────────────────────────────────────────────────────────
@@ -510,16 +517,32 @@ export class SystemDataListComponent implements OnInit {
 
   // ─── DELETE ──────────────────────────────────────────────────────────────────
 
-  delete(id: number): void {
+  openDeleteConfirm(id: number): void {
+    this.deleteTargetId.set(id);
+    const label = this.activeTab() === 'primitivos' ? 'dato primitivo' : 'imagen médica';
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el ${label} con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
     if (this.activeTab() === 'primitivos') {
       this.primitiveDatumService.delete(id).subscribe({
-        next: () => { this.showToast('Dato primitivo eliminado', 'success'); this.loadAll(); },
-        error: () => this.showToast('Error al eliminar dato primitivo', 'error'),
+        next: () => { this.showToast('Dato primitivo eliminado', 'success'); this.deleteTargetId.set(null); this.loadAll(); },
+        error: () => { this.showToast('Error al eliminar dato primitivo', 'error'); this.deleteTargetId.set(null); },
       });
     } else {
       this.medicalImageService.delete(id).subscribe({
-        next: () => { this.showToast('Imagen médica eliminada', 'success'); this.loadAll(); },
-        error: () => this.showToast('Error al eliminar imagen médica', 'error'),
+        next: () => { this.showToast('Imagen médica eliminada', 'success'); this.deleteTargetId.set(null); this.loadAll(); },
+        error: () => { this.showToast('Error al eliminar imagen médica', 'error'); this.deleteTargetId.set(null); },
       });
     }
   }

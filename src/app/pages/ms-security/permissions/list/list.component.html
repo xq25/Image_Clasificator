@@ -105,4 +105,15 @@
     }
 
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar permiso"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

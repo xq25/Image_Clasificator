@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { EntityDetailComponent, EntityDetailConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 
 import { MedicalImageType, MedicalImageTypeExtended } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
@@ -31,6 +32,7 @@ interface Toast { message: string; type: 'success' | 'error'; }
     ReactiveFormsModule,
     DynamicTableComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     DynamicFormComponent,
     MatButtonModule,
     MatIconModule,
@@ -63,6 +65,11 @@ export class MedicalImageTypeListComponent implements OnInit {
   formConfig   = signal<DynamicFormConfig | null>(null);
   detailConfig = signal<EntityDetailConfig | null>(null);
   toast        = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── ASSIGN AREA ─────────────────────────────────────────────────────────────
   assignAreaForm!: FormGroup;
@@ -119,7 +126,7 @@ export class MedicalImageTypeListComponent implements OnInit {
     const { action, row } = event;
     if (action === 'view')       this.openView(row.id);
     if (action === 'edit')       this.openEdit(row.id);
-    if (action === 'delete')     this.delete(row.id);
+    if (action === 'delete')     this.openDeleteConfirm(row.id);
     if (action === 'assignArea') this.openAssignArea(row.id);
   }
 
@@ -306,10 +313,32 @@ export class MedicalImageTypeListComponent implements OnInit {
 
   // ─── DELETE ──────────────────────────────────────────────────────────────────
 
-  delete(id: number): void {
+  openDeleteConfirm(id: number): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el tipo de imagen con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
     this.medicalImageTypeService.delete(id).subscribe({
-      next: () => { this.showToast('Tipo de imagen eliminado', 'success'); this.loadAll(); },
-      error: () => this.showToast('Error al eliminar tipo de imagen', 'error'),
+      next: () => {
+        this.showToast('Tipo de imagen eliminado', 'success');
+        this.deleteTargetId.set(null);
+        this.loadAll();
+      },
+      error: () => {
+        this.showToast('Error al eliminar tipo de imagen', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { DoctorService } from '@app/services/ms-clasificator/doctor.service';
 import { DoctorAreaService } from '@app/services/ms-clasificator/doctor-area.service';
 import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-area.service';
@@ -36,6 +37,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -65,6 +67,11 @@ export class ListComponent implements OnInit {
   detailConfig    = signal<EntityDetailConfig | null>(null);
   currentDoctorId = signal<number | null>(null);
   toast           = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── AREAS PANEL STATE ────────────────────────────────────────────────────
   managedDoctor        = signal<DoctorExtended | null>(null);
@@ -146,7 +153,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':        this.openView(row.id);    break;
       case 'edit':        this.openEdit(row.id);    break;
-      case 'delete':      this.delete(row.id);      break;
+      case 'delete':      this.openDeleteConfirm(row.id, row.code); break;
       case 'manageAreas': this.manageAreas(row); break;
     }
   }
@@ -489,13 +496,32 @@ export class ListComponent implements OnInit {
 
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
 
-  delete(doctorId: number): void {
-    this.doctorService.delete(doctorId).subscribe({
+  openDeleteConfirm(doctorId: number, code: string): void {
+    this.deleteTargetId.set(doctorId);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar al doctor con código "${code}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
+    this.doctorService.delete(id).subscribe({
       next: () => {
         this.showToast('Doctor eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadDoctors();
       },
-      error: () => this.showToast('Error al eliminar doctor', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar doctor', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

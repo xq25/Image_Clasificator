@@ -24,6 +24,7 @@ import { MedicalDiagnostic, MedicalDiagnosticExtended } from '@app/models/ms-cla
 import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
 
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 
 interface Toast { message: string; type: 'success' | 'error'; }
 
@@ -52,6 +53,7 @@ const COLORS = [
     MatProgressSpinnerModule,
     MatDividerModule,
     DynamicTableComponent,
+    ConfirmDeleteComponent,
   ],
   templateUrl: './list.component.html',
   styleUrl:    './list.component.scss',
@@ -73,6 +75,11 @@ export class DatasetListComponent implements OnInit {
   viewCategories = signal<CategoryView[]>([]);
   currentId      = signal<number | null>(null);
   toast          = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── MODO EDITAR INFO GENERAL ────────────────────────────────────────────────
   editingGeneral  = signal(false);
@@ -150,7 +157,7 @@ export class DatasetListComponent implements OnInit {
 
   handleAction(event: { action: string; row: any }): void {
     if (event.action === 'view')   this.openView(event.row.id);
-    if (event.action === 'delete') this.deleteDataset(event.row.id);
+    if (event.action === 'delete') this.openDeleteConfirm(event.row.id);
   }
 
   openCreate(): void { this.router.navigate(['/datasets/create']); }
@@ -215,15 +222,32 @@ export class DatasetListComponent implements OnInit {
     this.editingCategories.set(false);
   }
 
-  deleteDataset(id: number): void {
+  openDeleteConfirm(id: number): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el dataset con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
     this.datasetService.delete(id).subscribe({
       next: () => {
         this.showToast('Dataset eliminado', 'success');
+        this.deleteTargetId.set(null);
         if (this.currentId() === id) this.closePanel();
         this.loadDatasets();
       },
       error: (err) => {
         this.showToast(err?.error?.message ?? 'Error al eliminar el dataset', 'error');
+        this.deleteTargetId.set(null);
       },
     });
   }

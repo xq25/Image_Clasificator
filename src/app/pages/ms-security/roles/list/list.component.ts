@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { Role } from '@app/models/Role';
 import { RoleService } from '@app/services/ms-security/role-service';
 
@@ -26,6 +27,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -52,6 +54,11 @@ export class ListComponent implements OnInit {
   detailConfig  = signal<EntityDetailConfig | null>(null);
   currentRoleId = signal<string | null>(null);
   toast         = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<string | null>(null);
+  deleteConfirmMessage = signal('');
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
@@ -99,7 +106,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':              this.openView(row.id); break;
       case 'edit':              this.openEdit(row.id); break;
-      case 'delete':            this.delete(row.id);   break;
+      case 'delete':            this.openDeleteConfirm(row.id); break;
       case 'managePermissions': this.router.navigate([`${this.initialPath}/role-permissions/${row.id}`]); break;
     }
   }
@@ -242,13 +249,32 @@ export class ListComponent implements OnInit {
 
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
 
-  delete(roleId: string): void {
-    this.roleService.deleteRole(roleId).subscribe({
+  openDeleteConfirm(id: string): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el rol con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
+    this.roleService.deleteRole(id).subscribe({
       next: () => {
         this.showToast('Rol eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadRoles();
       },
-      error: () => this.showToast('Error al eliminar rol', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar rol', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

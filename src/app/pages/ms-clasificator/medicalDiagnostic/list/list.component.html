@@ -95,4 +95,15 @@
     }
 
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar diagnóstico"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

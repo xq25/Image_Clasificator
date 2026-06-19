@@ -262,4 +262,16 @@
     }
 
   </div>
+
+  <!-- CONFIRM DELETE -->
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar doctor"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

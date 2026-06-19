@@ -1,17 +1,25 @@
-import { Component, OnInit, signal, ChangeDetectorRef, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, signal, ChangeDetectorRef, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import { DynamicTableComponent, TableColumn, TableAction } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { User } from '@app/models/User';
+import { Role } from '@app/models/Role';
+import { UserRole } from '@app/models/UserRole';
 import { UserService } from '@app/services/ms-security/user-service';
+import { RoleService } from '@app/services/ms-security/role-service';
+import { UserRoleService } from '@app/services/ms-security/user-role-service';
 
 interface Toast {
   message: string;
@@ -23,20 +31,24 @@ interface Toast {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })
 export class ListComponent implements OnInit {
 
-  private initialPath = '/users';
   private cdr = inject(ChangeDetectorRef);
   private toastTimer: any;
 
@@ -48,10 +60,41 @@ export class ListComponent implements OnInit {
   panelOpen     = signal(false);
   panelLoading  = signal(false);
   isViewMode    = signal(false);
+  isRolesMode   = signal(false);
   formConfig    = signal<DynamicFormConfig | null>(null);
   detailConfig  = signal<EntityDetailConfig | null>(null);
   currentUserId = signal<string | null>(null);
   toast         = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<string | null>(null);
+  deleteConfirmMessage = signal('');
+
+  // ─── ROLES PANEL STATE ───────────────────────────────────────────────────────
+  managedUser       = signal<User | null>(null);
+  userRoles         = signal<UserRole[]>([]);
+  allRoles          = signal<Role[]>([]);
+  rolesLoading      = signal(false);
+  addingRole        = signal(false);
+  removingRoleId    = signal<string | null>(null);
+  selectedRoleIdValue: string | null = null;
+  rolesPage         = signal(0);
+  readonly ROLES_PAGE_SIZE = 5;
+
+  availableRoles = computed(() => {
+    const assigned = new Set(this.userRoles().map(ur => ur.role.id));
+    return this.allRoles().filter(r => !assigned.has(r.id));
+  });
+
+  pagedRoles = computed(() => {
+    const start = this.rolesPage() * this.ROLES_PAGE_SIZE;
+    return this.userRoles().slice(start, start + this.ROLES_PAGE_SIZE);
+  });
+
+  totalRolesPages = computed(() =>
+    Math.ceil(this.userRoles().length / this.ROLES_PAGE_SIZE)
+  );
 
   // ─── TABLE CONFIG ─────────────────────────────────────────────────────────────
   columns: TableColumn[] = [
@@ -68,8 +111,9 @@ export class ListComponent implements OnInit {
   ];
 
   constructor(
-    private router: Router,
     private userService: UserService,
+    private roleService: RoleService,
+    private userRoleService: UserRoleService,
   ) {}
 
   ngOnInit(): void {
@@ -99,8 +143,8 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':        this.openView(row.id); break;
       case 'edit':        this.openEdit(row.id); break;
-      case 'delete':      this.delete(row.id);   break;
-      case 'manageRoles': this.router.navigate([`${this.initialPath}/user-roles/${row.id}`]); break;
+      case 'delete':      this.openDeleteConfirm(row.id); break;
+      case 'manageRoles': this.openManageRoles(row); break;
     }
   }
 
@@ -166,13 +210,89 @@ export class ListComponent implements OnInit {
     });
   }
 
+  openManageRoles(user: User): void {
+    this.panelOpen.set(true);
+    this.isViewMode.set(false);
+    this.isRolesMode.set(true);
+    this.rolesPage.set(0);
+    this.userRoles.set([]);
+    this.allRoles.set([]);
+    this.selectedRoleIdValue = null;
+    this.rolesLoading.set(true);
+    this.managedUser.set(user);
+
+    this.roleService.getRoles().subscribe({
+      next: (rolesRes) => {
+        this.allRoles.set(rolesRes.data ?? []);
+
+        this.userRoleService.getUserRoles(user.id!).subscribe({
+          next: (res) => {
+            this.userRoles.set(res.data ?? []);
+            this.rolesLoading.set(false);
+          },
+          error: () => {
+            this.showToast('Error al cargar roles del usuario', 'error');
+            this.rolesLoading.set(false);
+          },
+        });
+      },
+      error: () => {
+        this.showToast('Error al cargar la lista de roles', 'error');
+        this.rolesLoading.set(false);
+      },
+    });
+  }
+
+  addRoleToUser(): void {
+    const roleId = this.selectedRoleIdValue;
+    const userId = this.managedUser()?.id;
+    if (!roleId || !userId) return;
+
+    this.addingRole.set(true);
+    this.userRoleService.addUserRole(userId, roleId).subscribe({
+      next: (res) => {
+        if (res.data) {
+          this.userRoles.update(list => [...list, res.data!]);
+        }
+        this.selectedRoleIdValue = null;
+        this.addingRole.set(false);
+        this.showToast('Rol agregado al usuario', 'success');
+      },
+      error: () => {
+        this.addingRole.set(false);
+        this.showToast('Error al agregar el rol', 'error');
+      },
+    });
+  }
+
+  removeRoleFromUser(userRole: UserRole): void {
+    this.removingRoleId.set(userRole.id);
+    this.userRoleService.removeUserRole(userRole.id).subscribe({
+      next: () => {
+        this.userRoles.update(list => list.filter(ur => ur.id !== userRole.id));
+        this.removingRoleId.set(null);
+        this.showToast('Rol quitado del usuario', 'success');
+      },
+      error: () => {
+        this.removingRoleId.set(null);
+        this.showToast('Error al quitar el rol', 'error');
+      },
+    });
+  }
+
   closePanel(): void {
     this.panelOpen.set(false);
     this.isViewMode.set(false);
+    this.isRolesMode.set(false);
     this.formConfig.set(null);
     this.detailConfig.set(null);
     this.currentUserId.set(null);
     this.panelLoading.set(false);
+    this.managedUser.set(null);
+    this.userRoles.set([]);
+    this.allRoles.set([]);
+    this.selectedRoleIdValue = null;
+    this.rolesPage.set(0);
   }
 
   // ─── FORM BUILDER ─────────────────────────────────────────────────────────────
@@ -252,13 +372,32 @@ export class ListComponent implements OnInit {
 
   // ─── OTRAS ACCIONES ───────────────────────────────────────────────────────────
 
-  delete(userId: string): void {
-    this.userService.deleteUser(userId).subscribe({
+  openDeleteConfirm(id: string): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el usuario con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
+    this.userService.deleteUser(id).subscribe({
       next: () => {
         this.showToast('Usuario eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.loadUsers();
       },
-      error: () => this.showToast('Error al eliminar usuario', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar usuario', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

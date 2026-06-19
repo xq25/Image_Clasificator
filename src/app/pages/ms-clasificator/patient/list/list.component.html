@@ -95,4 +95,16 @@
     }
 
   </div>
+
+  <!-- CONFIRM DELETE -->
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar paciente"
+      [message]="deleteConfirmMessage()"
+      subMessage="Esta acción no se puede deshacer y se eliminarán todos los registros asociados."
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

@@ -165,4 +165,15 @@
     }
 
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar registro clínico"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

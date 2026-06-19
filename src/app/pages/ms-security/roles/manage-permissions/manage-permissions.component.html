@@ -1,96 +1,113 @@
-<div class="p-6">
-  <mat-card class="cardWithShadow mb-6">
-    <div class="flex items-center justify-between p-4">
-      <div>
-        <h2 class="text-2xl font-bold">Gestión de Permisos</h2>
-        <p class="text-gray-600 text-sm">
-          Rol: <strong>{{ role()?.name }}</strong>
-        </p>
-      </div>
-      <button mat-stroked-button (click)="onBack()" class="flex items-center gap-2">
-        <mat-icon>arrow_back</mat-icon>
-        Volver
-      </button>
-    </div>
-  </mat-card>
+<div class="mp-root">
 
-  @if (loading()) {
-    <div class="flex items-center justify-center py-12">
-      <mat-spinner></mat-spinner>
+  <!-- TOAST -->
+  @if (toast()) {
+    <div class="toast" [ngClass]="'toast--' + toast()!.type">
+      {{ toast()!.message }}
     </div>
-  } @else {
-    <!-- BÚSQUEDA Y CONTADORES GLOBALES -->
-    <mat-card class="cardWithShadow mb-6">
-      <div class="p-6 border-b border-gray-200">
-        <div class="flex items-center justify-between">
+  }
+
+  <!-- HEADER -->
+  <div class="sticky-header">
+    <mat-card class="cardWithShadow">
+      <div class="header-inner">
+        <div class="header-left">
+          <div class="header-icon-wrap">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
           <div>
-            <h3 class="text-lg font-semibold">Permisos disponibles</h3>
-            <p class="text-sm text-gray-600">
-              Total Asignados: <strong>{{ assignedCount() }}</strong> / <strong>{{ totalCount() }}</strong>
+            <h2 class="header-title">Gestión de Permisos</h2>
+            <p class="header-subtitle">
+              Rol:&nbsp;<strong>{{ role()?.name ?? '…' }}</strong>
             </p>
           </div>
-          <div class="flex-1 max-w-xs">
-            <input
-              type="text"
-              placeholder="Buscar permisos..."
-              [(ngModel)]="searchQuery"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         </div>
+        <button mat-stroked-button (click)="onBack()" class="btn-back">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-icon class="animate-spin">cached</mat-icon>
+      <p>Cargando permisos...</p>
+    </div>
+  } @else {
+
+    <!-- BARRA DE BÚSQUEDA Y CONTADORES -->
+    <mat-card class="cardWithShadow search-card">
+      <div class="search-inner">
+        <div class="search-counters">
+          <span class="counter-label">Permisos asignados</span>
+          <span class="counter-badge">{{ assignedCount() }} / {{ totalCount() }}</span>
+        </div>
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar permisos...</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            placeholder="URL, método o modelo..." />
+        </mat-form-field>
       </div>
     </mat-card>
 
-    <!-- PERMISOS AGRUPADOS POR MODEL -->
+    <!-- GRUPOS POR MODELO -->
     @for (model of uniqueModels(); track model) {
       @if (getFilteredByModel(model).length > 0) {
-        <mat-card class="cardWithShadow mb-6">
-          <div class="p-6 border-b border-gray-200 bg-gray-50">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-lg font-semibold capitalize">{{ model }}</h3>
-                <p class="text-sm text-gray-600">
-                  Asignados: <strong>{{ getAssignedCountByModel(model) }}</strong> / <strong>{{ getFilteredByModel(model).length }}</strong>
-                </p>
-              </div>
+        <div class="model-card">
+
+          <!-- Cabecera del grupo -->
+          <div class="model-header">
+            <div class="model-header__left">
+              <span class="model-name">{{ model }}</span>
+              <span class="model-badge">
+                {{ getAssignedCountByModel(model) }} / {{ getFilteredByModel(model).length }}
+              </span>
             </div>
           </div>
 
-          <!-- GRID DE PERMISOS POR MODEL -->
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              @for (permission of getFilteredByModel(model); track permission.id) {
-                <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                  <mat-checkbox
-                    [checked]="isAssigned(permission.id!)"
-                    (change)="onTogglePermission(permission)"
-                    [disabled]="processingId() === permission.id"
-                    class="mr-4"
-                  ></mat-checkbox>
-                  <div class="flex-1">
-                    <p class="font-semibold text-gray-800">{{ permission.method }}</p>
-                    <p class="text-sm text-gray-600">{{ permission.url }}</p>
-                  </div>
-                  @if (processingId() === permission.id) {
-                    <mat-spinner diameter="24"></mat-spinner>
-                  }
+          <!-- Grid de permisos -->
+          <div class="perm-grid">
+            @for (permission of getFilteredByModel(model); track permission.id) {
+              <div class="perm-item" [class.perm-item--assigned]="isAssigned(permission.id!)">
+                <mat-checkbox
+                  [checked]="isAssigned(permission.id!)"
+                  (change)="onTogglePermission(permission)"
+                  [disabled]="processingId() === permission.id"
+                  class="perm-check"
+                ></mat-checkbox>
+                <div class="perm-info">
+                  <span class="method-badge method-badge--{{ permission.method?.toLowerCase() }}">
+                    {{ permission.method }}
+                  </span>
+                  <p class="perm-url">{{ permission.url }}</p>
                 </div>
-              }
-            </div>
+                @if (processingId() === permission.id) {
+                  <mat-spinner diameter="20" class="perm-spinner"></mat-spinner>
+                }
+              </div>
+            }
           </div>
-        </mat-card>
+
+        </div>
       }
     }
 
-    <!-- TOAST -->
-    @if (toast()) {
-      <div 
-        [class]="'fixed bottom-6 right-6 p-4 rounded-lg shadow-lg flex items-center gap-3 ' + 
-                 (toast()!.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white')"
-      >
-        <mat-icon>{{ toast()!.type === 'success' ? 'check_circle' : 'error' }}</mat-icon>
-        <span>{{ toast()!.message }}</span>
+    @if (uniqueModels().length === 0 || allPermissions().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <mat-icon>lock_open</mat-icon>
+        </div>
+        <p class="empty-title">No hay permisos disponibles</p>
+        <p class="empty-subtitle">No se encontraron permisos en el sistema</p>
       </div>
     }
+
   }
+
 </div>

@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DynamicTableComponent, TableAction, TableColumn } from '@app/components/dynamic-table/dynamic-table.component';
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 import { EntityDetailComponent, EntityDetailConfig, DetailSectionConfig } from '@app/components/entity-detail/entity-detail.component';
+import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-delete.component';
 import { ClinicalRecordService } from '@app/services/ms-clasificator/clinical-record.service';
 import { PatientService } from '@app/services/ms-clasificator/patient.service';
 import { ClinicalRecord, ClinicalRecordExtended } from '@models/ms-clasificator/ClinicalRecord/ClinicalRecord';
@@ -28,6 +29,7 @@ interface Toast {
     DynamicTableComponent,
     DynamicFormComponent,
     EntityDetailComponent,
+    ConfirmDeleteComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -52,6 +54,11 @@ export class ListComponent implements OnInit {
   detailConfig    = signal<EntityDetailConfig | null>(null);
   currentRecordId = signal<number | null>(null);
   toast           = signal<Toast | null>(null);
+
+  // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
+  showDeleteConfirm    = signal(false);
+  deleteTargetId       = signal<number | null>(null);
+  deleteConfirmMessage = signal('');
 
   private cdr        = inject(ChangeDetectorRef);
   private toastTimer: any;
@@ -165,7 +172,7 @@ export class ListComponent implements OnInit {
     switch (action) {
       case 'view':   this.openView(row.id!);  break;
       case 'edit':   this.openEdit(row.id!);  break;
-      case 'delete': this.delete(row.id!);    break;
+      case 'delete': this.openDeleteConfirm(row.id!); break;
     }
   }
 
@@ -333,14 +340,32 @@ export class ListComponent implements OnInit {
   }
 
   // ── Eliminar ─────────────────────────────────────────────────
-  delete(id: number): void {
-    if (!confirm('¿Estás seguro de que quieres eliminar este registro clínico?')) return;
+  openDeleteConfirm(id: number): void {
+    this.deleteTargetId.set(id);
+    this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el registro clínico con ID "${id}"?`);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteTargetId.set(null);
+    this.deleteConfirmMessage.set('');
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.showDeleteConfirm.set(false);
     this.clinicalRecordService.delete(id).subscribe({
-      next:  () => {
+      next: () => {
         this.showToast('Registro eliminado exitosamente', 'success');
+        this.deleteTargetId.set(null);
         this.reloadRecords();
       },
-      error: () => this.showToast('Error al eliminar el registro clínico', 'error'),
+      error: () => {
+        this.showToast('Error al eliminar el registro clínico', 'error');
+        this.deleteTargetId.set(null);
+      },
     });
   }
 

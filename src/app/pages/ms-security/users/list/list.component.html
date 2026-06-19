@@ -59,7 +59,15 @@
 
       <mat-card class="cardWithShadow form-panel">
 
-        @if (!isViewMode()) {
+        <!-- Panel header -->
+        @if (isRolesMode()) {
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">Roles del Usuario</h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else if (!isViewMode()) {
           <div class="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold">
               @if (formConfig()?.mode === 1) { Nuevo Usuario }
@@ -71,11 +79,123 @@
           </div>
         }
 
-        <div [class.p-4]="!isViewMode()">
+        <div [class.p-4]="!isViewMode() && !isRolesMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (isRolesMode()) {
+
+            <!-- INFO DEL USUARIO -->
+            @if (managedUser()) {
+              <div class="roles-user-info">
+                <div class="roles-user-info__icon">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div class="roles-user-info__data">
+                  <span class="roles-user-info__name">{{ managedUser()!.name || 'Usuario' }}</span>
+                  <span class="roles-user-info__email">{{ managedUser()!.email }}</span>
+                  <span class="roles-user-info__count">
+                    {{ userRoles().length }} rol{{ userRoles().length !== 1 ? 'es' : '' }} asignado{{ userRoles().length !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+            }
+
+            <!-- AGREGAR ROL -->
+            <div class="add-role-row">
+              <mat-form-field appearance="outline" class="add-role-select">
+                <mat-label>Agregar rol</mat-label>
+                <mat-select [(ngModel)]="selectedRoleIdValue" [disabled]="rolesLoading() || addingRole()">
+                  @for (role of availableRoles(); track role.id) {
+                    <mat-option [value]="role.id">{{ role.name }}</mat-option>
+                  }
+                  @if (availableRoles().length === 0) {
+                    <mat-option disabled>No hay roles disponibles</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-flat-button color="primary"
+                [disabled]="!selectedRoleIdValue || addingRole()"
+                (click)="addRoleToUser()">
+                @if (addingRole()) {
+                  <mat-spinner diameter="18" style="display:inline-block"></mat-spinner>
+                } @else {
+                  <mat-icon>add_moderator</mat-icon>
+                }
+                Agregar
+              </button>
+            </div>
+
+            <!-- TABLA DE ROLES -->
+            @if (rolesLoading()) {
+              <div class="flex items-center justify-center py-10">
+                <mat-spinner diameter="36"></mat-spinner>
+              </div>
+            } @else if (userRoles().length === 0) {
+              <div class="roles-empty">
+                <mat-icon>admin_panel_settings</mat-icon>
+                <p>No hay roles asignados a este usuario</p>
+              </div>
+            } @else {
+              <div class="roles-table-wrap">
+                <table class="roles-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Descripción</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (userRole of pagedRoles(); track userRole.id) {
+                      <tr>
+                        <td class="text-truncate">{{ userRole.role.name }}</td>
+                        <td class="text-truncate">{{ userRole.role.description || '—' }}</td>
+                        <td class="roles-table__action-cell">
+                          <button mat-icon-button class="btn-remove-role"
+                            [disabled]="removingRoleId() === userRole.id"
+                            (click)="removeRoleFromUser(userRole)"
+                            title="Quitar rol">
+                            @if (removingRoleId() === userRole.id) {
+                              <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                              <mat-icon>remove_circle_outline</mat-icon>
+                            }
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+
+                <!-- PAGINACIÓN -->
+                @if (totalRolesPages() > 1) {
+                  <div class="roles-pagination">
+                    <button mat-icon-button
+                      [disabled]="rolesPage() === 0"
+                      (click)="rolesPage.set(rolesPage() - 1)">
+                      <mat-icon>chevron_left</mat-icon>
+                    </button>
+                    <span class="roles-pagination__label">
+                      {{ rolesPage() + 1 }} / {{ totalRolesPages() }}
+                    </span>
+                    <button mat-icon-button
+                      [disabled]="rolesPage() === totalRolesPages() - 1"
+                      (click)="rolesPage.set(rolesPage() + 1)">
+                      <mat-icon>chevron_right</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="p-4 pt-0">
+              <button mat-stroked-button (click)="closePanel()" class="w-full">
+                <mat-icon>close</mat-icon> Cerrar
+              </button>
+            </div>
+
           } @else if (isViewMode() && detailConfig()) {
             <app-entity-detail
               [config]="detailConfig()!"
@@ -95,4 +215,15 @@
     }
 
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar usuario"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

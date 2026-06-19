@@ -93,4 +93,15 @@
     }
 
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar rol"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>

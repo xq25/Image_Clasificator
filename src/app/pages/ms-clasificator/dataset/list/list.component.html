@@ -357,4 +357,14 @@
     </mat-card>
   }
 
+  @if (showDeleteConfirm()) {
+    <app-confirm-delete
+      title="Eliminar dataset"
+      [message]="deleteConfirmMessage()"
+      subMessage=""
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+
 </div>
