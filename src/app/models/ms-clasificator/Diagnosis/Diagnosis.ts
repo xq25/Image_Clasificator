@@ -5,6 +5,12 @@ export interface Diagnosis {
     id?: number;
     medicalDiagnostic: MedicalDiagnostic;
 }
+
+export interface DiagnosisCreateDTO {
+    medicalDiagnosticId: number;
+    clinicalRecordId: number;
+}
+
 export interface DiagnosisExtended extends Diagnosis {
     clinicalRecord: ClinicalRecord;
 }

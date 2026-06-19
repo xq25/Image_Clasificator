@@ -11,6 +11,8 @@ import { EvaluationAreaService } from '@app/services/ms-clasificator/evaluation-
 import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
 import { InternalServicesService } from '@app/services/ms-clasificator/internal-services.service';
 import { Doctor, DoctorArea, EvaluationArea, MedicalImageType, ApiResponse } from '@app/models/ms-clasificator';
+import { PatientExtended } from '@app/models/ms-clasificator/Patient/Patient';
+import { PatientService } from '@app/services/ms-clasificator/patient.service';
 
 @Injectable({
   providedIn: 'root',
@@ -29,6 +31,7 @@ export class SideBarService {
     private evaluationAreaService: EvaluationAreaService,
     private medicalImageTypeService: MedicalImageTypeService,
     private internalService: InternalServicesService,
+    private patientService: PatientService,
   ) {}
 
   // ── Punto de entrada principal ────────────────────────────────
@@ -63,35 +66,76 @@ export class SideBarService {
     );
   }
 
-  // ── Carga aislada de la sección de clasificación ──────────────
+  // ── Carga aislada de las secciones dinámicas (doctor / paciente) ──
   /**
-   * Intenta construir la sección de clasificación para el usuario.
-   * Cada paso tiene su propio catchError que retorna baseSections,
-   * garantizando que un fallo en cualquier punto nunca oculte
-   * las secciones de Home, Security o Management.
+   * Corre ambas verificaciones en paralelo para que un fallo en una
+   * no bloquee la otra. Las secciones se acumulan sobre baseSections.
    */
   private resolveClassificationSection(
     userId: string,
     baseSections: SidebarSection[],
   ): Observable<SidebarSection[]> {
 
-    return this.internalService.existRelationWithDoctor(userId).pipe(
-      switchMap((isDoctor) => {
-        console.log('[SideBarService] existRelationWithDoctor:', isDoctor);
-        if (!isDoctor) return of(baseSections);
+    const isDoctor$ = this.internalService.existRelationWithDoctor(userId).pipe(
+      catchError((err) => {
+        console.error('[SideBarService] Error en existRelationWithDoctor:', err);
+        return of(false);
+      })
+    );
 
-        return this.resolveDoctorSection(userId, baseSections);
+    const isPatient$ = this.internalService.existRelationWithPatient(userId).pipe(
+      catchError((err) => {
+        console.error('[SideBarService] Error en existRelationWithPatient:', err);
+        return of(false);
+      })
+    );
+
+    return forkJoin({ isDoctor: isDoctor$, isPatient: isPatient$ }).pipe(
+      switchMap(({ isDoctor, isPatient }) => {
+        console.log('[SideBarService] isDoctor:', isDoctor, '| isPatient:', isPatient);
+
+        const doctor$ = isDoctor
+          ? this.resolveDoctorSection(userId, [])
+          : of([] as SidebarSection[]);
+
+        const patient$ = isPatient
+          ? this.resolvePatientSections(userId)
+          : of([] as SidebarSection[]);
+
+        return forkJoin({ doctorSections: doctor$, patientSections: patient$ }).pipe(
+          map(({ doctorSections, patientSections }) =>
+            [...baseSections, ...patientSections, ...doctorSections]
+          )
+        );
       }),
       catchError((error) => {
-        console.error('[SideBarService] Error en existRelationWithDoctor:', error);
-        return of(baseSections);   // ← baseSections siempre visible
+        console.error('[SideBarService] Error en resolveClassificationSection:', error);
+        return of(baseSections);
+      })
+    );
+  }
+
+  // ── Sección de paciente ───────────────────────────────────────
+  private resolvePatientSections(userId: string): Observable<SidebarSection[]> {
+    return this.patientService.findByUserId(userId).pipe(
+      map((response) => {
+        const patient = this.unwrapData<PatientExtended | null>(response, null);
+        console.log('[SideBarService] paciente encontrado:', patient);
+
+        if (!patient?.document) return [];
+
+        return this.buildPatientSection(patient.document);
+      }),
+      catchError((error) => {
+        console.error('[SideBarService] Error al obtener paciente:', error);
+        return of([] as SidebarSection[]);
       })
     );
   }
 
   private resolveDoctorSection(
     userId: string,
-    baseSections: SidebarSection[],
+    _baseSections: SidebarSection[],
   ): Observable<SidebarSection[]> {
 
     return this.doctorService.findByUserId(userId).pipe(
@@ -99,21 +143,20 @@ export class SideBarService {
         const doctor = this.normalizeDoctors(doctorsRes).find((d) => d?.id != null);
         console.log('[SideBarService] doctor encontrado:', doctor);
 
-        if (!doctor?.id) return of(baseSections);
+        if (!doctor?.id) return of([] as SidebarSection[]);
 
-        return this.resolveAreaSection(doctor.id, baseSections);
+        return this.resolveAreaSection(doctor.id).pipe(
+          map((areaSections) => [this.buildDoctorManagementSection(), ...areaSections])
+        );
       }),
       catchError((error) => {
         console.error('[SideBarService] Error al obtener doctor:', error);
-        return of(baseSections);   // ← baseSections siempre visible
+        return of([] as SidebarSection[]);
       })
     );
   }
 
-  private resolveAreaSection(
-    doctorId: number,
-    baseSections: SidebarSection[],
-  ): Observable<SidebarSection[]> {
+  private resolveAreaSection(doctorId: number): Observable<SidebarSection[]> {
 
     return this.doctorAreaService.findByDoctorId(doctorId).pipe(
       switchMap((doctorAreasRes) => {
@@ -122,21 +165,18 @@ export class SideBarService {
           .filter((id): id is number => id != null);
         console.log('[SideBarService] evaluationAreaIds del doctor:', areaIds);
 
-        if (!areaIds.length) return of(this.buildNoAreasSection(baseSections));
+        if (!areaIds.length) return of(this.buildNoAreasSection([]));
 
-        return this.resolveImageTypeGroups(areaIds, baseSections);
+        return this.resolveImageTypeGroups(areaIds);
       }),
       catchError((error) => {
         console.error('[SideBarService] Error al obtener áreas del doctor:', error);
-        return of(baseSections);   // ← baseSections siempre visible
+        return of([] as SidebarSection[]);
       })
     );
   }
 
-  private resolveImageTypeGroups(
-    areaIds: number[],
-    baseSections: SidebarSection[],
-  ): Observable<SidebarSection[]> {
+  private resolveImageTypeGroups(areaIds: number[]): Observable<SidebarSection[]> {
 
     return forkJoin(
       areaIds.map((areaId) =>
@@ -149,7 +189,6 @@ export class SideBarService {
             imageTypes: (imageTypes.data ?? []) as MedicalImageType[],
           })),
           catchError((err) => {
-            // Un área que falla se descarta; las demás siguen.
             console.error(`[SideBarService] Error al cargar área ${areaId}:`, err);
             return of(null);
           })
@@ -161,35 +200,55 @@ export class SideBarService {
           (g): g is { area: EvaluationArea; imageTypes: MedicalImageType[] } => g !== null
         );
         console.log('[SideBarService] grupos de clasificación:', valid);
-        return this.buildClassificationSection(baseSections, valid);
+        return this.buildClassificationSection([], valid);
       }),
       catchError((error) => {
-        // Cubre el caso extremo de que el forkJoin completo falle.
         console.error('[SideBarService] Error al resolver grupos de imagen:', error);
-        return of(baseSections);   // ← baseSections siempre visible
+        return of([] as SidebarSection[]);
       })
     );
   }
 
-  // ── Constructores de secciones ────────────────────────────────
-  private buildNoAreasSection(sections: SidebarSection[]): SidebarSection[] {
-    return [
-      ...sections,
-      {
-        navCap:  NavCap.CLASIFICATION,
-        visible: true,
-        routes: [{
-          displayName: 'No perteneces a ningún área de evaluación. Solicita acceso y recarga la página.',
-          iconName:    'solar:info-circle-line-duotone',
-          visible:     true,
-          disabled:    true,
-        }],
-      },
-    ];
+  // ── Constructores de secciones (retornan solo su propia sección) ──
+  private buildDoctorManagementSection(): SidebarSection {
+    return {
+      navCap:  NavCap.DOCTOR_MANAGEMENT,
+      visible: true,
+      routes: [
+        { displayName: 'Patients',            iconName: 'solar:user-heart-line-duotone',   route: '/patients/list',            visible: true },
+        { displayName: 'Medical Diagnostics', iconName: 'solar:stethoscope-line-duotone',  route: '/medical-diagnostics/list', visible: true },
+      ],
+    };
+  }
+
+  private buildPatientSection(document: string): SidebarSection[] {
+    return [{
+      navCap:  NavCap.PATIENT,
+      visible: true,
+      routes: [{
+        displayName: 'Mis Visitas Médicas',
+        iconName:    'solar:heart-pulse-line-duotone',
+        route:       `/clinical-records/patient/${document}/records`,
+        visible:     true,
+      }],
+    }];
+  }
+
+  private buildNoAreasSection(_sections: SidebarSection[]): SidebarSection[] {
+    return [{
+      navCap:  NavCap.CLASIFICATION,
+      visible: true,
+      routes: [{
+        displayName: 'No perteneces a ningún área de evaluación. Solicita acceso y recarga la página.',
+        iconName:    'solar:info-circle-line-duotone',
+        visible:     true,
+        disabled:    true,
+      }],
+    }];
   }
 
   private buildClassificationSection(
-    sections: SidebarSection[],
+    _sections: SidebarSection[],
     groups: { area: EvaluationArea; imageTypes: MedicalImageType[] }[]
   ): SidebarSection[] {
     const areaRoutes: SidebarRoute[] = groups
@@ -206,16 +265,13 @@ export class SideBarService {
         })),
       }));
 
-    if (!areaRoutes.length) return sections;
+    if (!areaRoutes.length) return [];
 
-    return [
-      ...sections,
-      {
-        navCap:  NavCap.CLASIFICATION,
-        visible: true,
-        routes:  areaRoutes,
-      },
-    ];
+    return [{
+      navCap:  NavCap.CLASIFICATION,
+      visible: true,
+      routes:  areaRoutes,
+    }];
   }
 
   private buildSections(hasSecurityAccess: boolean, hasClasificatorAccess: boolean): SidebarSection[] {

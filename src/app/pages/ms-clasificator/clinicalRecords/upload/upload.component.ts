@@ -11,17 +11,21 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { PatientDatumService }   from '@app/services/ms-clasificator/patient-datum.service';
-import { MedicalImageService }   from '@app/services/ms-clasificator/medical-image.service';
-import { PrimitiveDatumService } from '@app/services/ms-clasificator/primitive-datum.service';
-import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
-import { ClinicalRecordService } from '@app/services/ms-clasificator/clinical-record.service';
+import { PatientDatumService }      from '@app/services/ms-clasificator/patient-datum.service';
+import { MedicalImageService }      from '@app/services/ms-clasificator/medical-image.service';
+import { PrimitiveDatumService }    from '@app/services/ms-clasificator/primitive-datum.service';
+import { MedicalImageTypeService }  from '@app/services/ms-clasificator/medical-image-type.service';
+import { ClinicalRecordService }    from '@app/services/ms-clasificator/clinical-record.service';
+import { DiagnosisService }         from '@app/services/ms-clasificator/diagnosis.service';
+import { MedicalDiagnosticService } from '@app/services/ms-clasificator/medical-diagnostic.service';
 
-import { PrimitiveDatum } from '@app/models/ms-clasificator/PrimitiveDatum/PrimitiveDatum';
-import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
+import { PrimitiveDatum }       from '@app/models/ms-clasificator/PrimitiveDatum/PrimitiveDatum';
+import { MedicalImageType }     from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
 import { PatientDatumExtended } from '@app/models/ms-clasificator/PatientDatum/PatientDatum';
-import { MedicalImg } from '@app/models/ms-clasificator/MedicalImage/MedicalImg';
+import { MedicalImg }           from '@app/models/ms-clasificator/MedicalImage/MedicalImg';
 import { ClinicalRecordExtended } from '@app/models/ms-clasificator/ClinicalRecord/ClinicalRecord';
+import { DiagnosisExtended }    from '@app/models/ms-clasificator/Diagnosis/Diagnosis';
+import { MedicalDiagnosticExtended } from '@app/models/ms-clasificator/MedicalDiagnostic/MedicalDiagnostic';
 
 interface Toast { message: string; type: 'success' | 'error'; }
 
@@ -55,20 +59,24 @@ export class UploadComponent implements OnInit {
   clinicalRecord   = signal<ClinicalRecordExtended | null>(null);
 
   // ─── CATÁLOGOS ───────────────────────────────────────────────────────────────
-  primitiveDatums  = signal<PrimitiveDatum[]>([]);
-  imageTypes       = signal<MedicalImageType[]>([]);
-  loadingCatalogs  = signal(true);
+  primitiveDatums    = signal<PrimitiveDatum[]>([]);
+  imageTypes         = signal<MedicalImageType[]>([]);
+  medicalDiagnostics = signal<MedicalDiagnosticExtended[]>([]);
+  loadingCatalogs    = signal(true);
 
   // ─── HISTORIAL CARGADO EN SESIÓN ─────────────────────────────────────────────
-  uploadedDatums   = signal<PatientDatumExtended[]>([]);
-  uploadedImages   = signal<MedicalImg[]>([]);
+  uploadedDatums    = signal<PatientDatumExtended[]>([]);
+  uploadedImages    = signal<MedicalImg[]>([]);
+  uploadedDiagnoses = signal<DiagnosisExtended[]>([]);
 
   // ─── FORMULARIOS ─────────────────────────────────────────────────────────────
-  datumForm!:  FormGroup;
-  imageForm!:  FormGroup;
+  datumForm!:     FormGroup;
+  imageForm!:     FormGroup;
+  diagnosisForm!: FormGroup;
 
-  submittingDatum  = signal(false);
-  submittingImage  = signal(false);
+  submittingDatum      = signal(false);
+  submittingImage      = signal(false);
+  submittingDiagnosis  = signal(false);
 
   selectedFile     = signal<File | null>(null);
   filePreviewUrl   = signal<string | null>(null);
@@ -76,11 +84,13 @@ export class UploadComponent implements OnInit {
   toast = signal<Toast | null>(null);
 
   constructor(
-    private patientDatumService:    PatientDatumService,
-    private medicalImageService:    MedicalImageService,
-    private primitiveDatumService:  PrimitiveDatumService,
-    private imageTypeService:       MedicalImageTypeService,
-    private clinicalRecordService:  ClinicalRecordService,
+    private patientDatumService:      PatientDatumService,
+    private medicalImageService:      MedicalImageService,
+    private primitiveDatumService:    PrimitiveDatumService,
+    private imageTypeService:         MedicalImageTypeService,
+    private clinicalRecordService:    ClinicalRecordService,
+    private diagnosisService:         DiagnosisService,
+    private medicalDiagnosticService: MedicalDiagnosticService,
   ) {}
 
   ngOnInit(): void {
@@ -105,12 +115,17 @@ export class UploadComponent implements OnInit {
     this.imageForm = this.fb.group({
       medicalImageTypeId: [null, Validators.required],
     });
+
+    this.diagnosisForm = this.fb.group({
+      medicalDiagnosticId: [null, Validators.required],
+      clinicalRecordId:    [clinicalRecordId],
+    });
   }
 
   loadCatalogs(clinicalRecordId: number): void {
     this.loadingCatalogs.set(true);
     let done = 0;
-    const checkDone = () => { if (++done === 3) this.loadingCatalogs.set(false); };
+    const checkDone = () => { if (++done === 4) this.loadingCatalogs.set(false); };
 
     this.primitiveDatumService.findAll().subscribe({
       next: r => { this.primitiveDatums.set(r.data ?? []); checkDone(); },
@@ -124,6 +139,11 @@ export class UploadComponent implements OnInit {
 
     this.clinicalRecordService.findById(clinicalRecordId).subscribe({
       next: r => { this.clinicalRecord.set(r.data ?? null); checkDone(); },
+      error: () => checkDone(),
+    });
+
+    this.medicalDiagnosticService.findAll().subscribe({
+      next: r => { this.medicalDiagnostics.set(r ?? []); checkDone(); },
       error: () => checkDone(),
     });
   }
@@ -200,6 +220,32 @@ export class UploadComponent implements OnInit {
       error: () => {
         this.showToast('Error al cargar imagen médica', 'error');
         this.submittingImage.set(false);
+      },
+    });
+  }
+
+  // ─── SUBMIT DIAGNOSIS ────────────────────────────────────────────────────────
+
+  submitDiagnosis(): void {
+    this.diagnosisForm.markAllAsTouched();
+    if (this.diagnosisForm.invalid) return;
+
+    this.submittingDiagnosis.set(true);
+    const raw = this.diagnosisForm.getRawValue();
+
+    this.diagnosisService.create({
+      medicalDiagnosticId: raw.medicalDiagnosticId,
+      clinicalRecordId:    raw.clinicalRecordId,
+    }).subscribe({
+      next: r => {
+        this.showToast('Diagnóstico registrado', 'success');
+        this.uploadedDiagnoses.update(list => [r.data!, ...list]);
+        this.diagnosisForm.get('medicalDiagnosticId')!.reset();
+        this.submittingDiagnosis.set(false);
+      },
+      error: () => {
+        this.showToast('Error al registrar diagnóstico', 'error');
+        this.submittingDiagnosis.set(false);
       },
     });
   }

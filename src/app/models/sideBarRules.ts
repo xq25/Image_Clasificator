@@ -22,5 +22,7 @@ export enum NavCap{
     HOME = 'Home',
     SECURITY_ADMIN = 'Security Admin',
     MANAGEMENT_CLASIFICATOR = 'Management Clasificator',
-    CLASIFICATION = 'Classification'
+    CLASIFICATION = 'Classification',
+    PATIENT = 'My Health',
+    DOCTOR_MANAGEMENT = 'Medical Management'
 }

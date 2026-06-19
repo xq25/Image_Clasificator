@@ -109,7 +109,7 @@
         }
       </div>
 
-      <!-- ══ COLUMNA DERECHA: IMAGEN MÉDICA ═════════════════════════════════════ -->
+      <!-- ══ COLUMNA CENTRAL: IMAGEN MÉDICA ═══════════════════════════════════ -->
       <div class="upload-col">
         <mat-card class="cardWithShadow section-card">
           <div class="section-header">
@@ -190,6 +190,65 @@
                 <div class="history-info">
                   <span class="history-name">{{ img.medicalImageTypeName ?? '—' }}</span>
                   <span class="history-value">{{ img.contentType }} · {{ (img.fileSize! / 1024).toFixed(1) }} KB</span>
+                </div>
+              </div>
+            }
+          </mat-card>
+        }
+      </div>
+
+      <!-- ══ COLUMNA DERECHA: DIAGNÓSTICO ══════════════════════════════════════ -->
+      <div class="upload-col">
+        <mat-card class="cardWithShadow section-card">
+          <div class="section-header">
+            <mat-icon class="section-icon">medical_services</mat-icon>
+            <div>
+              <h2 class="section-title">Diagnóstico</h2>
+              <p class="section-sub">Asocia un diagnóstico médico al expediente</p>
+            </div>
+          </div>
+
+          <mat-divider />
+
+          <form [formGroup]="diagnosisForm" (ngSubmit)="submitDiagnosis()" class="section-form">
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Diagnóstico médico</mat-label>
+              <mat-select formControlName="medicalDiagnosticId">
+                @for (d of medicalDiagnostics(); track d.id) {
+                  <mat-option [value]="d.id">
+                    {{ d.diagnosticName }}
+                    <span class="option-badge">{{ d.diagnosticCode }}</span>
+                  </mat-option>
+                }
+              </mat-select>
+              @if (diagnosisForm.get('medicalDiagnosticId')?.invalid && diagnosisForm.get('medicalDiagnosticId')?.touched) {
+                <mat-error>Selecciona un diagnóstico</mat-error>
+              }
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" type="submit"
+              class="submit-btn" [disabled]="submittingDiagnosis()">
+              @if (submittingDiagnosis()) {
+                <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+              } @else {
+                <mat-icon>add_circle</mat-icon>
+              }
+              Registrar diagnóstico
+            </button>
+          </form>
+        </mat-card>
+
+        <!-- Historial de diagnósticos registrados en sesión -->
+        @if (uploadedDiagnoses().length > 0) {
+          <mat-card class="cardWithShadow history-card">
+            <p class="history-title">Registrados en esta sesión</p>
+            @for (d of uploadedDiagnoses(); track d.id) {
+              <div class="history-item">
+                <mat-icon class="history-icon">check_circle</mat-icon>
+                <div class="history-info">
+                  <span class="history-name">{{ d.medicalDiagnostic.diagnosticName }}</span>
+                  <span class="history-value">{{ d.medicalDiagnostic.diagnosticCode }}</span>
                 </div>
               </div>
             }

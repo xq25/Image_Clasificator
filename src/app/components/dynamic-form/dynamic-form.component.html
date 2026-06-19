@@ -147,7 +147,7 @@
 
       @if (isCreateMode()) {
         <button type="submit" mat-flat-button color="primary"
-          [disabled]="form.invalid" class="btn-create">
+          [disabled]="form.invalid || submitting" class="btn-create">
           <mat-icon>add_circle</mat-icon>
           Crear
         </button>
@@ -155,7 +155,7 @@
 
       @if (isUpdateMode()) {
         <button type="submit" mat-flat-button color="primary"
-          [disabled]="form.invalid" class="btn-update">
+          [disabled]="form.invalid || submitting" class="btn-update">
           <mat-icon>save</mat-icon>
           Actualizar
         </button>
@@ -163,7 +163,7 @@
 
       @if (isModeSend()) {
         <button type="submit" mat-flat-button color="primary"
-          [disabled]="form.invalid" class="btn-send">
+          [disabled]="form.invalid || submitting" class="btn-send">
           <mat-icon>send</mat-icon>
           Enviar
         </button>

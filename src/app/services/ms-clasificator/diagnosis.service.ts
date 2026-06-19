@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '@models/ms-clasificator';
-import { Diagnosis, DiagnosisExtended } from '@models/ms-clasificator/Diagnosis/Diagnosis';
+import { Diagnosis, DiagnosisCreateDTO, DiagnosisExtended } from '@models/ms-clasificator/Diagnosis/Diagnosis';
 
 const apiUrl = `${environment.url_backend_clasificator}/api/diagnosis`;
 
@@ -29,8 +29,8 @@ export class DiagnosisService {
   }
 
   /** Crear un nuevo diagnóstico → DiagnosisResponseDTO */
-  create(diagnosis: Partial<Diagnosis>): Observable<ApiResponse<DiagnosisExtended>> {
-    return this.http.post<ApiResponse<DiagnosisExtended>>(`${apiUrl}`, diagnosis);
+  create(dto: DiagnosisCreateDTO): Observable<ApiResponse<DiagnosisExtended>> {
+    return this.http.post<ApiResponse<DiagnosisExtended>>(`${apiUrl}`, dto);
   }
 
   /** Eliminar un diagnóstico */

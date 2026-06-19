@@ -59,6 +59,7 @@ export class DynamicFormComponent implements OnInit {
 
   form: FormGroup = new FormGroup({});
   previewUrls: Record<string, SafeUrl> = {};
+  submitting = false;
 
   readonly MODE_CREATE = 1;
   readonly MODE_UPDATE = 2;
@@ -76,6 +77,7 @@ export class DynamicFormComponent implements OnInit {
 
   // ── Construcción del formulario ───────────────────────────────
   buildForm(): void {
+    this.submitting = false;
     this.form = this.fb.group({});
 
     for (const field of this.config.fields) {
@@ -98,9 +100,9 @@ export class DynamicFormComponent implements OnInit {
 
   // ── Submit / Cancel ───────────────────────────────────────────
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.submitting) return;
+    this.submitting = true;
     const raw = this.form.getRawValue();
-    console.log('[DynamicForm] getRawValue:', raw);
     this.formSubmit.emit(raw);
   }
 
