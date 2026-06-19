@@ -68,8 +68,15 @@
 
       <mat-card class="cardWithShadow form-panel">
 
-        <!-- Panel header (solo para create/edit; view maneja su propio header) -->
-        @if (!isViewMode()) {
+        <!-- Panel header -->
+        @if (isAreasMode()) {
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">Áreas del Doctor</h3>
+            <button mat-icon-button (click)="closePanel()" aria-label="Cerrar panel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else if (!isViewMode()) {
           <div class="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold">
               @if (formConfig()?.mode === 1) { Nuevo Doctor }
@@ -82,11 +89,160 @@
         }
 
         <!-- Panel body -->
-        <div [class.p-4]="!isViewMode()">
+        <div [class.p-4]="!isViewMode() && !isAreasMode()">
           @if (panelLoading()) {
             <div class="flex items-center justify-center py-16">
               <mat-spinner diameter="48"></mat-spinner>
             </div>
+          } @else if (isAreasMode()) {
+
+            <!-- INFO DEL DOCTOR -->
+            @if (managedDoctor()) {
+              <div class="areas-doctor-info">
+                <div class="areas-doctor-info__icon">
+                  <mat-icon>medical_services</mat-icon>
+                </div>
+                <div class="areas-doctor-info__data">
+                  <span class="areas-doctor-info__name">{{ managedDoctor()!.userInfo.name || 'Doctor' }}</span>
+                  <span class="areas-doctor-info__code">Código: {{ managedDoctor()!.code }}</span>
+                  <span class="areas-doctor-info__count">
+                    {{ doctorAreas().length }} área{{ doctorAreas().length !== 1 ? 's' : '' }} asignada{{ doctorAreas().length !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+            }
+
+            <!-- AGREGAR ÁREA -->
+            <div class="add-area-row">
+              <mat-form-field appearance="outline" class="add-area-select">
+                <mat-label>Agregar área de evaluación</mat-label>
+                <mat-select [(ngModel)]="selectedAreaIdValue" [disabled]="areasLoading() || addingArea()">
+                  @for (area of availableAreas(); track area.id) {
+                    <mat-option [value]="area.id">{{ area.name }}{{ area.codeArea ? ' — ' + area.codeArea : '' }}</mat-option>
+                  }
+                  @if (availableAreas().length === 0) {
+                    <mat-option disabled>No hay áreas disponibles</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-flat-button color="primary"
+                [disabled]="!selectedAreaIdValue || addingArea()"
+                (click)="addAreaToDoctor()">
+                @if (addingArea()) {
+                  <mat-spinner diameter="18" style="display:inline-block"></mat-spinner>
+                } @else {
+                  <mat-icon>add_business</mat-icon>
+                }
+                Agregar
+              </button>
+            </div>
+
+            <!-- CREAR NUEVA ÁREA -->
+            <div class="new-area-toggle-row">
+              <button mat-stroked-button color="primary" (click)="toggleNewAreaForm()" class="new-area-toggle-btn">
+                <mat-icon>{{ showNewAreaForm() ? 'remove' : 'add' }}</mat-icon>
+                {{ showNewAreaForm() ? 'Cancelar' : 'Crear nueva área' }}
+              </button>
+            </div>
+
+            @if (showNewAreaForm()) {
+              <div class="new-area-form">
+                <p class="new-area-form__hint">La nueva área quedará creada y asignada a este doctor.</p>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Código del área</mat-label>
+                  <input matInput [(ngModel)]="newAreaCode" placeholder="ej. AREA-01" [disabled]="creatingArea()" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Nombre del área</mat-label>
+                  <input matInput [(ngModel)]="newAreaName" placeholder="ej. Cardiología" [disabled]="creatingArea()" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" class="w-full"
+                  [disabled]="!newAreaCode.trim() || !newAreaName.trim() || creatingArea()"
+                  (click)="createAndAssignArea()">
+                  @if (creatingArea()) {
+                    <mat-spinner diameter="18" style="display:inline-block;margin-right:6px"></mat-spinner>
+                    Creando...
+                  } @else {
+                    <ng-container>
+                      <mat-icon>save</mat-icon>
+                      Crear y asignar
+                    </ng-container>
+                  }
+                </button>
+              </div>
+            }
+
+            <!-- TABLA DE ÁREAS -->
+            @if (areasLoading()) {
+              <div class="flex items-center justify-center py-10">
+                <mat-spinner diameter="36"></mat-spinner>
+              </div>
+            } @else if (doctorAreas().length === 0) {
+              <div class="areas-empty">
+                <mat-icon>domain_disabled</mat-icon>
+                <p>No hay áreas asignadas a este doctor</p>
+              </div>
+            } @else {
+              <div class="areas-table-wrap">
+                <table class="areas-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Código</th>
+                      <th>Nombre</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (area of pagedAreas(); track area.id) {
+                      <tr>
+                        <td>{{ area.id }}</td>
+                        <td>{{ area.codeArea }}</td>
+                        <td class="text-truncate">{{ area.name }}</td>
+                        <td class="areas-table__action-cell">
+                          <button mat-icon-button class="btn-remove-area"
+                            [disabled]="removingAreaId() === area.id"
+                            (click)="removeAreaFromDoctor(area)"
+                            title="Quitar del doctor">
+                            @if (removingAreaId() === area.id) {
+                              <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                              <mat-icon>remove_circle_outline</mat-icon>
+                            }
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+
+                <!-- PAGINACIÓN -->
+                @if (totalAreasPages() > 1) {
+                  <div class="areas-pagination">
+                    <button mat-icon-button
+                      [disabled]="areasPage() === 0"
+                      (click)="areasPage.set(areasPage() - 1)">
+                      <mat-icon>chevron_left</mat-icon>
+                    </button>
+                    <span class="areas-pagination__label">
+                      {{ areasPage() + 1 }} / {{ totalAreasPages() }}
+                    </span>
+                    <button mat-icon-button
+                      [disabled]="areasPage() === totalAreasPages() - 1"
+                      (click)="areasPage.set(areasPage() + 1)">
+                      <mat-icon>chevron_right</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="p-4 pt-0">
+              <button mat-stroked-button (click)="closePanel()" class="w-full">
+                <mat-icon>close</mat-icon> Cerrar
+              </button>
+            </div>
+
           } @else if (isViewMode() && detailConfig()) {
             <app-entity-detail
               [config]="detailConfig()!"

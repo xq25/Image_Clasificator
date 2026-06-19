@@ -131,8 +131,9 @@
               #imageCard
               class="image-card"
               [class.image-card--dragging]="dragOffset().x !== 0 || dragOffset().y !== 0"
+              [class.image-card--classifying]="classifying()"
               [style.transform]="dragTransform()"
-              (pointerdown)="onPointerDown($event)"
+              (pointerdown)="classifying() ? null : onPointerDown($event)"
               (pointermove)="onPointerMove($event)"
               (pointerup)="onPointerUp($event)"
             >
@@ -153,6 +154,13 @@
               <button class="image-info-btn">
                 <mat-icon>info</mat-icon>
               </button>
+
+              <!-- Overlay de clasificación en vuelo -->
+              @if (classifying()) {
+                <div class="classifying-overlay">
+                  <mat-spinner diameter="36"></mat-spinner>
+                </div>
+              }
 
               <!-- Indicador enriquecido al arrastrar -->
               @if (dragTargetSlot(); as slot) {
@@ -212,8 +220,10 @@
       <!-- MODO BOTONES (> 4 categorías) -->
       @if (!tinderMode()) {
         <div class="button-layout">
-          <div class="image-stage image-stage--centered">
-            <div class="image-card">
+
+          <!-- IMAGEN -->
+          <div class="bl-image">
+            <div class="image-card" [class.image-card--classifying]="classifying()">
               @if (currentImage()) {
                 <img
                   class="image-card-img"
@@ -229,23 +239,32 @@
               }
               <div class="image-counter">{{ currentIndex() + 1 }} / {{ totalImages() }}</div>
               <button class="image-info-btn"><mat-icon>info</mat-icon></button>
+
+              @if (classifying()) {
+                <div class="classifying-overlay">
+                  <mat-spinner diameter="36"></mat-spinner>
+                </div>
+              }
             </div>
           </div>
 
-          <p class="btn-hint">Selecciona la categoría que corresponda a la imagen.</p>
-
-          <div class="cats-chips-row">
-            @for (slot of buttonSlots(); track slot.cat.categoryId) {
-              <button class="cat-chip" [style.--cat-color]="slot.color" (click)="classifyBySlot($index)">
-                <span class="cat-chip-dot" [style.background]="slot.color"></span>
-                <div class="cat-chip-info">
-                  <span class="cat-chip-num">{{ slot.num }}.</span>
-                  <span class="cat-chip-name">{{ slot.displayName }}</span>
-                  <span class="cat-chip-codes">{{ slot.codeCount }} código(s)</span>
-                </div>
-              </button>
-            }
+          <!-- CATEGORÍAS -->
+          <div class="bl-categories">
+            <p class="btn-hint">Selecciona la categoría que corresponda a la imagen.</p>
+            <div class="cats-chips-col">
+              @for (slot of buttonSlots(); track slot.cat.categoryId) {
+                <button class="cat-chip" [style.--cat-color]="slot.color" [disabled]="classifying() || !currentImage()" (click)="classifyBySlot($index)">
+                  <span class="cat-chip-dot" [style.background]="slot.color"></span>
+                  <div class="cat-chip-info">
+                    <span class="cat-chip-num">{{ slot.num }}.</span>
+                    <span class="cat-chip-name">{{ slot.displayName }}</span>
+                    <span class="cat-chip-codes">{{ slot.codeCount }} código(s)</span>
+                  </div>
+                </button>
+              }
+            </div>
           </div>
+
         </div>
       }
 
@@ -253,7 +272,7 @@
 
     <!-- ── BARRA INFERIOR ───────────────────────────────────────────────────── -->
     <div class="bottom-bar">
-      <button class="bottom-btn bottom-btn--unsure" (click)="markUnsure()">
+      <button class="bottom-btn bottom-btn--unsure" [disabled]="classifying() || !currentImage()" (click)="markUnsure()">
         <mat-icon>help_outline</mat-icon>
         <span>No estoy seguro</span>
       </button>
@@ -263,7 +282,7 @@
         <span>Atajo de teclado</span>
       </button>
 
-      <button class="bottom-btn bottom-btn--discard" (click)="discard()">
+      <button class="bottom-btn bottom-btn--discard" [disabled]="classifying() || !currentImage()" (click)="discard()">
         <mat-icon>delete_outline</mat-icon>
         <span>Descartar</span>
       </button>

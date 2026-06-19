@@ -45,6 +45,7 @@ interface quicklinks { id: number; title: string; link: string; }
 })
 export class FullComponent implements OnInit {
   navItems: NavItem[] = [];
+  isLoadingSidebar = true;
 
   @ViewChild('leftsidenav') public sidenav!: MatSidenav;
   @ViewChild('content', { static: true }) content!: MatSidenavContent;
@@ -121,8 +122,8 @@ export class FullComponent implements OnInit {
 
   ngOnInit(): void {
     this.sidebarSubscription = this.sideBarService.getSideBarSections().subscribe({
-      next:  (sections) => { this.navItems = this.mapSectionsToNavItems(sections); },
-      error: (err)      => { console.error('[FullComponent] sidebar error:', err); this.navItems = []; },
+      next:  (sections) => { this.navItems = this.mapSectionsToNavItems(sections); this.isLoadingSidebar = false; },
+      error: (err)      => { console.error('[FullComponent] sidebar error:', err); this.navItems = []; this.isLoadingSidebar = false; },
     });
   }
 

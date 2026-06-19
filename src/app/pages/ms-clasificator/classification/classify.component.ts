@@ -73,7 +73,8 @@ export class ClassifyComponent implements OnInit, OnDestroy {
   dragDirection       = signal<number | null>(null); // index of highlighted slot
 
   // ─── STATE ───────────────────────────────────────────────────────────────────
-  loading          = signal(true);
+  loading          = signal(true);   // carga inicial de datos
+  classifying      = signal(false);  // petición de clasificación en vuelo
   dataset          = signal<DatasetExtended | null>(null);
   categories       = signal<ClassifyCategory[]>([]);
   images           = signal<MedicalImgExtended[]>([]);
@@ -178,7 +179,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
   // ─── KEYBOARD ────────────────────────────────────────────────────────────────
   @HostListener('document:keydown', ['$event'])
   onKeydown(e: KeyboardEvent): void {
-    if (this.loading() || !this.tinderMode()) return;
+    if (this.loading() || this.classifying() || !this.tinderMode()) return;
     const slots = this.tinderSlots();
     switch (e.key) {
       case 'ArrowUp':    e.preventDefault(); this.classifyBySlot(0); break;
@@ -230,6 +231,8 @@ export class ClassifyComponent implements OnInit, OnDestroy {
 
   // ─── ACTIONS ─────────────────────────────────────────────────────────────────
   classifyBySlot(slotIndex: number): void {
+    if (this.classifying()) return;
+
     const slots = this.tinderMode() ? this.tinderSlots() : this.buttonSlots();
     if (slotIndex >= slots.length) return;
 
@@ -239,7 +242,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
     const cat = slots[slotIndex].cat;
     if (cat.codes.length === 0) return;
 
-    this.loading.set(true);
+    this.classifying.set(true);
 
     const diagPayload: Partial<ImageDiagnostic> = {
       doctorId:     this.doctorId,
@@ -265,14 +268,14 @@ export class ClassifyComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (results) => {
-        this.loading.set(false);
+        this.classifying.set(false);
         if (results !== null) {
           this.showToast('Clasificación guardada correctamente.', 'success');
           this.advanceImage();
         }
       },
       error: () => {
-        this.loading.set(false);
+        this.classifying.set(false);
         this.showToast('Error al guardar la clasificación.', 'error');
       },
     });
@@ -288,9 +291,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
 
   private advanceImage(): void {
     this.classifiedCount.update(c => c + 1);
-    if (this.currentIndex() < this.totalImages() - 1) {
-      this.currentIndex.update(i => i + 1);
-    }
+    this.currentIndex.update(i => i + 1);
   }
 
   // ─── DATA LOADING ────────────────────────────────────────────────────────────

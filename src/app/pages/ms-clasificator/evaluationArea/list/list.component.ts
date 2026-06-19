@@ -254,6 +254,7 @@ export class ListComponent implements OnInit {
         this.areaDoctors.update(list => list.filter(d => d.id !== doctor.id));
         this.removingDoctorId.set(null);
         this.showToast('Doctor quitado del área', 'success');
+        this.loadEvaluationAreas();
       },
       error: () => {
         this.removingDoctorId.set(null);
@@ -275,6 +276,7 @@ export class ListComponent implements OnInit {
         this.selectedDoctorIdValue = null;
         this.addingDoctor.set(false);
         this.showToast('Doctor agregado al área', 'success');
+        this.loadEvaluationAreas();
       },
       error: () => {
         this.addingDoctor.set(false);
