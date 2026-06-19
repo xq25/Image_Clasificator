@@ -45,7 +45,7 @@
               } @else if (column === 'email') {
                 <span class="cell-email">{{ element[column] }}</span>
               } @else {
-                {{ element[column] }}
+                {{ getCellValue(column, element[column]) }}
               }
             </td>
           </ng-container>
@@ -122,7 +122,7 @@
           @for (col of collapsedColumns(); track col.key) {
             <div class="mobile-detail-row">
               <span class="mobile-detail-label">{{ col.label }}</span>
-              <span class="mobile-detail-value">{{ row[col.key] }}</span>
+              <span class="mobile-detail-value">{{ getCellValue(col.key, row[col.key]) }}</span>
             </div>
           }
 

@@ -137,8 +137,10 @@ export class EntityDetailComponent implements OnInit {
       return result.label; // BadgeConfig
     }
     if (field.type === 'date') {
-      try { return new Date(raw).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }); }
-      catch { return String(raw); }
+      try {
+        const [y, m, d] = String(raw).split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+      } catch { return String(raw); }
     }
     if (field.type === 'boolean') return raw ? 'Sí' : 'No';
     if (field.type === 'currency') {

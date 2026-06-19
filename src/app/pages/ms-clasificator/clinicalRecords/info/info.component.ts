@@ -111,18 +111,18 @@ export class InfoComponent implements OnInit {
 
   formatVisitDate(date?: Date | string): string {
     if (!date) return '—';
-    return new Date(date).toLocaleString('es-CO', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
+    const str = String(date);
+    const [datePart, timePart = ''] = str.split('T');
+    const [y, m, d] = datePart.split('-');
+    const [hh = '00', mm = '00'] = timePart.split(':');
+    return `${d}/${m}/${y} ${hh}:${mm}`;
   }
 
   formatDob(dob?: Date | string): string {
     if (!dob) return '—';
-    const d   = new Date(dob);
-    const age = new Date().getFullYear() - d.getFullYear();
-    const fmt = d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `${fmt} (${age} años)`;
+    const [y, m, d] = String(dob).split('T')[0].split('-');
+    const age = new Date().getFullYear() - Number(y);
+    return `${d}/${m}/${y} (${age} años)`;
   }
 
   formatSex(sex?: string): string {

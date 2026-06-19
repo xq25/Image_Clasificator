@@ -13,6 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 export interface TableColumn {
   key: string;
   label: string;
+  formatter?: (value: any) => string;
 }
 
 export interface TableAction {
@@ -179,6 +180,11 @@ export class DynamicTableComponent {
       this.columns().find(col => col.key === key)?.label ||
       key.charAt(0).toUpperCase() + key.slice(1)
     );
+  }
+
+  getCellValue(column: string, value: any): string {
+    const col = this.columns().find(c => c.key === column);
+    return col?.formatter ? col.formatter(value) : (value ?? '');
   }
 
   getInitials(name: string): string {

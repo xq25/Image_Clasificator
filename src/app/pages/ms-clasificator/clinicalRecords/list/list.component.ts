@@ -78,7 +78,12 @@ export class ListComponent implements OnInit {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
   });
 
-  patientAge = computed(() => this.patient()?.dob?.toString() ?? '—');
+  patientAge = computed(() => {
+    const dob = this.patient()?.dob;
+    if (!dob) return '—';
+    const [y, m, d] = String(dob).split('T')[0].split('-');
+    return `${d}/${m}/${y}`;
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -135,9 +140,12 @@ export class ListComponent implements OnInit {
     return records.map(r => ({
       ...r,
       visitDate: r.visitDate
-        ? new Date(r.visitDate).toLocaleDateString('es-CO', {
-            day: '2-digit', month: 'short', year: 'numeric',
-          }) as any
+        ? (() => {
+            const [datePart, timePart = ''] = String(r.visitDate).split('T');
+            const [y, m, d] = datePart.split('-');
+            const [hh = '00', mm = '00'] = timePart.split(':');
+            return `${d}/${m}/${y} ${hh}:${mm}` as any;
+          })()
         : '—',
     }));
   }
@@ -286,7 +294,7 @@ export class ListComponent implements OnInit {
         { key: 'name',     label: 'Nombre',      icon: 'person' },
         { key: 'email',    label: 'Email',        icon: 'email'  },
         { key: 'document', label: 'Documento',    icon: 'badge'  },
-        { key: 'dob',      label: 'Nacimiento',   icon: 'cake'   },
+        { key: 'dob',      label: 'Nacimiento',   icon: 'cake',  type: 'date' },
       ],
     }];
   }

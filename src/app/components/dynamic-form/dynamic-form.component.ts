@@ -24,6 +24,7 @@ export interface FieldConfig {
   disabled?: boolean;
   hidden?: boolean;
   placeholder?: string;
+  fullWidth?: boolean;
 }
 
 export interface DynamicFormConfig {

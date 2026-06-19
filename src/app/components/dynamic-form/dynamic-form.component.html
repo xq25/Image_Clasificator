@@ -23,7 +23,7 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 px-6 pb-6 pt-0">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       @for (field of getVisibleFields(); track field.name) {
-        <div [class.md:col-span-2]="field.type === 'textarea'">
+        <div [class.md:col-span-2]="field.type === 'textarea' || field.fullWidth">
 
           @switch (field.type) {
 

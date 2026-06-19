@@ -60,7 +60,11 @@ export class ListComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'id',       label: 'ID'                  },
     { key: 'document', label: 'Documento'            },
-    { key: 'dob',      label: 'Fecha de Nacimiento' },
+    { key: 'dob',      label: 'Fecha de Nacimiento', formatter: (v) => {
+          if (!v) return '—';
+          const [y, m, d] = String(v).split('T')[0].split('-');
+          return `${d}/${m}/${y}`;
+        } },
     { key: 'sex',      label: 'Sexo'                },
     { key: 'userId',   label: 'ID Usuario'          },
   ];
@@ -215,7 +219,7 @@ export class ListComponent implements OnInit {
       .filter(u => u.id)
       .map(u => ({ value: u.id, label: u.email || u.id || 'Sin correo' }));
 
-    const userIdValue = mode === 2 && model?.userInfo ? model.userInfo.id : (model?.userId ?? null);
+    const userIdValue = model?.userInfo?.id ?? model?.userId ?? null;
 
     this.formConfig.set({
       mode,
@@ -256,6 +260,7 @@ export class ListComponent implements OnInit {
           placeholder: 'Selecciona un usuario',
           validators:  [Validators.required],
           options:     userOptions,
+          fullWidth:   true,
         },
       ],
     });

@@ -407,9 +407,7 @@ export class ListComponent implements OnInit {
       .filter(u => u.id)
       .map(u => ({ value: u.id, label: u.email || u.id || 'Sin correo' }));
 
-    const userIdValue = mode === 2 && model?.userInfo
-      ? model.userInfo.id
-      : (model?.userId ?? null);
+    const userIdValue = model?.userInfo?.id ?? model?.userId ?? null;
 
     this.formConfig.set({
       mode,
@@ -434,6 +432,7 @@ export class ListComponent implements OnInit {
           placeholder: 'Selecciona un usuario',
           validators: [Validators.required],
           options: userOptions,
+          fullWidth: true,
         },
       ],
     });
