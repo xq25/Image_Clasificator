@@ -28,6 +28,7 @@ interface Toast { message: string; type: 'success' | 'error'; }
 export interface ClassifyCategory {
   categoryId: number;
   numValue:   number;
+  name:       string;
   codes:      MedicalDiagnostic[];
 }
 
@@ -387,6 +388,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
             const built: ClassifyCategory[] = cats.map((c, i) => ({
               categoryId: c.id!,
               numValue:   c.numValue,
+              name:       c.name ?? '',
               codes:      (assocResults[i].data ?? []).map(a => a.medicalDiagnostic),
             }));
             this.categories.set(built);
@@ -406,6 +408,7 @@ export class ClassifyComponent implements OnInit, OnDestroy {
   }
 
   getCategoryName(cat: ClassifyCategory): string {
+    if (cat.name.trim()) return cat.name.trim();
     if (cat.codes.length === 0) return `Categoría ${cat.numValue}`;
     if (cat.codes.length === 1) return cat.codes[0].diagnosticName;
     return cat.codes.map(c => c.diagnosticCode).join(', ');
