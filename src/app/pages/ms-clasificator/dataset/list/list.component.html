@@ -280,7 +280,7 @@
                             [style.color]="getCategoryColor(i)">
                         {{ cv.category.numValue }}
                       </span>
-                      <span class="cat-name">Categoría {{ cv.category.numValue }}</span>
+                      <span class="cat-name">{{ cv.category.name || 'Categoría ' + cv.category.numValue }}</span>
                       <span class="cat-count" [style.color]="getCategoryColor(i)">
                         {{ cv.diagnostics.length }} código(s)
                       </span>

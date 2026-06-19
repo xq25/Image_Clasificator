@@ -449,7 +449,7 @@ export class DatasetListComponent implements OnInit {
         this.viewCategories.update(cats => [
           ...cats,
           {
-            category:        { id: newCat.id, numValue: newCat.numValue },
+            category:        { id: newCat.id, numValue: newCat.numValue, name: newCat.name ?? '' },
             diagnostics:     [],
             searchValue:     '',
             showDropdown:    false,

@@ -194,14 +194,37 @@
                 </div>
 
                 <div class="cat-body">
-                  <label class="field-label">
+                  <div class="cat-name-field">
+                    <label class="field-label">Nombre de la categoría *</label>
+                    <div class="cat-name-input-wrap">
+                      <input class="cat-name-input"
+                        [value]="cat.name"
+                        [disabled]="cat.saving"
+                        (input)="updateCategoryName(i, $any($event.target).value)"
+                        (blur)="onCategoryNameBlur(i)"
+                        placeholder="Ej. Normal, Patológico…" />
+                      @if (cat.saving) {
+                        <mat-spinner diameter="16" class="name-spinner"></mat-spinner>
+                      } @else if (cat.categoryId && cat.name.trim().length > 0) {
+                        <mat-icon class="name-saved-icon">check_circle</mat-icon>
+                      }
+                    </div>
+                    @if (cat.name.trim().length === 0 && !cat.saving) {
+                      <span class="field-error-inline">Escribe el nombre y luego haz clic fuera para guardar la categoría</span>
+                    }
+                  </div>
+
+                  <label class="field-label" [class.label-disabled]="!cat.categoryId" style="margin-top:12px">
                     Sub-diagnósticos asociados *
-                    @if (cat.associations.length === 0 && !cat.saving) {
+                    @if (cat.associations.length === 0 && cat.categoryId && !cat.saving) {
                       <span class="field-error-inline">— Añade al menos uno</span>
+                    }
+                    @if (!cat.categoryId && !cat.saving) {
+                      <span class="field-hint-inline">— Guarda el nombre primero</span>
                     }
                   </label>
 
-                  <div class="chips-search-box" [class.focused]="cat.showDropdown" [class.disabled]="cat.saving">
+                  <div class="chips-search-box" [class.focused]="cat.showDropdown" [class.disabled]="cat.saving || !cat.categoryId">
 
                     <!-- Chips de asociaciones ya guardadas -->
                     @for (assoc of cat.associations; track assoc.assocId) {

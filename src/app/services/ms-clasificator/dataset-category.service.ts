@@ -33,6 +33,11 @@ export class DatasetCategoryService {
     return this.http.post<ApiResponse<DatasetCategoryExtended>>(`${apiUrl}`, datasetCategory);
   }
 
+  /** Actualizar una categoría de dataset */
+  update(id: number, data: Partial<DatasetCategory>): Observable<ApiResponse<DatasetCategoryExtended>> {
+    return this.http.put<ApiResponse<DatasetCategoryExtended>>(`${apiUrl}/${id}`, data);
+  }
+
   /** Eliminar una categoría de dataset */
   delete(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${apiUrl}/${id}`);

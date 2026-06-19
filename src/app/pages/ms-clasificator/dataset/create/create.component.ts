@@ -29,6 +29,7 @@ interface DiagAssociation {
 
 export interface CategoryRow {
   numValue:     number;
+  name:         string;
   categoryId?:  number;
   associations: DiagAssociation[];
   searchValue:  string;
@@ -133,7 +134,7 @@ export class CreateDatasetComponent implements OnInit {
   readonly step2CanAdvance = computed(() =>
     this.categories().length > 0 &&
     !this.hasPendingSaves() &&
-    this.categories().every(c => c.associations.length > 0)
+    this.categories().every(c => c.associations.length > 0 && c.name.trim().length > 0)
   );
 
   constructor(
@@ -269,35 +270,54 @@ export class CreateDatasetComponent implements OnInit {
   // ─── CATEGORÍAS — creación inmediata ─────────────────────────────────────────
 
   addCategory(): void {
-    const numValue    = this.categories().length + 1;
-    const datasetId   = this.createdDatasetId()!;
-
+    const numValue = this.categories().length + 1;
     this.categories.update(cats => [
       ...cats,
       {
         numValue,
-        categoryId:   undefined,
-        associations: [],
-        searchValue:  '',
-        showDropdown: false,
+        name:            '',
+        categoryId:      undefined,
+        associations:    [],
+        searchValue:     '',
+        showDropdown:    false,
         filteredOptions: [...this.subDiagnostics()],
-        saving: true,
+        saving:          false,
       },
     ]);
+  }
 
-    this.datasetCategoryService.create({ numValue, datasetId } as any).subscribe({
-      next: (res) => {
-        const categoryId = res.data?.id;
-        this.categories.update(cats =>
-          cats.map(c => c.numValue === numValue ? { ...c, categoryId, saving: false } : c)
-        );
-      },
-      error: (err) => {
-        const msg = err?.error?.message ?? 'Error al crear la categoría';
-        this.showToast(msg, 'error');
-        this.categories.update(cats => cats.filter(c => c.numValue !== numValue));
-      },
-    });
+  onCategoryNameBlur(index: number): void {
+    const cat       = this.categories()[index];
+    const name      = cat.name.trim();
+    const datasetId = this.createdDatasetId()!;
+
+    if (!name) return;
+
+    if (!cat.categoryId) {
+      // Primera vez: crear en el backend
+      const numValue = cat.numValue;
+      this.categories.update(cats =>
+        cats.map((c, i) => i === index ? { ...c, saving: true } : c)
+      );
+      this.datasetCategoryService.create({ numValue, datasetId, name } as any).subscribe({
+        next: (res) => {
+          const categoryId = res.data?.id;
+          this.categories.update(cats =>
+            cats.map((c, i) => i === index ? { ...c, categoryId, saving: false } : c)
+          );
+        },
+        error: (err) => {
+          const msg = err?.error?.message ?? 'Error al crear la categoría';
+          this.showToast(msg, 'error');
+          this.categories.update(cats =>
+            cats.map((c, i) => i === index ? { ...c, saving: false } : c)
+          );
+        },
+      });
+    } else {
+      // Ya existe: actualizar nombre
+      this.datasetCategoryService.update(cat.categoryId, { name } as any).subscribe();
+    }
   }
 
   removeCategory(index: number): void {
@@ -317,6 +337,12 @@ export class CreateDatasetComponent implements OnInit {
         this.showToast(msg, 'error');
       },
     });
+  }
+
+  updateCategoryName(index: number, name: string): void {
+    this.categories.update(cats =>
+      cats.map((c, i) => i === index ? { ...c, name } : c)
+    );
   }
 
   // ─── SUB-DIAGNÓSTICOS — creación/eliminación inmediata ───────────────────────
@@ -431,6 +457,11 @@ export class CreateDatasetComponent implements OnInit {
       this.showToast('Agrega al menos una categoría', 'error');
       return;
     }
+    const unnamed = this.categories().find(c => c.name.trim().length === 0);
+    if (unnamed) {
+      this.showToast(`La categoría ${unnamed.numValue} necesita un nombre`, 'error');
+      return;
+    }
     const invalid = this.categories().find(c => c.associations.length === 0);
     if (invalid) {
       this.showToast(`La categoría ${invalid.numValue} necesita al menos un sub-diagnóstico`, 'error');
@@ -442,6 +473,7 @@ export class CreateDatasetComponent implements OnInit {
   // ─── STEP 3 ──────────────────────────────────────────────────────────────────
 
   getCategoryName(cat: CategoryRow): string {
+    if (cat.name.trim().length > 0) return cat.name.trim();
     if (cat.associations.length === 0) return `Categoría ${cat.numValue}`;
     if (cat.associations.length === 1)  return cat.associations[0].diagnostic.diagnosticName;
     return cat.associations.map(a => a.diagnostic.diagnosticCode).join(', ');

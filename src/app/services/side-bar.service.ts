@@ -302,7 +302,6 @@ export class SideBarService {
           { displayName: 'Doctors',            iconName: 'solar:stethoscope-line-duotone',       route: '/doctors/list',            visible: hasClasificatorAccess },
           { displayName: 'Medical Diagnostics',iconName: 'solar:stethoscope-line-duotone',       route: '/medical-diagnostics/list',visible: hasClasificatorAccess },
           { displayName: 'System Data',        iconName: 'solar:database-line-duotone',          route: '/system-data/list',        visible: hasClasificatorAccess },
-          { displayName: 'Medical Image Types',iconName: 'solar:medical-kit-line-duotone',       route: '/medical-image-types/list',visible: hasClasificatorAccess },
           { displayName: 'Datasets',           iconName: 'solar:layers-line-duotone',            route: '/datasets/list',           visible: hasClasificatorAccess },
         ],
       },

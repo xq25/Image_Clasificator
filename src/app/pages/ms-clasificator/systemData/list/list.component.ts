@@ -17,18 +17,16 @@ import { ConfirmDeleteComponent } from '@app/components/confirm-delete/confirm-d
 import { DynamicFormComponent, DynamicFormConfig } from '@app/components/dynamic-form/dynamic-form.component';
 
 import { PrimitiveDatum, PrimitiveDatumType, PrimitiveUnit } from '@app/models/ms-clasificator/PrimitiveDatum/PrimitiveDatum';
-import { MedicalImg } from '@app/models/ms-clasificator/MedicalImage/MedicalImg';
-import { MedicalImageType } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
+import { MedicalImageType, MedicalImageTypeExtended } from '@app/models/ms-clasificator/MedicalImageType/MedicalImageType';
 
 import { PrimitiveDatumService }   from '@app/services/ms-clasificator/primitive-datum.service';
-import { MedicalImageService }     from '@app/services/ms-clasificator/medical-image.service';
 import { MedicalImageTypeService } from '@app/services/ms-clasificator/medical-image-type.service';
 import { EvaluationAreaService }   from '@app/services/ms-clasificator/evaluation-area.service';
 import { EvaluationArea }          from '@app/models/ms-clasificator/EvaluationArea/EvaluationArea';
 
 type ActiveTab = 'primitivos' | 'imagenes';
-type PanelMode = 'create' | 'edit' | 'view';
-type DataKind  = 'primitiveDatum' | 'medicalImage';
+type PanelMode = 'create' | 'edit' | 'view' | 'assign-area';
+type DataKind  = 'primitiveDatum' | 'medicalImageType';
 
 interface Toast { message: string; type: 'success' | 'error'; }
 
@@ -61,7 +59,6 @@ export class SystemDataListComponent implements OnInit {
 
   // ─── DATA ────────────────────────────────────────────────────────────────────
   primitiveDatums   = signal<PrimitiveDatum[]>([]);
-  medicalImages     = signal<MedicalImg[]>([]);
   imageTypes        = signal<MedicalImageType[]>([]);
   loading           = signal(true);
 
@@ -74,9 +71,10 @@ export class SystemDataListComponent implements OnInit {
   panelMode    = signal<PanelMode>('create');
   currentId    = signal<number | null>(null);
 
-  formConfig   = signal<DynamicFormConfig | null>(null);
-  detailConfig = signal<EntityDetailConfig | null>(null);
-  toast        = signal<Toast | null>(null);
+  formConfig    = signal<DynamicFormConfig | null>(null);
+  detailConfig  = signal<EntityDetailConfig | null>(null);
+  currentDetail = signal<MedicalImageTypeExtended | null>(null);
+  toast         = signal<Toast | null>(null);
 
   // ─── CONFIRM DELETE ───────────────────────────────────────────────────────────
   showDeleteConfirm    = signal(false);
@@ -85,53 +83,51 @@ export class SystemDataListComponent implements OnInit {
 
   // ─── CREATE FORM ─────────────────────────────────────────────────────────────
   createForm!: FormGroup;
-  selectedKind      = signal<DataKind | null>(null);
-  showNewTypeForm   = signal(false);
-  newTypeForm!: FormGroup;
-  selectedFile      = signal<File | null>(null);
-  filePreviewUrl    = signal<string | null>(null);
-  viewImageUrl      = signal<string | null>(null);
-  evaluationAreas   = signal<EvaluationArea[]>([]);
+  selectedKind    = signal<DataKind | null>(null);
+  evaluationAreas = signal<EvaluationArea[]>([]);
+
+  // ─── ASSIGN AREA FORM ────────────────────────────────────────────────────────
+  assignAreaForm!: FormGroup;
 
   // ─── ENUM OPTIONS ─────────────────────────────────────────────────────────────
   readonly primitiveTypeOptions = [
-    { value: 'STRING',   label: 'String (texto)'          },
-    { value: 'INTEGER',  label: 'Integer (entero)'         },
-    { value: 'DOUBLE',   label: 'Double (decimal)'         },
-    { value: 'BOOLEAN',  label: 'Boolean (verdadero/falso)'},
-    { value: 'DATE',     label: 'Date (fecha)'             },
-    { value: 'DATETIME', label: 'DateTime'                 },
-    { value: 'TIME',     label: 'Time (hora)'              },
-    { value: 'BINARY',   label: 'Binary (archivo)'         },
-    { value: 'TEXT',     label: 'Text (texto largo)'       },
+    { value: 'STRING',   label: 'String (texto)'           },
+    { value: 'INTEGER',  label: 'Integer (entero)'          },
+    { value: 'DOUBLE',   label: 'Double (decimal)'          },
+    { value: 'BOOLEAN',  label: 'Boolean (verdadero/falso)' },
+    { value: 'DATE',     label: 'Date (fecha)'              },
+    { value: 'DATETIME', label: 'DateTime'                  },
+    { value: 'TIME',     label: 'Time (hora)'               },
+    { value: 'BINARY',   label: 'Binary (archivo)'          },
+    { value: 'TEXT',     label: 'Text (texto largo)'        },
   ];
 
   readonly primitiveUnitOptions = [
-    { value: 'NONE',                    label: 'Sin unidad'               },
-    { value: 'KILOGRAM',                label: 'Kilogramo (kg)'           },
-    { value: 'GRAM',                    label: 'Gramo (g)'                },
-    { value: 'MILLIGRAM',               label: 'Miligramo (mg)'           },
-    { value: 'MICROGRAM',               label: 'Microgramo (µg)'          },
-    { value: 'LITER',                   label: 'Litro (L)'                },
-    { value: 'MILLILITER',              label: 'Mililitro (mL)'           },
-    { value: 'METER',                   label: 'Metro (m)'                },
-    { value: 'CENTIMETER',              label: 'Centímetro (cm)'          },
-    { value: 'MILLIMETER',              label: 'Milímetro (mm)'           },
-    { value: 'CELSIUS',                 label: 'Celsius (°C)'             },
-    { value: 'FAHRENHEIT',              label: 'Fahrenheit (°F)'          },
-    { value: 'MMHG',                    label: 'mmHg (presión)'           },
-    { value: 'BPM',                     label: 'BPM (lat/min)'            },
-    { value: 'RESPIRATIONS_PER_MINUTE', label: 'Resp/min'                 },
-    { value: 'PERCENT',                 label: 'Porcentaje (%)'           },
-    { value: 'SECOND',                  label: 'Segundo (s)'              },
-    { value: 'MINUTE',                  label: 'Minuto (min)'             },
-    { value: 'HOUR',                    label: 'Hora (h)'                 },
-    { value: 'DAY',                     label: 'Día (d)'                  },
-    { value: 'MG_DL',                   label: 'mg/dL (glucosa)'          },
-    { value: 'MMOL_L',                  label: 'mmol/L'                   },
-    { value: 'UNIT',                    label: 'Unidad (U)'               },
-    { value: 'INTERNATIONAL_UNIT',      label: 'UI (Unidad Internacional)'},
-    { value: 'KG_M2',                   label: 'kg/m² (IMC)'              },
+    { value: 'NONE',                    label: 'Sin unidad'                },
+    { value: 'KILOGRAM',                label: 'Kilogramo (kg)'            },
+    { value: 'GRAM',                    label: 'Gramo (g)'                 },
+    { value: 'MILLIGRAM',               label: 'Miligramo (mg)'            },
+    { value: 'MICROGRAM',               label: 'Microgramo (µg)'           },
+    { value: 'LITER',                   label: 'Litro (L)'                 },
+    { value: 'MILLILITER',              label: 'Mililitro (mL)'            },
+    { value: 'METER',                   label: 'Metro (m)'                 },
+    { value: 'CENTIMETER',              label: 'Centímetro (cm)'           },
+    { value: 'MILLIMETER',              label: 'Milímetro (mm)'            },
+    { value: 'CELSIUS',                 label: 'Celsius (°C)'              },
+    { value: 'FAHRENHEIT',              label: 'Fahrenheit (°F)'           },
+    { value: 'MMHG',                    label: 'mmHg (presión)'            },
+    { value: 'BPM',                     label: 'BPM (lat/min)'             },
+    { value: 'RESPIRATIONS_PER_MINUTE', label: 'Resp/min'                  },
+    { value: 'PERCENT',                 label: 'Porcentaje (%)'            },
+    { value: 'SECOND',                  label: 'Segundo (s)'               },
+    { value: 'MINUTE',                  label: 'Minuto (min)'              },
+    { value: 'HOUR',                    label: 'Hora (h)'                  },
+    { value: 'DAY',                     label: 'Día (d)'                   },
+    { value: 'MG_DL',                   label: 'mg/dL (glucosa)'           },
+    { value: 'MMOL_L',                  label: 'mmol/L'                    },
+    { value: 'UNIT',                    label: 'Unidad (U)'                },
+    { value: 'INTERNATIONAL_UNIT',      label: 'UI (Unidad Internacional)' },
+    { value: 'KG_M2',                   label: 'kg/m² (IMC)'               },
   ];
 
   // ─── TABLE COLUMNS ────────────────────────────────────────────────────────────
@@ -143,16 +139,8 @@ export class SystemDataListComponent implements OnInit {
   ];
 
   imageCols: TableColumn[] = [
-    { key: 'id',                   label: 'ID'          },
-    { key: 'medicalImageTypeName', label: 'Tipo'        },
-    { key: 'contentType',          label: 'Formato'     },
-    { key: 'fileSize',             label: 'Tamaño (B)'  },
-    { key: 'createdAt',            label: 'Creada'      },
-  ];
-
-  actionButtons: TableAction[] = [
-    { action: 'view',   icon: 'visibility', class: 'btn-view'   },
-    { action: 'delete', icon: 'delete',     class: 'btn-delete' },
+    { key: 'id',   label: 'ID'     },
+    { key: 'name', label: 'Nombre' },
   ];
 
   primitiveActionButtons: TableAction[] = [
@@ -161,16 +149,22 @@ export class SystemDataListComponent implements OnInit {
     { action: 'delete', icon: 'delete',     class: 'btn-delete' },
   ];
 
+  imageTypeActionButtons: TableAction[] = [
+    { action: 'view',       icon: 'visibility', class: 'btn-view'         },
+    { action: 'edit',       icon: 'edit',       class: 'btn-edit'         },
+    { action: 'delete',     icon: 'delete',     class: 'btn-delete'       },
+    { action: 'assignArea', icon: 'link',       class: 'btn-manage-roles' },
+  ];
+
   constructor(
     private primitiveDatumService:   PrimitiveDatumService,
-    private medicalImageService:     MedicalImageService,
     private medicalImageTypeService: MedicalImageTypeService,
     private evaluationAreaService:   EvaluationAreaService,
   ) {}
 
   ngOnInit(): void {
     this.initCreateForm();
-    this.initNewTypeForm();
+    this.initAssignAreaForm();
     this.loadAll();
   }
 
@@ -179,15 +173,10 @@ export class SystemDataListComponent implements OnInit {
   loadAll(): void {
     this.loading.set(true);
     let done = 0;
-    const checkDone = () => { if (++done === 4) this.loading.set(false); };
+    const checkDone = () => { if (++done === 3) this.loading.set(false); };
 
     this.primitiveDatumService.findAll().subscribe({
       next: r => { this.primitiveDatums.set(r.data ?? []); checkDone(); },
-      error: () => checkDone(),
-    });
-
-    this.medicalImageService.findAll().subscribe({
-      next: r => { this.medicalImages.set(r.data ?? []); checkDone(); },
       error: () => checkDone(),
     });
 
@@ -206,10 +195,6 @@ export class SystemDataListComponent implements OnInit {
     return this.evaluationAreas().map(a => ({ value: a.id!, label: `${a.codeArea} – ${a.name}` }));
   }
 
-  get imageTypeOptions() {
-    return this.imageTypes().map(t => ({ value: t.id!, label: t.name }));
-  }
-
   // ─── TABS ────────────────────────────────────────────────────────────────────
 
   setTab(tab: ActiveTab): void {
@@ -221,9 +206,10 @@ export class SystemDataListComponent implements OnInit {
 
   handleAction(event: { action: string; row: any }): void {
     const { action, row } = event;
-    if (action === 'view')   this.openView(row.id);
-    if (action === 'edit')   this.openEdit(row.id);
-    if (action === 'delete') this.openDeleteConfirm(row.id);
+    if (action === 'view')       this.openView(row.id);
+    if (action === 'edit')       this.openEdit(row.id);
+    if (action === 'delete')     this.openDeleteConfirm(row.id);
+    if (action === 'assignArea') this.openAssignArea(row.id);
   }
 
   // ─── OPEN PANEL ──────────────────────────────────────────────────────────────
@@ -232,12 +218,14 @@ export class SystemDataListComponent implements OnInit {
     this.panelMode.set('create');
     this.panelOpen.set(true);
     this.initCreateForm();
-    this.initNewTypeForm();
+    this.initAssignAreaForm();
     this.formConfig.set(null);
     this.detailConfig.set(null);
-    this.showNewTypeForm.set(false);
-    this.selectedFile.set(null);
-    this.filePreviewUrl.set(null);
+    this.currentDetail.set(null);
+
+    if (this.activeTab() === 'imagenes') {
+      this.createForm.get('dataKind')!.setValue('medicalImageType');
+    }
   }
 
   openView(id: number): void {
@@ -267,38 +255,30 @@ export class SystemDataListComponent implements OnInit {
         error: () => { this.showToast('Error al cargar dato primitivo', 'error'); this.closePanel(); },
       });
     } else {
-      this.medicalImageService.findById(id).subscribe({
+      this.medicalImageTypeService.findById(id).subscribe({
         next: r => {
           const d = r.data!;
-          this.viewImageUrl.set(d.imageUrl ?? null);
-          const flat = {
-            id:            d.id,
-            imageKey:      d.imageKey,
-            provider:      d.provider,
-            contentType:   d.contentType   ?? '—',
-            fileSize:      d.fileSize      ?? '—',
-            createdAt:     d.createdAt     ?? '—',
-            imageTypeName: d.medicalImageType?.name ?? '—',
-            imageTypeId:   d.medicalImageType?.id   ?? '—',
-          };
+          this.currentDetail.set(d);
           this.detailConfig.set({
-            title: 'Detalle de Imagen Médica', subtitle: d.medicalImageType?.name ?? '',
-            icon: 'image', data: flat,
+            title: 'Detalle del Tipo de Imagen', subtitle: d.name,
+            icon: 'image', data: {
+              id:       d.id,
+              name:     d.name,
+              areaName: d.evaluationArea?.name    ?? '—',
+              areaCode: d.evaluationArea?.codeArea ?? '—',
+            },
             fields: [
-              { key: 'id',           label: 'ID',          icon: 'tag'           },
-              { key: 'imageTypeName',label: 'Tipo',         icon: 'category'      },
-              { key: 'contentType',  label: 'Formato',      icon: 'description'   },
-              { key: 'fileSize',     label: 'Tamaño (B)',   icon: 'storage'       },
-              { key: 'provider',     label: 'Proveedor',    icon: 'cloud'         },
-              { key: 'imageKey',     label: 'Clave',        icon: 'key'           },
-              { key: 'createdAt',    label: 'Fecha',        icon: 'calendar_today'},
+              { key: 'id',       label: 'ID',                 icon: 'tag'        },
+              { key: 'name',     label: 'Nombre',              icon: 'label'      },
+              { key: 'areaName', label: 'Área de evaluación',  icon: 'area_chart' },
+              { key: 'areaCode', label: 'Código del área',     icon: 'qr_code'   },
             ],
-            primaryActionLabel: '', primaryActionIcon: '', sections: [],
+            primaryActionLabel: 'Editar', primaryActionIcon: 'edit', sections: [],
           });
           this.panelLoading.set(false);
           this.cdr.detectChanges();
         },
-        error: () => { this.showToast('Error al cargar imagen médica', 'error'); this.closePanel(); },
+        error: () => { this.showToast('Error al cargar tipo de imagen', 'error'); this.closePanel(); },
       });
     }
   }
@@ -310,25 +290,68 @@ export class SystemDataListComponent implements OnInit {
     this.currentId.set(id);
     this.detailConfig.set(null);
 
-    this.primitiveDatumService.findById(id).subscribe({
+    if (this.activeTab() === 'primitivos') {
+      this.primitiveDatumService.findById(id).subscribe({
+        next: r => {
+          const d = r.data!;
+          this.formConfig.set({
+            mode: 2,
+            model: d,
+            fields: [
+              { name: 'id',   label: 'ID',          type: 'text',   hidden: false, disabled: true },
+              { name: 'name', label: 'Nombre',       type: 'text',   validators: [Validators.required] },
+              { name: 'type', label: 'Tipo de dato', type: 'select',
+                options: this.primitiveTypeOptions,  validators: [Validators.required] },
+              { name: 'unit', label: 'Unidad',       type: 'select',
+                options: this.primitiveUnitOptions,  validators: [Validators.required] },
+            ],
+          });
+          this.panelLoading.set(false);
+          this.cdr.detectChanges();
+        },
+        error: () => { this.showToast('Error al cargar dato primitivo', 'error'); this.closePanel(); },
+      });
+    } else {
+      this.medicalImageTypeService.findById(id).subscribe({
+        next: r => {
+          const d = r.data!;
+          this.formConfig.set({
+            mode: 2,
+            model: { id: d.id, name: d.name },
+            fields: [
+              { name: 'id',   label: 'ID',     type: 'text', hidden: false, disabled: true },
+              { name: 'name', label: 'Nombre', type: 'text',
+                validators: [Validators.required, Validators.minLength(2)] },
+            ],
+          });
+          this.panelLoading.set(false);
+          this.cdr.detectChanges();
+        },
+        error: () => { this.showToast('Error al cargar tipo de imagen', 'error'); this.closePanel(); },
+      });
+    }
+  }
+
+  openAssignArea(id: number): void {
+    this.panelLoading.set(true);
+    this.panelOpen.set(true);
+    this.panelMode.set('assign-area');
+    this.currentId.set(id);
+    this.formConfig.set(null);
+    this.detailConfig.set(null);
+    this.initAssignAreaForm();
+
+    this.medicalImageTypeService.findById(id).subscribe({
       next: r => {
         const d = r.data!;
-        this.formConfig.set({
-          mode: 2,
-          model: d,
-          fields: [
-            { name: 'id',   label: 'ID',                type: 'text',   hidden: false, disabled: true },
-            { name: 'name', label: 'Nombre',             type: 'text',   validators: [Validators.required] },
-            { name: 'type', label: 'Tipo de dato',       type: 'select',
-              options: this.primitiveTypeOptions,         validators: [Validators.required] },
-            { name: 'unit', label: 'Unidad',             type: 'select',
-              options: this.primitiveUnitOptions,         validators: [Validators.required] },
-          ],
-        });
+        this.currentDetail.set(d);
+        if (d.evaluationArea?.id) {
+          this.assignAreaForm.get('evaluationAreaId')!.setValue(d.evaluationArea.id);
+        }
         this.panelLoading.set(false);
         this.cdr.detectChanges();
       },
-      error: () => { this.showToast('Error al cargar dato primitivo', 'error'); this.closePanel(); },
+      error: () => { this.showToast('Error al cargar tipo de imagen', 'error'); this.closePanel(); },
     });
   }
 
@@ -340,23 +363,21 @@ export class SystemDataListComponent implements OnInit {
     this.detailConfig.set(null);
     this.panelLoading.set(false);
     this.selectedKind.set(null);
-    this.showNewTypeForm.set(false);
-    this.selectedFile.set(null);
-    this.filePreviewUrl.set(null);
-    this.viewImageUrl.set(null);
+    this.currentDetail.set(null);
     this.initCreateForm();
-    this.initNewTypeForm();
+    this.initAssignAreaForm();
   }
 
   // ─── CREATE FORM ─────────────────────────────────────────────────────────────
 
   initCreateForm(): void {
     this.createForm = this.fb.group({
-      dataKind:          [''],
-      primName:          [''],
-      primType:          [''],
-      primUnit:          ['NONE'],
-      imgTypeId:         [null],
+      dataKind:      [''],
+      primName:      [''],
+      primType:      [''],
+      primUnit:      ['NONE'],
+      imgTypeName:   [''],
+      imgTypeAreaId: [null],
     });
 
     this.createForm.get('dataKind')!.valueChanges.subscribe(kind => {
@@ -365,97 +386,29 @@ export class SystemDataListComponent implements OnInit {
     });
   }
 
-  initNewTypeForm(): void {
-    this.newTypeForm = this.fb.group({
-      typeName:        ['', [Validators.required, Validators.minLength(2)]],
+  initAssignAreaForm(): void {
+    this.assignAreaForm = this.fb.group({
       evaluationAreaId: [null],
     });
   }
 
   updateCreateValidators(kind: DataKind | null): void {
-    const primName  = this.createForm.get('primName')!;
-    const primType  = this.createForm.get('primType')!;
-    const primUnit  = this.createForm.get('primUnit')!;
-    const imgTypeId = this.createForm.get('imgTypeId')!;
+    const primName    = this.createForm.get('primName')!;
+    const primType    = this.createForm.get('primType')!;
+    const primUnit    = this.createForm.get('primUnit')!;
+    const imgTypeName = this.createForm.get('imgTypeName')!;
 
-    [primName, primType, primUnit, imgTypeId].forEach(c => c.clearValidators());
+    [primName, primType, primUnit, imgTypeName].forEach(c => c.clearValidators());
 
     if (kind === 'primitiveDatum') {
       primName.setValidators([Validators.required]);
       primType.setValidators([Validators.required]);
       primUnit.setValidators([Validators.required]);
-    } else if (kind === 'medicalImage') {
-      imgTypeId.setValidators([Validators.required]);
+    } else if (kind === 'medicalImageType') {
+      imgTypeName.setValidators([Validators.required, Validators.minLength(2)]);
     }
 
-    [primName, primType, primUnit, imgTypeId].forEach(c => c.updateValueAndValidity());
-  }
-
-  // ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file  = input.files?.[0] ?? null;
-    this.selectedFile.set(file);
-
-    if (file) {
-      const url = URL.createObjectURL(file);
-      this.filePreviewUrl.set(url);
-    } else {
-      this.filePreviewUrl.set(null);
-    }
-  }
-
-  removeFile(): void {
-    this.selectedFile.set(null);
-    this.filePreviewUrl.set(null);
-  }
-
-  // ─── NUEVO TIPO INLINE ───────────────────────────────────────────────────────
-
-  toggleNewTypeForm(): void {
-    this.showNewTypeForm.update(v => !v);
-    if (!this.showNewTypeForm()) this.initNewTypeForm();
-  }
-
-  submitNewType(): void {
-    this.newTypeForm.markAllAsTouched();
-    if (this.newTypeForm.invalid) return;
-
-    const name = this.newTypeForm.value.typeName?.trim();
-    const areaId = this.newTypeForm.value.evaluationAreaId as number | null;
-    if (!name) return;
-
-    this.medicalImageTypeService.create({ name }).subscribe({
-      next: created => {
-        const newId = created.data?.id;
-        const afterCreate = () => {
-          this.showToast('Tipo de imagen creado', 'success');
-          this.medicalImageTypeService.findAll().subscribe({
-            next: res => {
-              this.imageTypes.set(res.data ?? []);
-              const newType = res.data?.find(t => t.name === name);
-              if (newType?.id) this.createForm.get('imgTypeId')!.setValue(newType.id);
-            },
-          });
-          this.showNewTypeForm.set(false);
-          this.initNewTypeForm();
-        };
-
-        if (newId && areaId) {
-          this.medicalImageTypeService.assignEvaluationArea(newId, areaId).subscribe({
-            next: () => afterCreate(),
-            error: () => {
-              this.showToast('Tipo creado, pero error al asignar área', 'error');
-              afterCreate();
-            },
-          });
-        } else {
-          afterCreate();
-        }
-      },
-      error: () => this.showToast('Error al crear tipo de imagen', 'error'),
-    });
+    [primName, primType, primUnit, imgTypeName].forEach(c => c.updateValueAndValidity());
   }
 
   // ─── SUBMIT CREATE ───────────────────────────────────────────────────────────
@@ -483,19 +436,29 @@ export class SystemDataListComponent implements OnInit {
         error: () => this.showToast('Error al crear dato primitivo', 'error'),
       });
 
-    } else {
-      const file = this.selectedFile();
-      if (!file) { this.showToast('Selecciona un archivo de imagen', 'error'); return; }
+    } else if (kind === 'medicalImageType') {
+      const name = raw.imgTypeName?.trim();
+      const areaId = raw.imgTypeAreaId as number | null;
+      if (!name) { this.showToast('El nombre es obligatorio', 'error'); return; }
 
-      const typeId = Number(raw.imgTypeId);
-      if (!typeId) { this.showToast('Selecciona un tipo de imagen', 'error'); return; }
+      this.medicalImageTypeService.create({ name }).subscribe({
+        next: created => {
+          const newId = created.data?.id;
+          const afterCreate = () => {
+            this.showToast('Tipo de imagen creado', 'success');
+            this.closePanel(); this.loadAll();
+          };
 
-      this.medicalImageService.upload(file, typeId).subscribe({
-        next: r => {
-          this.showToast(r.message || 'Imagen médica cargada exitosamente', 'success');
-          this.closePanel(); this.loadAll();
+          if (newId && areaId) {
+            this.medicalImageTypeService.assignEvaluationArea(newId, areaId).subscribe({
+              next: () => afterCreate(),
+              error: () => { this.showToast('Tipo creado, error al asignar área', 'error'); afterCreate(); },
+            });
+          } else {
+            afterCreate();
+          }
         },
-        error: () => this.showToast('Error al cargar imagen médica', 'error'),
+        error: () => this.showToast('Error al crear tipo de imagen', 'error'),
       });
     }
   }
@@ -503,23 +466,67 @@ export class SystemDataListComponent implements OnInit {
   // ─── EDIT SUBMIT ─────────────────────────────────────────────────────────────
 
   handleFormSubmit(data: any): void {
-    const id = Number(data.id);
-    this.primitiveDatumService.update(id, data).subscribe({
-      next: r => {
-        this.showToast(r.message || 'Dato actualizado', 'success');
-        this.closePanel(); this.loadAll();
-      },
-      error: () => this.showToast('Error al actualizar dato primitivo', 'error'),
-    });
+    if (this.activeTab() === 'primitivos') {
+      const id = Number(data.id);
+      this.primitiveDatumService.update(id, data).subscribe({
+        next: r => {
+          this.showToast(r.message || 'Dato actualizado', 'success');
+          this.closePanel(); this.loadAll();
+        },
+        error: () => this.showToast('Error al actualizar dato primitivo', 'error'),
+      });
+    } else {
+      const id = Number(data.id);
+      this.medicalImageTypeService.update(id, { name: data.name?.trim() }).subscribe({
+        next: r => {
+          this.showToast(r.message || 'Tipo de imagen actualizado', 'success');
+          this.closePanel(); this.loadAll();
+        },
+        error: () => this.showToast('Error al actualizar tipo de imagen', 'error'),
+      });
+    }
   }
 
   handleFormCancel(): void { this.closePanel(); }
+
+  // ─── ASSIGN / REMOVE AREA ────────────────────────────────────────────────────
+
+  submitAssignArea(): void {
+    const areaId = this.assignAreaForm.value.evaluationAreaId;
+    const id = this.currentId()!;
+
+    if (!areaId) {
+      this.showToast('Selecciona un área de evaluación', 'error');
+      return;
+    }
+
+    this.medicalImageTypeService.assignEvaluationArea(id, areaId).subscribe({
+      next: r => {
+        this.showToast('Área de evaluación asignada', 'success');
+        this.currentDetail.set(r.data ?? null);
+        this.loadAll();
+      },
+      error: () => this.showToast('Error al asignar área de evaluación', 'error'),
+    });
+  }
+
+  removeArea(): void {
+    const id = this.currentId()!;
+    this.medicalImageTypeService.removeEvaluationArea(id).subscribe({
+      next: r => {
+        this.showToast('Área de evaluación removida', 'success');
+        this.currentDetail.set(r.data ?? null);
+        this.loadAll();
+      },
+      error: () => this.showToast('Error al remover área de evaluación', 'error'),
+    });
+  }
 
   // ─── DELETE ──────────────────────────────────────────────────────────────────
 
   openDeleteConfirm(id: number): void {
     this.deleteTargetId.set(id);
-    const label = this.activeTab() === 'primitivos' ? 'dato primitivo' : 'imagen médica';
+    const label = this.activeTab() === 'primitivos' ? 'dato primitivo' : 'tipo de imagen';
     this.deleteConfirmMessage.set(`¿Está seguro que desea eliminar el ${label} con ID "${id}"?`);
     this.showDeleteConfirm.set(true);
   }
@@ -540,9 +547,9 @@ export class SystemDataListComponent implements OnInit {
         error: () => { this.showToast('Error al eliminar dato primitivo', 'error'); this.deleteTargetId.set(null); },
       });
     } else {
-      this.medicalImageService.delete(id).subscribe({
-        next: () => { this.showToast('Imagen médica eliminada', 'success'); this.deleteTargetId.set(null); this.loadAll(); },
-        error: () => { this.showToast('Error al eliminar imagen médica', 'error'); this.deleteTargetId.set(null); },
+      this.medicalImageTypeService.delete(id).subscribe({
+        next: () => { this.showToast('Tipo de imagen eliminado', 'success'); this.deleteTargetId.set(null); this.loadAll(); },
+        error: () => { this.showToast('Error al eliminar tipo de imagen', 'error'); this.deleteTargetId.set(null); },
       });
     }
   }

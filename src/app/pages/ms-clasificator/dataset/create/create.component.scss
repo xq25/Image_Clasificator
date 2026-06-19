@@ -269,6 +269,40 @@
 
 .cat-body { flex: 1; display: flex; flex-direction: column; gap: 8px; position: relative; }
 
+.cat-name-field { display: flex; flex-direction: column; gap: 4px; }
+
+.cat-name-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cat-name-input {
+  border: 1.5px solid #d1d5db; border-radius: 8px;
+  padding: 8px 36px 8px 12px; font-size: 14px; background: #fff;
+  color: #1a1a2e; outline: none; width: 100%; box-sizing: border-box;
+  transition: border-color .2s;
+  &:focus        { border-color: #5d5fef; }
+  &::placeholder { color: #9ca3af; }
+  &:disabled     { background: #f9fafb; opacity: .6; cursor: not-allowed; }
+}
+
+.name-spinner {
+  position: absolute; right: 10px; flex-shrink: 0;
+}
+
+.name-saved-icon {
+  position: absolute; right: 8px;
+  font-size: 18px; width: 18px; height: 18px;
+  color: #22c55e; flex-shrink: 0;
+}
+
+.label-disabled { opacity: .45; }
+
+.field-hint-inline {
+  font-size: 11px; font-weight: 500; color: #9ca3af; margin-left: 4px;
+}
+
 .field-error-inline {
   font-size: 11px;
   font-weight: 500;
@@ -798,6 +832,17 @@
     &.warn    { background: #2d2210; border-color: #78450a; color: #fbbf24; mat-icon { color: #f59e0b; } }
     &.success { background: #1a3328; border-color: #2d5a46; color: #6ee7b7; mat-icon { color: #22c55e; } }
   }
+
+  // Nombre de categoría input
+  .cat-name-input {
+    background: #19212a;
+    border-color: #2e3f50;
+    color: rgba(255,255,255,0.87);
+    &:focus { border-color: #5d5fef; }
+    &::placeholder { color: rgba(255,255,255,0.3); }
+    &:disabled { background: #14191f; }
+  }
+  .field-hint-inline { color: rgba(255,255,255,0.3); }
 
   // Chips search box (categorías)
   .chips-search-box {

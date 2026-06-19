@@ -15,11 +15,11 @@
           <div class="header-bar">
             <div>
               <h2 class="header-title">Datos del Sistema</h2>
-              <p class="header-sub">Gestión de tipos de datos clínicos e imágenes médicas</p>
+              <p class="header-sub">Gestión de tipos de datos clínicos y tipos de imagen médica</p>
             </div>
             <button mat-flat-button color="primary" (click)="openCreate()" class="btn-new">
               <mat-icon>add</mat-icon>
-              Nuevo dato
+              {{ activeTab() === 'imagenes' ? 'Nuevo tipo' : 'Nuevo dato' }}
             </button>
           </div>
           <div class="tab-bar">
@@ -27,7 +27,7 @@
               <mat-icon class="tab-icon">data_object</mat-icon>Primitivos
             </button>
             <button class="tab-btn" [class.active]="activeTab() === 'imagenes'" (click)="setTab('imagenes')">
-              <mat-icon class="tab-icon">image</mat-icon>Imágenes
+              <mat-icon class="tab-icon">image</mat-icon>Tipos de Imagen
             </button>
           </div>
         </mat-card>
@@ -57,19 +57,19 @@
             />
           }
         } @else {
-          @if (medicalImages().length === 0) {
+          @if (imageTypes().length === 0) {
             <div class="empty-state">
-              <mat-icon class="empty-icon">image</mat-icon>
-              <p>No hay imágenes médicas registradas</p>
+              <mat-icon class="empty-icon">image_search</mat-icon>
+              <p>No hay tipos de imagen médica registrados</p>
             </div>
           } @else {
             <app-dynamic-table
-              [data]="medicalImages()"
+              [data]="imageTypes()"
               [columns]="imageCols"
               [pageSize]="8"
-              [searchKey]="'medicalImageTypeName'"
-              [mobileKey]="'medicalImageTypeName'"
-              [actionButtons]="actionButtons"
+              [searchKey]="'name'"
+              [mobileKey]="'name'"
+              [actionButtons]="imageTypeActionButtons"
               (actionClicked)="handleAction($event)"
             />
           }
@@ -86,10 +86,13 @@
 
         <div class="panel-header">
           <h3 class="panel-title">
-            @if (panelMode() === 'create') { Nuevo dato del sistema }
-            @else if (panelMode() === 'edit') { Editar dato primitivo }
+            @if (panelMode() === 'create' && activeTab() === 'primitivos') { Nuevo dato del sistema }
+            @else if (panelMode() === 'create') { Nuevo tipo de imagen médica }
+            @else if (panelMode() === 'edit' && activeTab() === 'primitivos') { Editar dato primitivo }
+            @else if (panelMode() === 'edit') { Editar tipo de imagen }
+            @else if (panelMode() === 'assign-area') { Gestionar área de evaluación }
             @else if (activeTab() === 'primitivos') { Detalle del dato primitivo }
-            @else { Detalle de imagen médica }
+            @else { Detalle del tipo de imagen }
           </h3>
           <button mat-icon-button (click)="closePanel()"><mat-icon>close</mat-icon></button>
         </div>
@@ -100,20 +103,6 @@
             <div class="panel-loading"><mat-spinner diameter="48"></mat-spinner></div>
 
           } @else if (panelMode() === 'view' && detailConfig()) {
-
-            <!-- Vista imagen médica con preview -->
-            @if (activeTab() === 'imagenes' && viewImageUrl()) {
-              <div class="image-view-wrapper">
-                <img [src]="viewImageUrl()!" alt="Imagen médica" class="image-view-preview"
-                     (error)="viewImageUrl.set(null)" />
-              </div>
-            } @else if (activeTab() === 'imagenes' && !viewImageUrl()) {
-              <div class="image-view-placeholder">
-                <mat-icon>image_not_supported</mat-icon>
-                <span>Vista previa no disponible</span>
-              </div>
-            }
-
             <app-entity-detail
               [config]="detailConfig()!"
               (back)="handleFormCancel()"
@@ -127,31 +116,76 @@
               (formCancel)="handleFormCancel()"
             />
 
+          } @else if (panelMode() === 'assign-area') {
+
+            <!-- ── ÁREA ACTUAL ── -->
+            @if (currentDetail()?.evaluationArea) {
+              <div class="area-info-panel">
+                <div class="area-info-panel__icon">
+                  <mat-icon>area_chart</mat-icon>
+                </div>
+                <div class="area-info-panel__data">
+                  <span class="area-info-panel__label">Área asignada</span>
+                  <span class="area-info-panel__name">{{ currentDetail()!.evaluationArea.name }}</span>
+                  <span class="area-info-panel__code">{{ currentDetail()!.evaluationArea.codeArea }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="area-none-state">
+                <mat-icon>link_off</mat-icon>
+                <span>Sin área de evaluación asignada</span>
+              </div>
+            }
+
+            <form [formGroup]="assignAreaForm" class="assign-area-section">
+              <p class="assign-area-label">Asignar área de evaluación</p>
+
+              <div class="assign-area-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Área de evaluación</mat-label>
+                  <mat-select formControlName="evaluationAreaId">
+                    @for (opt of evaluationAreaOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                @if (currentDetail()?.evaluationArea) {
+                  <button type="button" mat-stroked-button color="warn" (click)="removeArea()">
+                    <mat-icon>link_off</mat-icon> Quitar área
+                  </button>
+                }
+                <button type="button" mat-stroked-button (click)="closePanel()">Cancelar</button>
+                <button type="button" mat-flat-button color="primary"
+                  [disabled]="!assignAreaForm.value.evaluationAreaId"
+                  (click)="submitAssignArea()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+              </div>
+            </form>
+
           } @else if (panelMode() === 'create') {
 
             <!-- ══ FORMULARIO DE CREACIÓN ════════════════════════════════════ -->
             <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="create-form">
 
-              <!-- Selector de tipo -->
-              <div class="type-selector-section">
-                <p class="section-label">¿Qué tipo de dato deseas crear?</p>
-                <div class="type-selector-grid">
-                  <button type="button" class="type-card"
-                    [class.selected]="selectedKind() === 'primitiveDatum'"
-                    (click)="createForm.get('dataKind')!.setValue('primitiveDatum')">
-                    <mat-icon class="type-card-icon">data_object</mat-icon>
-                    <span class="type-card-title">Dato Primitivo</span>
-                    <span class="type-card-desc">Valores numéricos, texto, booleanos, etc.</span>
-                  </button>
-                  <button type="button" class="type-card"
-                    [class.selected]="selectedKind() === 'medicalImage'"
-                    (click)="createForm.get('dataKind')!.setValue('medicalImage')">
-                    <mat-icon class="type-card-icon">image</mat-icon>
-                    <span class="type-card-title">Imagen Médica</span>
-                    <span class="type-card-desc">Radiografías, TAC, ecografías, etc.</span>
-                  </button>
+              <!-- Selector de tipo (solo en tab primitivos) -->
+              @if (activeTab() === 'primitivos') {
+                <div class="type-selector-section">
+                  <p class="section-label">¿Qué tipo de dato deseas crear?</p>
+                  <div class="type-selector-grid">
+                    <button type="button" class="type-card"
+                      [class.selected]="selectedKind() === 'primitiveDatum'"
+                      (click)="createForm.get('dataKind')!.setValue('primitiveDatum')">
+                      <mat-icon class="type-card-icon">data_object</mat-icon>
+                      <span class="type-card-title">Dato Primitivo</span>
+                      <span class="type-card-desc">Valores numéricos, texto, booleanos, etc.</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              }
 
               <!-- ── Campos Dato Primitivo ── -->
               @if (selectedKind() === 'primitiveDatum') {
@@ -192,91 +226,28 @@
                 </div>
               }
 
-              <!-- ── Campos Imagen Médica ── -->
-              @if (selectedKind() === 'medicalImage') {
+              <!-- ── Campos Tipo de Imagen Médica ── -->
+              @if (selectedKind() === 'medicalImageType') {
                 <div class="fields-section">
-                  <p class="section-label">Información de la imagen médica</p>
+                  <p class="section-label">Información del tipo de imagen médica</p>
 
-                  <!-- Selector de tipo de imagen -->
-                  <div class="image-type-row">
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Tipo de imagen médica</mat-label>
-                      <mat-select formControlName="imgTypeId">
-                        @for (opt of imageTypeOptions; track opt.value) {
-                          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                        }
-                      </mat-select>
-                      @if (createForm.get('imgTypeId')?.invalid && createForm.get('imgTypeId')?.touched) {
-                        <mat-error>Selecciona un tipo de imagen</mat-error>
-                      }
-                    </mat-form-field>
-                    <button type="button" mat-icon-button class="btn-add-type"
-                      [class.active]="showNewTypeForm()"
-                      (click)="toggleNewTypeForm()"
-                      matTooltip="Crear nuevo tipo de imagen">
-                      <mat-icon>{{ showNewTypeForm() ? 'remove' : 'add' }}</mat-icon>
-                    </button>
-                  </div>
-
-                  <!-- Sub-formulario: nuevo tipo de imagen inline -->
-                  @if (showNewTypeForm()) {
-                    <div class="new-type-subform" [formGroup]="newTypeForm">
-                      <p class="subform-label">Nuevo tipo de imagen médica</p>
-                      <div class="subform-row">
-                        <mat-form-field appearance="outline" class="full-width">
-                          <mat-label>Nombre del tipo</mat-label>
-                          <input matInput formControlName="typeName" placeholder="Ej. Radiografía" />
-                          @if (newTypeForm.get('typeName')?.invalid && newTypeForm.get('typeName')?.touched) {
-                            <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
-                          }
-                        </mat-form-field>
-                      </div>
-                      <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Área de evaluación (opcional)</mat-label>
-                        <mat-select formControlName="evaluationAreaId">
-                          <mat-option [value]="null">Sin área de evaluación</mat-option>
-                          @for (opt of evaluationAreaOptions; track opt.value) {
-                            <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                      <button type="button" mat-flat-button color="accent" class="btn-save-type"
-                        (click)="submitNewType()" [disabled]="newTypeForm.invalid">
-                        Crear
-                      </button>
-                    </div>
-                  }
-
-                  <!-- Upload de archivo -->
-                  <div class="file-upload-area" [class.has-file]="selectedFile()">
-                    @if (!selectedFile()) {
-                      <label class="file-drop-label" for="fileInput">
-                        <mat-icon class="upload-icon">cloud_upload</mat-icon>
-                        <span class="upload-title">Selecciona o arrastra la imagen</span>
-                        <span class="upload-desc">DICOM, PNG, JPG, PDF — máx. 20 MB</span>
-                      </label>
-                      <input id="fileInput" type="file"
-                        accept="image/*,.dcm,.pdf"
-                        class="file-input"
-                        (change)="onFileSelected($event)" />
-                    } @else {
-                      <div class="file-preview">
-                        @if (filePreviewUrl() && selectedFile()!.type.startsWith('image/')) {
-                          <img [src]="filePreviewUrl()!" alt="preview" class="preview-img" />
-                        } @else {
-                          <mat-icon class="file-icon">description</mat-icon>
-                        }
-                        <div class="file-info">
-                          <span class="file-name">{{ selectedFile()!.name }}</span>
-                          <span class="file-size">{{ (selectedFile()!.size / 1024).toFixed(1) }} KB</span>
-                        </div>
-                        <button type="button" mat-icon-button class="btn-remove-file" (click)="removeFile()">
-                          <mat-icon>close</mat-icon>
-                        </button>
-                      </div>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Nombre del tipo</mat-label>
+                    <input matInput formControlName="imgTypeName" placeholder="Ej. Radiografía de tórax" />
+                    @if (createForm.get('imgTypeName')?.invalid && createForm.get('imgTypeName')?.touched) {
+                      <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
                     }
-                  </div>
+                  </mat-form-field>
 
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Área de evaluación (opcional)</mat-label>
+                    <mat-select formControlName="imgTypeAreaId">
+                      <mat-option [value]="null">Sin área de evaluación</mat-option>
+                      @for (opt of evaluationAreaOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
                 </div>
               }
 
@@ -285,7 +256,7 @@
                 <div class="form-actions">
                   <button type="button" mat-stroked-button (click)="closePanel()">Cancelar</button>
                   <button type="submit" mat-flat-button color="primary"
-                    [disabled]="createForm.invalid || (selectedKind() === 'medicalImage' && !selectedFile())">
+                    [disabled]="createForm.invalid">
                     Guardar
                   </button>
                 </div>
