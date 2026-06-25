@@ -7,7 +7,7 @@ WORKDIR /app
 # Copia primero solo package.json para cachear npm install.
 # Si el código cambia pero las dependencias no, esta capa se reutiliza.
 COPY package.json package-lock.json ./
-RUN npm ci --prefer-offline
+RUN npm ci
 
 COPY . .
 
